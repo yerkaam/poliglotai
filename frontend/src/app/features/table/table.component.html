@@ -1,0 +1,111 @@
+<div class="page">
+  <header class="head">
+    <span class="eyebrow" i18n>1-қадам · Негізгі кесте</span>
+    <h1 class="page-title" i18n>Бір етістік — тоғыз форма</h1>
+  </header>
+
+  <div class="layout">
+    <section class="card main">
+      <div class="controls">
+        <div class="who">
+          <span class="eyebrow" id="whoLabel" i18n>Кім</span>
+          <div class="chips" role="group" aria-labelledby="whoLabel">
+            @for (p of pronouns; track p) {
+              <button type="button" class="chip" [attr.aria-pressed]="p === currentPronoun()" (click)="setPronoun(p)">
+                {{ p }}
+                @if (p === currentPronoun()) {
+                  <span class="kk">· {{ pronounKk[p] }}</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="picker" (keydown)="onPickerKey($event)">
+          <button
+            type="button"
+            class="picker-btn"
+            (click)="pickerOpen.set(!pickerOpen())"
+            [attr.aria-expanded]="pickerOpen()"
+            aria-controls="verbList"
+          >
+            @if (currentVerb(); as v) {
+              <span class="picked">
+                <b>{{ v.word }}</b>
+                <span class="muted">{{ v.translation_kk }}</span>
+                @if (v.is_irregular) {
+                  <span class="tag" i18n>бұрыс</span>
+                }
+              </span>
+            } @else {
+              <span class="muted" i18n>Етістікті таңдаңыз</span>
+            }
+            <app-icon name="chevron" [size]="18" />
+          </button>
+
+          @if (pickerOpen()) {
+            <div class="panel" id="verbList">
+              <label class="visually-hidden" for="verbSearch" i18n>Етістікті іздеу</label>
+              <input
+                id="verbSearch"
+                class="input"
+                type="search"
+                i18n-placeholder
+                placeholder="Іздеу: buy, сатып алу…"
+                [value]="query()"
+                (input)="query.set($any($event.target).value)"
+              />
+              <ul>
+                @for (v of filtered(); track v.id) {
+                  <li>
+                    <button type="button" (click)="pick(v)" [class.current]="v.id === currentVerb()?.id">
+                      <span class="status" [attr.data-status]="v.status" [attr.title]="statusKk[v.status]"></span>
+                      <b>{{ v.word }}</b>
+                      <span class="muted">{{ v.translation_kk }}</span>
+                      <span class="visually-hidden">{{ statusKk[v.status] }}</span>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="muted empty" i18n>Ештеңе табылмады</li>
+                }
+              </ul>
+              <div class="legend" aria-hidden="true">
+                <span><i data-status="learning"></i><ng-container i18n>үйреніп жүр</ng-container></span>
+                <span><i data-status="learned"></i><ng-container i18n>үйренілді</ng-container></span>
+                <span><i data-status="new"></i><ng-container i18n>жаңа</ng-container></span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (data(); as d) {
+        <app-verb-grid [cells]="d.cells" [focusTense]="focusTense()" [focusForm]="focusForm()" />
+        <p class="tip">
+          <app-icon name="speaker" [size]="18" />
+          <span>
+            <ng-container i18n>Сөйлемді тыңдау үшін ұяшықты басыңыз.</ng-container>
+            @if (d.verb.is_irregular) {
+              &ngsp;<b>{{ d.verb.word }}</b>&ngsp;<ng-container i18n>— бұрыс етістік: өткен шақта</ng-container>&ngsp;<b>{{ d.verb.past }}</b>.
+            }
+          </span>
+        </p>
+      } @else if (loadError()) {
+        <div class="alert" role="alert" i18n>Кестені жүктеу мүмкін болмады. Бетті жаңартыңыз.</div>
+      } @else {
+        <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
+      }
+    </section>
+
+    <aside class="rules">
+      <h2 class="rules-title" i18n>Қысқа ережелер</h2>
+      @for (t of tenses; track t) {
+        <div class="rule" [class.active]="focusTense() === t">
+          <b>{{ tenseKk[t] }}</b>
+          <p>{{ rules[t] }}</p>
+        </div>
+      }
+      <a class="btn btn-outline" routerLink="/trainer" i18n>Жаттықтырғышта тексеру</a>
+    </aside>
+  </div>
+</div>

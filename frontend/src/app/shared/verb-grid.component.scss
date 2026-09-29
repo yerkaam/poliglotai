@@ -1,0 +1,109 @@
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: 116px repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.col-head {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  b {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--ink);
+  }
+}
+
+.row-head {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  small {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--muted);
+  }
+}
+
+.cell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.3;
+  transition: border-color 0.15s, background 0.15s;
+  &:hover {
+    border-color: var(--muted);
+  }
+  &.focus {
+    background: var(--tint);
+    border: 2px solid var(--red);
+    font-weight: 600;
+  }
+  &.playing {
+    border-color: var(--red);
+  }
+}
+
+/* Phone: tense label over each row, sign row only, cells stacked tighter. */
+@mixin compact {
+  .head {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    .corner {
+      display: none;
+    }
+  }
+  .col-head {
+    font-size: 0;
+    b {
+      font-size: 16px;
+    }
+  }
+  .row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .row-head {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 2px 0;
+    small::before {
+      content: '· ';
+    }
+  }
+  .cell {
+    min-height: 56px;
+    padding: 10px 8px;
+    font-size: 13.5px;
+    border-radius: 12px;
+  }
+}
+
+.compact {
+  @include compact;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    @include compact;
+  }
+}

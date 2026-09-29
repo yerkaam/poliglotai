@@ -1,0 +1,131 @@
+<div class="page">
+  <header class="hello">
+    <span class="muted">{{ capitalize((today | date: 'EEEE, d MMMM') ?? '') }}</span>
+    <h1 class="page-title">
+      @if (goal(); as g) {
+        <ng-container i18n>Бүгін: {{ g.total }} тапсырма, шамамен {{ minutes() }} минут</ng-container>
+      } @else {
+        <ng-container i18n>Сәлем, {{ auth.user()?.name }}!</ng-container>
+      }
+    </h1>
+  </header>
+
+  <div class="grid">
+    <div class="col-main">
+      <section class="goal" aria-labelledby="goalTitle">
+        <div class="goal-head">
+          <h2 id="goalTitle" class="eyebrow on-red" i18n>Күннің мақсаты</h2>
+          <span class="goal-count">{{ goal()?.done ?? 0 }} / {{ goal()?.total ?? 0 }}</span>
+        </div>
+        <div class="goal-track" role="progressbar" [attr.aria-valuenow]="goalPercent()" aria-valuemin="0" aria-valuemax="100">
+          <span [style.width.%]="goalPercent()"></span>
+        </div>
+        <ul class="tasks">
+          @for (t of goal()?.tasks ?? []; track t.key) {
+            <li [class.done]="t.complete">
+              <span class="tick" aria-hidden="true">
+                @if (t.complete) {
+                  <app-icon name="check" [size]="14" [stroke]="3" />
+                }
+              </span>
+              <a [routerLink]="taskRoute(t)">{{ taskLabel(t) }}</a>
+              @if (!t.complete && t.done > 0) {
+                <span class="partial">{{ t.done }}/{{ t.target }}</span>
+              }
+              @if (t.complete) {
+                <span class="visually-hidden" i18n>орындалды</span>
+              }
+            </li>
+          }
+        </ul>
+        <button type="button" class="continue" (click)="continueDay()">
+          <ng-container i18n>Жалғастыру</ng-container>
+          <app-icon name="arrow" [size]="18" [stroke]="2.2" />
+        </button>
+      </section>
+
+      @if (verbOfDay(); as v) {
+        <section class="card verb" aria-labelledby="verbTitle">
+          <div class="verb-head">
+            <div>
+              <span class="eyebrow" i18n>1-қадам · Күннің етістігі</span>
+              <h2 id="verbTitle" class="verb-title">
+                {{ v.word }}&ngsp;<span class="mono ipa">{{ v.ipa }}</span>&ngsp;<span class="kk">— {{ v.translation_kk }}</span>
+              </h2>
+            </div>
+            <div class="chips" role="group" i18n-aria-label aria-label="Кім">
+              @for (p of pronouns; track p) {
+                <button type="button" class="chip" [attr.aria-pressed]="p === pronoun()" (click)="pronoun.set(p)">{{ p }}</button>
+              }
+            </div>
+          </div>
+          @if (forms(); as f) {
+            <app-verb-grid [cells]="f.cells" [focusTense]="'present'" [focusForm]="'affirmative'" />
+          }
+          <a class="more" routerLink="/table" [queryParams]="{ verb: v.word, pronoun: pronoun() }">
+            <ng-container i18n>Кестені ашу</ng-container>&ngsp;<app-icon name="arrow" [size]="16" />
+          </a>
+        </section>
+      }
+    </div>
+
+    <div class="col-side">
+      @if (store.progress(); as p) {
+        <section class="card side-card">
+          <div class="side-head">
+            <h3 i18n>Сөздер кезеңдер бойынша</h3>
+            <span class="muted small" i18n>қайталауға: {{ p.stats.due }}</span>
+          </div>
+          <div class="stages">
+            <div class="stage">
+              <b>{{ p.not_started }}</b>
+              <span class="col"><span class="grey" [style.height.%]="p.not_started ? 100 : 0"></span></span>
+              <small i18n>жаңа</small>
+            </div>
+            @for (s of p.stages; track s.stage) {
+              <div class="stage">
+                <b>{{ s.count }}</b>
+                <span class="col"><span [style.height.%]="(100 * s.count) / stageMax()"></span></span>
+                <small i18n>{{ intervals[s.stage - 1] }} к</small>
+              </div>
+            }
+          </div>
+          <a class="btn btn-primary btn-block" routerLink="/words">
+            @if (p.stats.due) {
+              <ng-container i18n>{{ p.stats.due }} сөзді қайталау</ng-container>
+            } @else {
+              <ng-container i18n>Жаңа сөздер</ng-container>
+            }
+          </a>
+        </section>
+      }
+
+      <section class="card side-card">
+        <h3 i18n>Курс · 16 қадам</h3>
+        <ol class="steps">
+          @for (s of course().slice(0, 3); track s.number) {
+            <li [class.open]="s.status === 'open'">
+              <span class="num">{{ s.number }}</span>
+              <span class="name">{{ s.title_kk }}</span>
+              @if (s.status === 'open') {
+                <span class="pct">{{ s.percent }}%</span>
+              } @else {
+                <app-icon name="lock" [size]="16" />
+              }
+            </li>
+          }
+        </ol>
+        <a class="more" routerLink="/course"><ng-container i18n>Барлық қадамдар</ng-container>&ngsp;<app-icon name="arrow" [size]="16" /></a>
+      </section>
+
+      <section class="card side-card ai">
+        <div class="ai-head">
+          <span class="bot"><app-icon name="spark" [size]="20" /></span>
+          <h3 i18n>AI-әңгімелесуші</h3>
+        </div>
+        <p i18n>«Hi! What did you do yesterday?» — өткен шақты қолданып жауап беріңіз.</p>
+        <a class="btn btn-outline btn-block" routerLink="/chat" i18n>Диалогты бастау</a>
+      </section>
+    </div>
+  </div>
+</div>

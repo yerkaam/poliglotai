@@ -1,0 +1,101 @@
+<a class="skip" href="#main" i18n>Негізгі мазмұнға өту</a>
+
+<div class="layout">
+  <aside class="sidebar">
+    <a routerLink="/" class="brand" i18n-aria-label aria-label="PoliglotAi, басты бет"><app-logo /></a>
+    <nav class="side-nav" i18n-aria-label aria-label="Негізгі мәзір">
+      @for (item of nav; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          ariaCurrentWhenActive="page"
+        >
+          <app-icon [name]="item.icon" />
+          <span>{{ item.label }}</span>
+          @if (item.path === '/words' && stats()?.due) {
+            <span class="badge" i18n-aria-label aria-label="қайталауға">{{ stats()!.due }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="side-foot">
+      <div class="me">
+        <span class="avatar"><app-icon name="user" [size]="18" /></span>
+        <span class="me-text">
+          <b>{{ auth.user()?.name }}</b>
+          <span class="muted" i18n>Деңгей {{ auth.user()?.profile?.level }} → A2</span>
+        </span>
+      </div>
+      <div class="side-actions">
+        <button type="button" class="icon-btn" (click)="theme.toggle()" i18n-aria-label aria-label="Тақырыпты ауыстыру">
+          <app-icon name="moon" />
+        </button>
+        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Шығу">
+          <app-icon name="logout" />
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar" #topbar>
+      <a routerLink="/" class="brand mobile-only" i18n-aria-label aria-label="PoliglotAi, басты бет"><app-logo /></a>
+
+      <!-- Stats bar on every screen (3.5): learning, learned, due, trainer accuracy -->
+      <dl class="stats" i18n-aria-label aria-label="Статистика">
+        <div class="stat streak">
+          <dt><app-icon name="flame" [size]="18" /><span class="visually-hidden" i18n>Қатарынан күн</span></dt>
+          <dd i18n>{{ stats()?.streak ?? 0 }} күн</dd>
+        </div>
+        <div class="stat">
+          <dt i18n>үйреніп жүр</dt>
+          <dd>{{ stats()?.learning ?? '–' }}</dd>
+        </div>
+        <div class="stat">
+          <dt i18n>үйренілді</dt>
+          <dd>{{ stats()?.learned ?? '–' }}<span class="of">/{{ learnedOf()?.total ?? 40 }}</span></dd>
+        </div>
+        <div class="stat" [class.hot]="(stats()?.due ?? 0) > 0">
+          <dt i18n>қайталауға</dt>
+          <dd>{{ stats()?.due ?? '–' }}</dd>
+        </div>
+        <div class="stat">
+          <dt i18n>дәлдік</dt>
+          <dd>{{ stats()?.accuracy != null ? stats()!.accuracy + '%' : '–' }}</dd>
+        </div>
+      </dl>
+
+      <div class="top-actions mobile-only">
+        <button type="button" class="icon-btn" (click)="theme.toggle()" i18n-aria-label aria-label="Тақырыпты ауыстыру">
+          <app-icon name="moon" />
+        </button>
+        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Шығу">
+          <app-icon name="logout" />
+        </button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<nav class="bottom-nav" i18n-aria-label aria-label="Негізгі мәзір">
+  @for (item of nav; track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        ariaCurrentWhenActive="page"
+      >
+        <app-icon [name]="item.icon" [size]="22" />
+        <span>{{ item.short }}</span>
+        @if (item.path === '/words' && stats()?.due) {
+          <span class="dot" aria-hidden="true"></span>
+        }
+      </a>
+  }
+</nav>

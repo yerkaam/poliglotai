@@ -1,0 +1,233 @@
+from collections import Counter
+
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import serializers, status
+from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
+from rest_framework.views import APIView
+
+from progress.models import ProgressLog
+from progress.services import log_activity
+from srs.models import UserVocabulary
+from users.models import Profile
+from vocabulary.forms import FORM_LABELS_KK, TENSE_LABELS_KK
+from vocabulary.models import CourseStep
+
+from .llm import BLOCKLIST, TutorUnavailable, ask_tutor, build_system_prompt
+from .models import Conversation, Message, Scenario
+
+
+class ChatThrottle(UserRateThrottle):
+    """Daily message limit per learner, to keep API costs under control."""
+
+    scope = "chat"
+
+
+def daily_limit() -> int:
+    return int(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["chat"].split("/")[0])
+
+
+def usage(user) -> dict:
+    log = ProgressLog.objects.filter(user=user, date=timezone.localdate()).first()
+    return {"used": log.chat_messages if log else 0, "limit": daily_limit()}
+
+
+class ScenarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scenario
+        fields = ["slug", "title_kk", "max_turns"]
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = [
+            "id",
+            "role",
+            "text",
+            "translation_kk",
+            "hint_en",
+            "new_words",
+            "correct",
+            "corrections",
+            "created_at",
+        ]
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    scenario = ScenarioSerializer(read_only=True)
+    messages = MessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Conversation
+        fields = ["id", "mode", "scenario", "finished", "created_at", "messages"]
+
+
+def _system_prompt(conversation: Conversation) -> str:
+    user = conversation.user
+    profile, _ = Profile.objects.get_or_create(user=user)
+    verbs = list(
+        UserVocabulary.objects.filter(user=user, vocabulary__is_verb=True)
+        .exclude(status=UserVocabulary.Status.KNOWN)
+        .values_list("vocabulary__word", flat=True)[:60]
+    )
+    steps = [f"{s.number}. {s.title_en}" for s in CourseStep.objects.filter(is_open=True)]
+    return build_system_prompt(
+        level=profile.level, steps=steps, verbs=verbs, mode=conversation.mode, scenario=conversation.scenario
+    )
+
+
+def _history(conversation: Conversation) -> list[dict]:
+    return [{"role": m.role, "content": m.text} for m in conversation.messages.all()]
+
+
+def _save_assistant(conversation: Conversation, reply) -> Message:
+    if reply.finished:
+        conversation.finished = True
+        conversation.save(update_fields=["finished"])
+    return Message.objects.create(
+        conversation=conversation,
+        role=Message.Role.ASSISTANT,
+        text=reply.reply,
+        translation_kk=reply.reply_kk,
+        hint_en=reply.answer_template,
+        new_words=[w.model_dump() for w in reply.new_words],
+    )
+
+
+UNAVAILABLE = Response(
+    {"detail": "AI-әңгімелесуші қазір қолжетімсіз. Бір минуттан кейін қайталаңыз."},
+    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+)
+
+
+class ScenarioListView(APIView):
+    def get(self, request):
+        return Response(
+            {
+                "scenarios": ScenarioSerializer(Scenario.objects.filter(is_active=True), many=True).data,
+                "usage": usage(request.user),
+            }
+        )
+
+
+class StartSerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=Conversation.Mode.choices)
+    scenario = serializers.SlugField(required=False, allow_null=True)
+
+
+class ConversationListView(APIView):
+    def post(self, request):
+        serializer = StartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        mode = serializer.validated_data["mode"]
+        scenario = None
+        if mode == Conversation.Mode.DIALOG:
+            slug = serializer.validated_data.get("scenario") or "cafe"
+            scenario = get_object_or_404(Scenario, slug=slug, is_active=True)
+        conversation = Conversation.objects.create(user=request.user, mode=mode, scenario=scenario)
+        try:
+            reply = ask_tutor(system=_system_prompt(conversation), history=[])
+        except TutorUnavailable:
+            conversation.delete()
+            return UNAVAILABLE
+        _save_assistant(conversation, reply)
+        return Response(ConversationSerializer(conversation).data, status=status.HTTP_201_CREATED)
+
+
+class ConversationDetailView(APIView):
+    def get(self, request, pk):
+        conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
+        return Response(ConversationSerializer(conversation).data)
+
+
+class SendSerializer(serializers.Serializer):
+    text = serializers.CharField(max_length=500)
+
+
+class SendMessageView(APIView):
+    throttle_classes = [ChatThrottle]
+
+    def post(self, request, pk):
+        conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
+        serializer = SendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        text = serializer.validated_data["text"].strip()
+        if not text:
+            return Response({"detail": "Бос хабарлама."}, status=status.HTTP_400_BAD_REQUEST)
+        if conversation.finished:
+            return Response({"detail": "Диалог аяқталды. Жаңасын бастаңыз."}, status=status.HTTP_409_CONFLICT)
+
+        if BLOCKLIST.search(text):
+            # Inappropriate content never reaches the model.
+            return Response(
+                {"detail": "Бұл тақырыпты талқыламаймыз. Оқуға қатысты жазыңыз.", "code": "filtered"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        history = _history(conversation) + [{"role": "user", "content": text}]
+        try:
+            reply = ask_tutor(system=_system_prompt(conversation), history=history)
+        except TutorUnavailable:
+            return UNAVAILABLE
+
+        user_message = Message.objects.create(
+            conversation=conversation,
+            role=Message.Role.USER,
+            text=text,
+            correct=reply.learner_correct if reply.learner_correct is not None else not reply.corrections,
+            corrections=[c.model_dump() for c in reply.corrections],
+        )
+        assistant_message = _save_assistant(conversation, reply)
+        log_activity(request.user, chat_messages=1)
+        return Response(
+            {
+                "user_message": MessageSerializer(user_message).data,
+                "assistant_message": MessageSerializer(assistant_message).data,
+                "finished": conversation.finished,
+                "off_topic": reply.off_topic,
+                "usage": usage(request.user),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class SummaryView(APIView):
+    """Session summary: sentences written, how many correct, top 3 errors, new words."""
+
+    def get(self, request, pk):
+        conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
+        user_messages = conversation.messages.filter(role=Message.Role.USER)
+        errors = Counter()
+        examples = {}
+        for m in user_messages:
+            for c in m.corrections:
+                key = (c.get("tense"), c.get("form"), c.get("right"))
+                errors[key] += 1
+                examples.setdefault(key, c)
+        top = []
+        for key, count in errors.most_common(3):
+            c = examples[key]
+            label = " · ".join(x for x in [TENSE_LABELS_KK.get(c.get("tense")), FORM_LABELS_KK.get(c.get("form"))] if x)
+            top.append({**c, "count": count, "cell_label_kk": label})
+
+        words = []
+        seen = set()
+        known = set(UserVocabulary.objects.filter(user=request.user).values_list("vocabulary__word", flat=True))
+        for m in conversation.messages.filter(role=Message.Role.ASSISTANT):
+            for w in m.new_words:
+                if w["word"].lower() not in seen:
+                    seen.add(w["word"].lower())
+                    words.append({**w, "added": w["word"].lower() in known})
+
+        return Response(
+            {
+                "written": user_messages.count(),
+                "correct": user_messages.filter(correct=True).count(),
+                "top_errors": top,
+                "new_words": words,
+                "usage": usage(request.user),
+            }
+        )

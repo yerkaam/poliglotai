@@ -1,0 +1,203 @@
+<div class="chat-layout">
+  <!-- Scenarios (left on desktop, a scrollable row on the phone) -->
+  <aside class="scenarios" i18n-aria-label aria-label="Жағдаяттар">
+    <span class="eyebrow" i18n>Жағдаяттар</span>
+    <div class="scenario-list">
+      @for (s of scenarios(); track s.slug) {
+        <button
+          type="button"
+          [attr.aria-pressed]="mode() === 'dialog' && scenario() === s.slug"
+          (click)="pickScenario(s.slug)"
+        >
+          {{ s.title_kk }}
+        </button>
+      }
+    </div>
+  </aside>
+
+  <section class="main" aria-labelledby="chatTitle">
+    <header class="chat-head">
+      <span class="bot"><app-icon name="spark" [size]="22" /></span>
+      <div class="titles">
+        <h1 id="chatTitle">{{ title() }}</h1>
+        <span class="muted small">
+          <ng-container i18n>1-қадам · тек сіздің етістіктеріңіз</ng-container>
+          @if (conversation()?.scenario; as s) {
+            · <ng-container i18n>{{ s.max_turns }} репликаның {{ turn() }}-і</ng-container>
+          }
+        </span>
+      </div>
+      <div class="head-actions">
+        <button type="button" class="kk-toggle" [attr.aria-pressed]="showKk()" (click)="showKk.set(!showKk())"
+                i18n-aria-label aria-label="Қазақша аударма мен кеңестер">KZ</button>
+        @if (conversation()) {
+          <button type="button" class="kk-toggle summary-btn" (click)="showSummary.set(!showSummary())"
+                  [attr.aria-expanded]="showSummary()" i18n>Қорытынды</button>
+        }
+      </div>
+    </header>
+
+    <div class="segmented modes" role="group" i18n-aria-label aria-label="Режим">
+      @for (m of modes; track m.key) {
+        <button type="button" [attr.aria-pressed]="mode() === m.key" (click)="pickMode(m.key)">{{ m.label }}</button>
+      }
+    </div>
+
+    <div class="feed" #feed aria-live="polite">
+      @if (!conversation()) {
+        <div class="start card">
+          <span class="bot big"><app-icon name="spark" [size]="28" /></span>
+          <h2 i18n>AI-әңгімелесушімен жаттығыңыз</h2>
+          <p class="muted">
+            @switch (mode()) {
+              @case ('dialog') { <ng-container i18n>Қысқа диалог (6–10 реплика). AI сұрақ қояды, сіз кестедегі құрылымдармен жауап бересіз.</ng-container> }
+              @case ('builder') { <ng-container i18n>AI тапсырма береді («Кеше не істегенімді сұраңыз»), сіз сөйлем құрастырасыз. Қате кесте ұяшығы арқылы түсіндіріледі.</ng-container> }
+              @default { <ng-container i18n>Кез келген тақырыпта жазыңыз — AI сіздің деңгейіңізде қарапайым сөйлемдермен жауап береді.</ng-container> }
+            }
+          </p>
+          <button type="button" class="btn btn-primary" [disabled]="starting() || limitReached()" (click)="start()">
+            @if (starting()) { <ng-container i18n>Басталуда…</ng-container> } @else { <ng-container i18n>Бастау</ng-container> }
+          </button>
+        </div>
+      }
+
+      @for (m of messages(); track m.id) {
+        @if (m.role === 'assistant') {
+          <div class="msg ai">
+            <div class="bubble">
+              <span>{{ m.text }}</span>
+              <button type="button" class="speak" (click)="speech.speak(m.text)" i18n-aria-label aria-label="Тыңдау">
+                <app-icon name="speaker" [size]="16" />
+              </button>
+            </div>
+            @if (showKk() && m.translation_kk) {
+              <span class="translation">{{ m.translation_kk }}</span>
+            }
+            @for (w of m.new_words; track w.word) {
+              <button type="button" class="add-word" [disabled]="isAdded(w)" (click)="addWord(w)">
+                @if (isAdded(w)) {
+                  <app-icon name="check" [size]="14" [stroke]="3" /> {{ w.word }} — {{ w.translation_kk }}
+                  <ng-container i18n>, карточкада</ng-container>
+                } @else {
+                  + {{ w.word }} — {{ w.translation_kk }}<ng-container i18n>, карточкаға</ng-container>
+                }
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="msg me">
+            <div class="bubble">{{ m.text }}</div>
+            @if (m.corrections.length) {
+              @for (c of m.corrections; track $index) {
+                <div class="correction">
+                  <span>
+                    <ng-container i18n>Дұрысы:</ng-container>&ngsp;<s>{{ c.wrong }}</s> → <b>{{ c.right }}</b>.
+                    {{ c.explanation_kk }}
+                  </span>
+                  @if (cellLabel(c)) {
+                    <a routerLink="/table" [queryParams]="cellParams(c)">{{ cellLabel(c) }} →</a>
+                  }
+                </div>
+              }
+            } @else if (m.correct) {
+              <span class="ok"><app-icon name="check" [size]="14" [stroke]="3" /><ng-container i18n>Қатесіз</ng-container></span>
+            }
+          </div>
+        }
+      }
+
+      @if (sending()) {
+        <div class="msg ai"><div class="bubble typing" i18n-aria-label aria-label="AI жазып жатыр"><i></i><i></i><i></i></div></div>
+      }
+      @if (conversation()?.finished) {
+        <div class="finished">
+          <span i18n>Диалог аяқталды. Жарайсыз!</span>
+          <button type="button" class="btn btn-outline" (click)="newSession()" i18n>Жаңа диалог</button>
+        </div>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="alert" role="alert"><app-icon name="alert" /><span>{{ error() }}</span></div>
+    }
+
+    @if (conversation() && !conversation()!.finished) {
+      <div class="composer">
+        @if (lastAssistant()?.hint_en) {
+          <div class="quick">
+            <button type="button" class="chip" (click)="useTemplate(lastAssistant()!.hint_en)">{{ lastAssistant()!.hint_en }}</button>
+            @if (!showKk()) {
+              <button type="button" class="chip" (click)="showKk.set(true)" i18n>Қазақша кеңес</button>
+            }
+          </div>
+        }
+        <form class="send" (submit)="send($event)">
+          <label for="chatInput" class="visually-hidden" i18n>Сіздің жауабыңыз</label>
+          <input
+            #chatInput
+            id="chatInput"
+            class="input"
+            type="text"
+            maxlength="500"
+            autocomplete="off"
+            i18n-placeholder
+            placeholder="Жауабыңызды ағылшынша жазыңыз…"
+            [value]="text()"
+            (input)="text.set($any($event.target).value)"
+            [disabled]="limitReached()"
+          />
+          <button type="submit" class="btn btn-primary" [disabled]="sending() || !text().trim() || limitReached()">
+            <span class="send-label" i18n>Жіберу</span>
+            <app-icon name="send" [size]="18" />
+          </button>
+        </form>
+      </div>
+    }
+  </section>
+
+  <aside class="summary" [class.open]="showSummary()" i18n-aria-label aria-label="Сабақ қорытындысы">
+    <div class="sheet-head">
+      <h2 i18n>Сабақ қорытындысы</h2>
+      <button type="button" class="close" (click)="showSummary.set(false)" i18n-aria-label aria-label="Жабу">
+        <app-icon name="close" />
+      </button>
+    </div>
+    <div class="tiles">
+      <div class="tile"><b>{{ summary()?.written ?? 0 }}</b><span i18n>сөйлем жазылды</span></div>
+      <div class="tile"><b class="red">{{ summary()?.correct ?? 0 }}</b><span i18n>қатесіз</span></div>
+    </div>
+
+    <div class="block">
+      <span class="eyebrow" i18n>Қателер → кесте ұяшықтары</span>
+      @for (e of summary()?.top_errors ?? []; track $index) {
+        <a class="error-item" routerLink="/table" [queryParams]="cellParams(e)">
+          <span><s>{{ e.wrong }}</s> → <b>{{ e.right }}</b> @if (e.count > 1) { <small>×{{ e.count }}</small> }</span>
+          @if (e.cell_label_kk) {
+            <span class="cell">{{ e.cell_label_kk }}</span>
+          }
+        </a>
+      } @empty {
+        <p class="muted small" i18n>Әзірге қате жоқ.</p>
+      }
+    </div>
+
+    <div class="block">
+      <span class="eyebrow" i18n>Диалогтағы жаңа сөздер</span>
+      <div class="words">
+        @for (w of summary()?.new_words ?? []; track w.word) {
+          <span class="word" [class.added]="isAdded(w)"><b>{{ w.word }}</b> — {{ w.translation_kk }}</span>
+        } @empty {
+          <p class="muted small" i18n>Жаңа сөздер осында шығады.</p>
+        }
+      </div>
+      @if (summary()?.new_words?.length) {
+        <button type="button" class="btn btn-outline" (click)="addAll()" i18n>Барлығын карточкаға қосу</button>
+      }
+    </div>
+
+    <div class="usage card">
+      <div class="usage-row"><span i18n>Бүгінгі хабарламалар</span><b>{{ usage().used }} / {{ usage().limit }}</b></div>
+      <div class="progress-track"><span [style.width.%]="(100 * usage().used) / (usage().limit || 1)"></span></div>
+    </div>
+  </aside>
+</div>

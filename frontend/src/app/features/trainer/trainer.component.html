@@ -1,0 +1,115 @@
+<div class="page narrow">
+  <header class="head">
+    <div>
+      <span class="eyebrow" i18n>Кесте + сөз</span>
+      <h1 class="page-title" i18n>Жаттықтырғыш</h1>
+    </div>
+    <dl class="counters">
+      <div>
+        <dt i18n>қатарынан дұрыс</dt>
+        <dd>{{ stats()?.streak ?? 0 }}</dd>
+      </div>
+      <div>
+        <dt i18n>дәлдік</dt>
+        <dd>{{ stats()?.accuracy != null ? stats()!.accuracy + '%' : '–' }}</dd>
+      </div>
+      <div>
+        <dt i18n>барлығы</dt>
+        <dd>{{ stats()?.total ?? 0 }}</dd>
+      </div>
+    </dl>
+  </header>
+
+  @if (error()) {
+    <div class="alert" role="alert"><app-icon name="alert" /><span>{{ error() }}</span></div>
+  }
+
+  @if (task(); as t) {
+    <section class="card task" aria-labelledby="taskTitle">
+      <h2 id="taskTitle" class="visually-hidden" i18n>Тапсырма</h2>
+      <p class="muted lead" i18n>Осы төрт бөліктен ағылшынша сөйлем құрастырыңыз:</p>
+      <div class="tiles">
+        <div class="tile">
+          <span class="eyebrow" i18n>кім</span>
+          <b>{{ t.pronoun }}</b>
+          <small>{{ t.pronoun_kk }}</small>
+        </div>
+        <div class="tile">
+          <span class="eyebrow" i18n>шақ</span>
+          <b>{{ t.tense_kk }}</b>
+          <small>{{ aux[t.tense] }}</small>
+        </div>
+        <div class="tile">
+          <span class="eyebrow" i18n>форма</span>
+          <b>{{ sign[t.form] }} {{ t.form_kk }}</b>
+        </div>
+        <div class="tile verb">
+          <span class="eyebrow" i18n>етістік</span>
+          <b>{{ t.verb.word }}</b>
+          <small>{{ t.verb.translation_kk }}</small>
+        </div>
+      </div>
+
+      <form class="answer" (submit)="check($event)">
+        <label for="answerInput" class="visually-hidden" i18n>Сіздің сөйлеміңіз</label>
+        <input
+          #answerInput
+          id="answerInput"
+          class="input big"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          i18n-placeholder
+          placeholder="Сөйлемді ағылшынша жазыңыз…"
+          [value]="answer()"
+          (input)="answer.set($any($event.target).value)"
+          [readOnly]="!!result()"
+          [attr.aria-invalid]="result() && !result()!.correct ? true : null"
+          aria-describedby="answerFeedback"
+        />
+        <button type="submit" class="btn btn-primary btn-lg" [disabled]="busy() || (!result() && !answer().trim())">
+          @if (result()) {
+            <ng-container i18n>Келесі</ng-container>&ngsp;<app-icon name="arrow" [size]="18" />
+          } @else {
+            <ng-container i18n>Тексеру</ng-container>
+          }
+        </button>
+      </form>
+
+      <div id="answerFeedback" aria-live="polite">
+        @if (result(); as r) {
+          @if (r.correct) {
+            <div class="feedback ok">
+              <app-icon name="check" [stroke]="3" />
+              <span><b i18n>Дұрыс!</b>&ngsp;<app-sentence [parts]="r.parts" /></span>
+            </div>
+          } @else {
+            <div class="feedback bad">
+              <app-icon name="close" [stroke]="3" />
+              <div>
+                <b i18n>Дұрысы:</b>&ngsp;<span class="expected"><app-sentence [parts]="r.parts" /></span>
+                <a
+                  class="cell-link"
+                  routerLink="/table"
+                  [queryParams]="{ verb: t.verb.word, pronoun: t.pronoun, tense: t.tense, form: t.form }"
+                >
+                  {{ t.tense_kk }} · {{ t.form_kk }}&ngsp;<ng-container i18n>— кестеде көру</ng-container> →
+                </a>
+              </div>
+            </div>
+          }
+        }
+      </div>
+      <p class="hint muted" i18n>Enter — тексеру. Бас әріп пен тыныс белгілері маңызды емес; won't = will not.</p>
+    </section>
+
+    @if (!t.from_learning) {
+      <p class="muted info" i18n>
+        Етістіктер 1-қадамнан алынды. <a routerLink="/words">Сөздер</a> бөлімінде жаңа етістіктерді үйрене бастасаңыз, жаттықтырғыш соларды береді.
+      </p>
+    }
+  } @else if (!error()) {
+    <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
+  }
+</div>

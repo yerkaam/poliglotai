@@ -1,0 +1,98 @@
+<div class="page">
+  <header class="head">
+    <span class="eyebrow" i18n>Нөлден A2 деңгейіне дейін</span>
+    <h1 class="page-title" i18n>Курс · 16 қадам</h1>
+  </header>
+
+  <section class="method" aria-labelledby="methodTitle">
+    <h2 id="methodTitle" class="visually-hidden" i18n>Әдістеме қалай құрылған</h2>
+    <div class="card how">
+      <span class="how-icon"><app-icon name="grid" /></span>
+      <b i18n>Кесте</b>
+      <p i18n>Бір етістік — тоғыз форма: үш шақ × сұрақ, болымды, болымсыз. Ереже аз, қолдану көп.</p>
+    </div>
+    <div class="card how">
+      <span class="how-icon"><app-icon name="cards" /></span>
+      <b i18n>Сөздер</b>
+      <p i18n>Әр сөз 6 рет қайталанады: 1, 2, 4, 7, 14 және 30 күннен кейін — сонда ұзақ есте қалады.</p>
+    </div>
+    <div class="card how">
+      <span class="how-icon"><app-icon name="target" /></span>
+      <b i18n>Жаттықтырғыш + AI</b>
+      <p i18n>Сөзіңізді кесте ұяшығына қойып сөйлем құрастырасыз, сосын AI-мен сөйлесесіз.</p>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="card map" aria-labelledby="mapTitle">
+      <h2 id="mapTitle" class="section-title" i18n>Қадамдар картасы</h2>
+      <ol class="steps">
+        @for (s of steps(); track s.number) {
+          <li [class.open]="s.status === 'open'">
+            <span class="num">{{ s.number }}</span>
+            <div class="info">
+              <b>{{ s.title_kk }}</b>
+              <span class="muted">{{ s.description_kk }}</span>
+              @if (s.status === 'open') {
+                <div class="step-progress">
+                  <div class="progress-track"><span [style.width.%]="s.percent"></span></div>
+                  <small class="muted" i18n>{{ s.words_learned }} / {{ s.words_total }} сөз · {{ s.percent }}%</small>
+                </div>
+              }
+            </div>
+            @if (s.status === 'open') {
+              <a class="btn btn-primary open-btn" routerLink="/table" i18n>Ашу</a>
+            } @else {
+              <span class="soon"><app-icon name="lock" [size]="14" />&ngsp;<ng-container i18n>жақында</ng-container></span>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+
+    <aside class="side">
+      @if (store.progress(); as p) {
+        <section class="card panel" aria-labelledby="progressTitle">
+          <h2 id="progressTitle" class="section-title" i18n>Прогресс</h2>
+          <dl class="nums">
+            <div><dt i18n>үйреніп жүр</dt><dd>{{ p.stats.learning }}</dd></div>
+            <div><dt i18n>үйренілді</dt><dd>{{ p.stats.learned }}</dd></div>
+            <div><dt i18n>қайталауға</dt><dd>{{ p.stats.due }}</dd></div>
+            <div><dt i18n>дәлдік</dt><dd>{{ p.stats.accuracy != null ? p.stats.accuracy + '%' : '–' }}</dd></div>
+          </dl>
+          <div class="stages">
+            @for (s of p.stages; track s.stage) {
+              <div class="stage">
+                <b>{{ s.count }}</b>
+                <span class="col"><span [style.height.%]="(100 * s.count) / stageMax()"></span></span>
+                <small i18n>{{ intervals[s.stage - 1] }} к</small>
+              </div>
+            }
+          </div>
+          <div class="learned">
+            <div class="row"><span i18n>Үйренілді</span><b>{{ p.learned_of.learned }} / {{ p.learned_of.total }}</b></div>
+            <div class="progress-track"><span [style.width.%]="(100 * p.learned_of.learned) / (p.learned_of.total || 1)"></span></div>
+          </div>
+        </section>
+      }
+
+      <section class="card panel">
+        <h2 class="section-title" i18n>Прогресті тазарту</h2>
+        <p class="muted" i18n>Барлық сөздер, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
+        @if (message()) {
+          <div class="alert alert-ok" role="status">{{ message() }}</div>
+        }
+        <button type="button" class="btn btn-ghost" (click)="openReset()" i18n>Тазарту…</button>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<dialog #resetDialog class="dialog" aria-labelledby="resetTitle" (cancel)="closeReset()">
+  <h2 id="resetTitle" i18n>Прогресті тазарту керек пе?</h2>
+  <p class="muted" i18n>Бұл әрекетті қайтару мүмкін емес. Сөздер, кезеңдер, жаттықтырғыш пен AI-чат тарихы өшеді.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-ghost" (click)="closeReset()" i18n>Болдырмау</button>
+    <button type="button" class="btn btn-primary" [disabled]="resetting()" (click)="confirmReset()" i18n>Иә, тазарту</button>
+  </div>
+</dialog>

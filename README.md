@@ -1,93 +1,87 @@
-# Poliglot
+# PoliglotAi
 
+Сайт для изучения английского с нуля до A2 для казахоязычных учеников: таблица глагола 3×3, карточки слов с интервальным повторением, тренажёр «клетка + слово» и AI-чат. Интерфейс на казахском.
 
+Стек: **Angular 20** (фронтенд), **Django 5.1 + DRF** (бэкенд), **PostgreSQL 16**, Redis (кэш, лимиты), nginx.
 
-## Getting started
+## Быстрый старт (Docker)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/poliglot-group/poliglot.git
-git branch -M main
-git push -uf origin main
+```bash
+cp .env.example .env          # при необходимости впишите ANTHROPIC_API_KEY
+docker compose up -d --build --wait
+open http://localhost:8080
 ```
 
-## Integrate with your tools
+Админка для методиста (слова, переводы, примеры, сценарии диалогов): http://localhost:8080/admin/
 
-* [Set up project integrations](https://gitlab.com/poliglot-group/poliglot/-/settings/integrations)
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
 
-## Collaborate with your team
+Письма для восстановления пароля с `EMAIL_BACKEND=console` печатаются в лог: `docker compose logs backend`.
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Разработка
 
-## Test and Deploy
+```bash
+# база
+docker compose up -d db                      # Postgres на localhost:5454
 
-Use the built-in continuous integration in GitLab.
+# бэкенд
+cd backend
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements-dev.txt
+export POSTGRES_PORT=5454
+python manage.py migrate                     # создаёт схему и загружает 40 глаголов, 16 шагов, 5 сценариев
+python manage.py runserver 8000
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+# фронтенд (проксирует /api на :8000)
+cd frontend
+npm ci
+npx ng serve --port 4300
+```
 
-***
+## Тесты
 
-# Editing this README
+| Что | Команда | Что проверяет |
+| --- | --- | --- |
+| Бэкенд | `cd backend && POSTGRES_PORT=5454 pytest` | Все 54 формы (6 местоимений × 9 клеток) для каждого из 40 глаголов, этапы SRS, лимит новых слов, авторизация (httpOnly, блокировка после 5 ошибок, ссылка сброса на 1 час и 1 раз), тренажёр, AI-чат |
+| Линтер | `cd backend && ruff check . && ruff format --check .` | |
+| Фронтенд | `cd frontend && npx ng test --watch=false --browsers=ChromeHeadless` | Компоненты таблицы, guards, разбор ошибок API |
+| E2E | `cd frontend && npx playwright test` (`E2E_BASE_URL=http://localhost:8080` для Docker) | Регистрация → таблица → слова → тренажёр → чат → выход, на 1440 px и 360 px без горизонтальной прокрутки |
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+CI (`.github/workflows/ci.yml`) запускает всё это на каждый pull request.
 
-## Suggestions for a good README
+## Устройство
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```
+backend/
+  config/        настройки, URL
+  users/         регистрация, вход, JWT в httpOnly-cookie, сброс пароля, профиль
+  vocabulary/    слова, шаги курса, forms.py — сборка 9 форм (один источник для таблицы и тренажёра)
+  srs/           этапы повторения 1-2-4-7-14-30 дней, лимит новых слов
+  trainer/       задания «кто · время · форма · глагол» и проверка ответа
+  chat/          диалоги, сообщения, llm.py — запросы к Claude со структурированным ответом
+  progress/      журнал активности, цель дня, серия дней, сброс прогресса
+frontend/src/app/
+  core/          API, авторизация, interceptor обновления токена, озвучка (Web Speech, en-GB), темы
+  layout/        боковое меню (десктоп), нижнее меню (телефон), строка статистики
+  features/      auth, home, table, words, trainer, chat, course — каждый экран грузится лениво
+```
 
-## Name
-Choose a self-explaining name for your project.
+Основные эндпоинты: `/api/auth/*`, `GET /api/verbs/{id}/forms/?pronoun=she`, `GET /api/srs/today/`, `POST /api/srs/{word_id}/answer/`, `GET /api/trainer/task/`, `POST /api/trainer/check/`, `GET /api/progress/`, `/api/chat/conversations/*`.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## AI-чат
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- Запросы к LLM идут только через Django; ключ `ANTHROPIC_API_KEY` лежит в окружении сервера и в браузер не попадает.
+- Модель задаётся `CHAT_MODEL` (по умолчанию `claude-opus-5`, `CHAT_EFFORT=low` для скорости). Включён серверный fallback: если модель отказывает, запрос выполняет резервная.
+- Ответ структурированный: реплика, перевод на казахский, шаблон ответа, исправления с привязкой к клетке таблицы, новые слова.
+- Дневной лимит сообщений — `CHAT_DAILY_LIMIT` (throttling DRF). Неуместные сообщения отсекаются до модели.
+- Без ключа отвечает офлайн-заглушка: сценарные вопросы и поиск типичных ошибок (`buyed` → `bought`). Её хватает для разработки и тестов.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Локализация
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Тексты интерфейса размечены Angular i18n, исходный язык — казахский (`kk`). Добавить русский: `npx ng extract-i18n`, перевести `messages.xlf`, добавить локаль в `angular.json`. Казахские тексты, переводы и примеры в `backend/vocabulary/seed.py` должен проверить носитель языка.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## Переменные окружения
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+См. `.env.example`. В продакшене обязательно: свой `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `AUTH_COOKIE_SECURE=1` за HTTPS, реальный SMTP.

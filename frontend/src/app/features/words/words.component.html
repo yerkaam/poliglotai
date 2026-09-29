@@ -1,0 +1,150 @@
+<div class="page">
+  <div class="layout">
+    <section class="session" aria-labelledby="sessionTitle">
+      <header class="bar">
+        <div class="bar-text">
+          <h1 id="sessionTitle" i18n>Сөздер</h1>
+          <span class="muted" i18n>{{ done() }} / {{ total() }}</span>
+        </div>
+        <div class="progress-track" role="progressbar" [attr.aria-valuenow]="percent()" aria-valuemin="0"
+             aria-valuemax="100" i18n-aria-label aria-label="Бүгінгі сабақ">
+          <span [style.width.%]="percent()"></span>
+        </div>
+      </header>
+
+      @if (error()) {
+        <div class="alert" role="alert"><app-icon name="alert" /><span>{{ error() }}</span></div>
+      }
+
+      @if (loading()) {
+        <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
+      } @else if (current(); as item) {
+        <article class="word-card" [attr.aria-label]="item.word.word">
+          <div class="card-top">
+            @if (item.mode === 'review') {
+              <div class="stage-dots" aria-hidden="true">
+                @for (s of segments; track s) {
+                  <span [class.on]="s <= item.word.stage"></span>
+                }
+              </div>
+              <span class="eyebrow" i18n>{{ item.word.stage }}-кезең / 6</span>
+            } @else {
+              <span class="new-tag" i18n>Жаңа сөз</span>
+              <span class="eyebrow" i18n>қалды: {{ newLeft() }} / {{ newLimit() }}</span>
+            }
+          </div>
+
+          <div class="face">
+            <span class="en">{{ item.word.word }}</span>
+            @if (item.word.ipa) {
+              <span class="ipa mono">{{ item.word.ipa }}</span>
+            }
+            <button type="button" class="listen" (click)="listen()" i18n-aria-label aria-label="Тыңдау">
+              <app-icon name="speaker" [size]="28" />
+            </button>
+          </div>
+
+          @if (item.mode === 'new' || revealed()) {
+            <div class="back" aria-live="polite">
+              <span class="kk">{{ item.word.translation_kk }}</span>
+              @if (item.word.is_verb) {
+                <div class="forms">
+                  <span class="mono">{{ item.word.word }} → {{ item.word.past }}</span>
+                  @if (item.word.is_irregular) {
+                    <span class="tag" i18n>бұрыс етістік</span>
+                  }
+                </div>
+              }
+              @if (item.word.example_en) {
+                <p class="example">
+                  <button type="button" class="link-btn" (click)="speech.speak(item.word.example_en)">
+                    {{ item.word.example_en }}
+                  </button>
+                  <br /><span class="muted">{{ item.word.example_kk }}</span>
+                </p>
+              }
+              @if (item.word.is_verb) {
+                <a class="to-table" routerLink="/table" [queryParams]="{ verb: item.word.word }">
+                  <ng-container i18n>Кестеде 9 форманың бәрін көру</ng-container>
+                  <app-icon name="arrow" [size]="16" />
+                </a>
+              }
+            </div>
+          } @else {
+            <button type="button" class="btn btn-ghost btn-block reveal" (click)="revealed.set(true)" i18n>
+              Аударманы көрсету
+            </button>
+          }
+        </article>
+
+        <div class="actions">
+          @if (item.mode === 'new') {
+            <button type="button" class="btn btn-outline btn-lg" [disabled]="busy()" (click)="answer('known')" i18n>
+              Бұрыннан білемін
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="answer('start')" i18n>
+              Үйренуді бастау
+            </button>
+          } @else {
+            <button type="button" class="btn btn-outline btn-lg" [disabled]="busy() || !revealed()" (click)="answer('forget')" i18n>
+              Ұмыттым
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" [disabled]="busy() || !revealed()" (click)="answer('remember')" i18n>
+              Есімде
+            </button>
+          }
+        </div>
+        <p class="note muted" aria-live="polite">{{ note() }}</p>
+      } @else {
+        <div class="card finished">
+          <span class="done-icon"><app-icon name="check" [size]="28" [stroke]="3" /></span>
+          <h2 i18n>Бүгінге бәрі!</h2>
+          <p class="muted">
+            @if (newLeft() === 0 && newLimit() > 0) {
+              <ng-container i18n>Бүгінгі жаңа сөздер лимиті бітті. Ертең жалғастырамыз.</ng-container>
+            } @else {
+              <ng-container i18n>Қайталайтын сөз қалмады.</ng-container>
+            }
+          </p>
+          @if (note()) {
+            <p class="muted">{{ note() }}</p>
+          }
+          <a class="btn btn-primary" routerLink="/trainer" i18n>Жаттықтырғышқа өту</a>
+        </div>
+      }
+    </section>
+
+    <aside class="side">
+      <section class="card panel">
+        <h2 class="panel-title" i18n>Бүгін</h2>
+        <dl class="today">
+          <div><dt i18n>Қайталауға</dt><dd>{{ reviewTotal() }}</dd></div>
+          <div><dt i18n>Жаңа сөздер</dt><dd>{{ newLimit() - newLeft() }} / {{ newLimit() }}</dd></div>
+        </dl>
+      </section>
+
+      @if (store.progress(); as p) {
+        <section class="card panel">
+          <h2 class="panel-title" i18n>Кезеңдер</h2>
+          <div class="stages" role="list">
+            @for (s of p.stages; track s.stage) {
+              <div class="stage" role="listitem">
+                <b>{{ s.count }}</b>
+                <span class="col"><span [style.height.%]="(100 * s.count) / stageMax()"></span></span>
+                <small i18n>{{ intervals[s.stage - 1] }} к</small>
+              </div>
+            }
+          </div>
+          <p class="muted small" i18n>Әр кезеңнен кейінгі қайталау аралығы (күн)</p>
+          <div class="learned">
+            <div class="learned-row">
+              <span i18n>Үйренілді</span>
+              <b>{{ p.learned_of.learned }} / {{ p.learned_of.total }}</b>
+            </div>
+            <div class="progress-track"><span [style.width.%]="(100 * p.learned_of.learned) / (p.learned_of.total || 1)"></span></div>
+          </div>
+        </section>
+      }
+    </aside>
+  </div>
+</div>
