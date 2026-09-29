@@ -74,3 +74,57 @@ def test_topics_file_matches_the_dataset():
     assert len(assigned) == len(set(assigned)), "a word is in two topics"
     assert set(assigned) <= words, set(assigned) - words
     assert {t for t in topics if not t.startswith("_")} <= set(TOPICS_KK)
+
+
+def _build_module():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "scripts" / "build_wiktionary_dataset.py"
+    spec = importlib.util.spec_from_file_location("build_wiktionary_dataset", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_topic_from_kazakh_dictionary_categories():
+    build = _build_module()
+    assert build.category_topic({"pos": "noun", "categories": [["Mammals", "Kazakh lemmas"]]}) == "animals"
+    assert build.category_topic({"pos": "noun", "categories": [["Months"]]}) == ""  # қазан: October / cauldron
+    assert build.category_topic({"pos": "num", "categories": [[]]}) == "numbers"
+    assert build.category_topic({"pos": "noun", "categories": [["Pages with 1 entry"]]}) == ""
+
+
+def test_english_source_wins_over_reversed_kazakh_dictionary(tmp_path, monkeypatch):
+    build = _build_module()
+    monkeypatch.setattr(build, "OUT", tmp_path / "out.jsonl")
+    en = tmp_path / "en.jsonl"
+    kk = tmp_path / "kk.jsonl"
+    row = {"rank": 10, "pos": "noun", "ipa": "", "past": [], "categories": [[]]}
+    en.write_text(json.dumps({**row, "word": "cat", "kk": [{"word": "мысық", "sense": ""}]}, ensure_ascii=False))
+    kk.write_text(
+        "\n".join(
+            json.dumps(
+                {
+                    **row,
+                    "word": w,
+                    "kk": [{"word": t, "sense": ""}],
+                    "source": "kk-dictionary",
+                    "categories": [["Mammals"]],
+                },
+                ensure_ascii=False,
+            )
+            for w, t in [("cat", "WRONG"), ("horse", "ат")]
+        )
+    )
+    build.main(str(en), str(kk))
+    out = {r["word"]: r for r in map(json.loads, (tmp_path / "out.jsonl").read_text().splitlines())}
+    assert out["cat"]["translation_kk"] == "мысық" and out["cat"]["via"] == "en"
+    assert out["horse"]["translation_kk"] == "ат" and out["horse"]["topic"] == "animals"
+
+
+def test_irregular_past_is_filled_when_the_source_has_no_forms(tmp_path, no_imported_words):
+    rows = [{"word": "catch", "rank": 900, "pos": "verb", "translation_kk": "ұстау", "ipa": "", "past": ""}]
+    load(Vocabulary, _write(tmp_path, rows))
+    catch = Vocabulary.objects.get(word="catch")
+    assert (catch.is_irregular, catch.past) == (True, "caught")

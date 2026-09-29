@@ -8,12 +8,13 @@ Needs `pip install wordfreq`. Then run scripts/build_wiktionary_dataset.py.
 """
 
 import json
+import os
 import re
 import sys
 
 from wordfreq import top_n_list
 
-TOP = {w: i for i, w in enumerate(top_n_list("en", 6000), start=1)}
+TOP = {w: i for i, w in enumerate(top_n_list("en", int(os.environ.get("WORDFREQ_TOP", "6000"))), start=1)}
 CYR = re.compile(r"^[А-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі \-]+$")
 META = re.compile(r"English|terms|Terms|Pages|Requests|Entries|with |Translation|Quotation|Rhymes|Undefined")
 ROUGH = {"vulgar", "offensive", "derogatory", "slur", "ethnic"}
