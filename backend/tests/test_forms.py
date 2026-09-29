@@ -117,7 +117,7 @@ def expected(pronoun: str, verb: str, tense: str, form: str) -> str:
 
 @pytest.mark.django_db
 def test_every_verb_has_all_54_forms_right():
-    verbs = list(Vocabulary.objects.filter(is_verb=True))
+    verbs = list(Vocabulary.objects.filter(is_verb=True, source="course"))
     assert len(verbs) == 40
     assert {v.word for v in verbs} == set(THIRD)
     checked = 0

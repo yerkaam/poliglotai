@@ -48,9 +48,9 @@ export class HomeComponent {
   private verbs = toSignal(this.api.verbs(), { initialValue: [] as Word[] });
   protected course = toSignal(this.api.course(), { initialValue: [] as CourseStep[] });
 
-  /** Verb of the day: rotates daily through the verbs being learned (or all step-1 verbs). */
+  /** Verb of the day: rotates daily through the verbs being learned (or the course verbs). */
   protected verbOfDay = computed<Word | null>(() => {
-    const all = this.verbs().filter((v) => v.is_verb);
+    const all = this.verbs().filter((v) => v.is_verb && v.course_step !== null);
     if (!all.length) return null;
     const learning = all.filter((v) => v.status === 'learning');
     const pool = learning.length ? learning : all;

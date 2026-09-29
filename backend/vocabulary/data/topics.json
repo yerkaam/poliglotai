@@ -1,0 +1,63 @@
+{
+  "_comment": "Hand-assigned topics for the Wiktionary words (thematic dictionaries). A word not listed here is 'general'. The methodologist can move words between topics here or in the admin.",
+  "food": [
+    "wine", "tea", "milk", "chicken", "cream", "orange", "apple", "bottle", "rice", "bread", "egg", "butter",
+    "soup", "bacon", "potato", "turkey", "sweet", "delicious", "raw", "alcohol", "fruit"
+  ],
+  "home": [
+    "house", "home", "bed", "table", "kitchen", "bathroom", "toilet", "basement", "garden", "yard", "fence",
+    "shed", "bowl", "pot", "bench", "key", "tool", "garbage", "clean", "repair", "saw"
+  ],
+  "family": [
+    "family", "man", "woman", "person", "son", "brother", "sister", "baby", "kid", "lady", "cousin", "twin",
+    "partner", "marry", "female", "male", "human", "crowd", "prince", "king"
+  ],
+  "body": [
+    "head", "foot", "finger", "bone", "ear", "tongue", "skin", "muscle", "brain", "pain", "ill", "therapy",
+    "diagnosis", "virus", "pregnant", "fat", "tall", "smoking"
+  ],
+  "time": [
+    "time", "year", "day", "week", "today", "morning", "evening", "hour", "season", "spring", "period", "era",
+    "birthday", "anniversary", "when"
+  ],
+  "work": [
+    "work", "company", "office", "profession", "department", "task", "labour", "responsibility", "product",
+    "consumer", "cent", "pound", "buy", "police", "nurse", "mayor", "ambassador", "sheriff", "artist", "operator",
+    "commission", "proposal"
+  ],
+  "education": [
+    "student", "learning", "reading", "read", "write", "teach", "word", "text", "grammar", "accent",
+    "translation", "meaning", "answer", "explain", "understand", "library", "academy", "degree", "chapter",
+    "conversation", "talk", "ask"
+  ],
+  "it": [
+    "system", "program", "network", "app", "screen", "mobile", "icon", "user", "update", "battery", "electronic",
+    "cable", "plug", "error", "copy", "telephone", "image"
+  ],
+  "travel": [
+    "country", "trip", "flight", "aircraft", "train", "station", "traffic", "accident", "bridge", "exit",
+    "north", "south", "east", "west", "eastern", "western", "southern", "distance", "mile", "embassy", "vessel",
+    "region", "park", "square", "tower", "district", "bag", "world"
+  ],
+  "nature": [
+    "water", "air", "sea", "lake", "island", "beach", "mountain", "star", "snow", "storm", "sand", "dust",
+    "desert", "rose", "oak", "species", "environment", "natural", "wild", "metal", "silver", "diamond", "coal",
+    "warm", "hot"
+  ],
+  "animals": [
+    "cat", "bird", "fox", "wolf", "tiger", "lion", "sheep", "pig", "deer", "mouse", "jay", "beast", "wing",
+    "horn"
+  ],
+  "colors": ["red", "blue", "green", "purple", "dark"],
+  "clothes": ["hood", "cotton"],
+  "hobbies": [
+    "play", "ball", "club", "dance", "basketball", "cricket", "movie", "hearts", "kick", "win", "lose",
+    "champion", "runner", "exercise", "portrait", "instrument", "classical", "vocal", "magic", "animation",
+    "paint", "newspaper", "magazine"
+  ],
+  "feelings": [
+    "love", "happy", "wish", "peace", "proud", "disappointed", "terror", "beautiful", "wonderful", "like",
+    "forgive"
+  ],
+  "numbers": ["number", "half", "pair", "ton"]
+}

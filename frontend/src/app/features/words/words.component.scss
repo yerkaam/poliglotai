@@ -136,6 +136,12 @@
   text-decoration: underline dotted;
   text-underline-offset: 4px;
 }
+.credit {
+  font-size: 12px;
+  a {
+    font-weight: 500;
+  }
+}
 .to-table {
   display: inline-flex;
   align-items: center;

@@ -30,6 +30,7 @@ export interface Word {
   example_kk: string;
   topic: string;
   course_step: number | null;
+  source: 'course' | 'chat' | 'wiktionary';
   status: WordStatus;
   stage: number;
 }

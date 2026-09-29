@@ -20,11 +20,13 @@ class Vocabulary(models.Model):
     class Source(models.TextChoices):
         COURSE = "course", "Курс"
         CHAT = "chat", "AI-чат"
+        WIKTIONARY = "wiktionary", "Wiktionary (CC BY-SA)"
 
     word = models.CharField(max_length=60, unique=True)
     translation_kk = models.CharField(max_length=120)
     ipa = models.CharField(max_length=60, blank=True)
     is_verb = models.BooleanField(default=True)
+    pos = models.CharField("part of speech", max_length=10, blank=True)
     past_form = models.CharField(
         max_length=60, blank=True, help_text="Only for irregular verbs, or a regular verb with an unusual spelling."
     )

@@ -28,6 +28,7 @@ class VocabularySerializer(serializers.ModelSerializer):
             "example_kk",
             "topic",
             "course_step",
+            "source",
             "status",
             "stage",
         ]

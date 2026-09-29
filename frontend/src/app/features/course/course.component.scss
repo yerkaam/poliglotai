@@ -225,3 +225,11 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.credits {
+  font-size: 12px;
+  padding-top: 0;
+  a {
+    font-weight: 500;
+  }
+}

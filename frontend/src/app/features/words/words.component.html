@@ -63,6 +63,11 @@
                   <br /><span class="muted">{{ item.word.example_kk }}</span>
                 </p>
               }
+              @if (item.word.source === 'wiktionary') {
+                <small class="credit muted">
+                  <ng-container i18n>Аударма:</ng-container>&ngsp;<a href="https://en.wiktionary.org/wiki/{{ item.word.word }}" target="_blank" rel="noopener">Wiktionary</a>, CC BY-SA
+                </small>
+              }
               @if (item.word.is_verb) {
                 <a class="to-table" routerLink="/table" [queryParams]="{ verb: item.word.word }">
                   <ng-container i18n>Кестеде 9 форманың бәрін көру</ng-container>

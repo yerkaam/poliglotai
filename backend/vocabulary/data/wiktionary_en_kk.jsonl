@@ -1,0 +1,444 @@
+{"word": "and", "rank": 3, "pos": "conj", "translation_kk": "және, әрі, мен", "ipa": "/ˈænd/", "past": "", "topic": ""}
+{"word": "you", "rank": 11, "pos": "pron", "translation_kk": "сен, сіз", "ipa": "/ju/", "past": "", "topic": ""}
+{"word": "this", "rank": 15, "pos": "det", "translation_kk": "бұл", "ipa": "/ðɪs/", "past": "", "topic": ""}
+{"word": "we", "rank": 29, "pos": "pron", "translation_kk": "біз", "ipa": "/wiː/", "past": "", "topic": ""}
+{"word": "they", "rank": 35, "pos": "pron", "translation_kk": "олар, ол", "ipa": "/ˈðeɪ̯/", "past": "", "topic": ""}
+{"word": "if", "rank": 37, "pos": "conj", "translation_kk": "егер", "ipa": "/ɪf/", "past": "", "topic": ""}
+{"word": "like", "rank": 42, "pos": "verb", "translation_kk": "ұнату, жарату", "ipa": "/laɪ̯k/", "past": "liked", "topic": "feelings"}
+{"word": "when", "rank": 48, "pos": "adv", "translation_kk": "қашан", "ipa": "/ˈwɛn/", "past": "", "topic": "time"}
+{"word": "there", "rank": 57, "pos": "adv", "translation_kk": "сонда, анда, онда", "ipa": "/ðə(ɹ)/", "past": "", "topic": ""}
+{"word": "time", "rank": 60, "pos": "noun", "translation_kk": "уақыт, шақ", "ipa": "/taɪm/", "past": "", "topic": "time"}
+{"word": "she", "rank": 64, "pos": "pron", "translation_kk": "ол", "ipa": "/ʃiː/", "past": "", "topic": ""}
+{"word": "new", "rank": 65, "pos": "adj", "translation_kk": "жаңа", "ipa": "/n(j)ʉw/", "past": "", "topic": ""}
+{"word": "them", "rank": 71, "pos": "pron", "translation_kk": "оларды", "ipa": "/ˈðɛm/", "past": "", "topic": ""}
+{"word": "our", "rank": 76, "pos": "det", "translation_kk": "біздің", "ipa": "/ˈaʊə(ɹ)/", "past": "", "topic": ""}
+{"word": "see", "rank": 85, "pos": "verb", "translation_kk": "көру, қарау", "ipa": "/siː/", "past": "saw", "topic": ""}
+{"word": "back", "rank": 93, "pos": "noun", "translation_kk": "арқа", "ipa": "/bæk/", "past": "", "topic": ""}
+{"word": "most", "rank": 104, "pos": "adv", "translation_kk": "ең", "ipa": "/ˈməʊst/", "past": "", "topic": ""}
+{"word": "where", "rank": 107, "pos": "adv", "translation_kk": "қайда", "ipa": "/wɛː/", "past": "", "topic": ""}
+{"word": "here", "rank": 111, "pos": "adv", "translation_kk": "мында, бұнда", "ipa": "/ˈhɪə̯/", "past": "", "topic": ""}
+{"word": "work", "rank": 116, "pos": "verb", "translation_kk": "жұмыс істеу, істеу", "ipa": "/wɜːk/", "past": "worked", "topic": "work"}
+{"word": "year", "rank": 117, "pos": "noun", "translation_kk": "жыл", "ipa": "/jɪə/", "past": "", "topic": "time"}
+{"word": "day", "rank": 120, "pos": "noun", "translation_kk": "күн, тәулік", "ipa": "/deɪ̯/", "past": "", "topic": "time"}
+{"word": "why", "rank": 125, "pos": "adv", "translation_kk": "неге", "ipa": "/waɪ̯/", "past": "", "topic": ""}
+{"word": "take", "rank": 128, "pos": "verb", "translation_kk": "алу, таңдау", "ipa": "/ˈteɪ̯k/", "past": "took", "topic": ""}
+{"word": "life", "rank": 134, "pos": "noun", "translation_kk": "өмір, тұрмыс", "ipa": "/ˈlaɪ̯f/", "past": "", "topic": ""}
+{"word": "world", "rank": 136, "pos": "noun", "translation_kk": "әлем, дүние, жаһан", "ipa": "/wɜːld/", "past": "", "topic": "travel"}
+{"word": "while", "rank": 144, "pos": "noun", "translation_kk": "сол уақытта", "ipa": "/ʍaɪl/", "past": "", "topic": ""}
+{"word": "love", "rank": 147, "pos": "noun", "translation_kk": "ғашықтық, махаббат, сүйіс", "ipa": "/ˈlʌv/", "past": "", "topic": "feelings"}
+{"word": "man", "rank": 148, "pos": "noun", "translation_kk": "ер, еркек, ер адам", "ipa": "/ˈmæn/", "past": "", "topic": "family"}
+{"word": "home", "rank": 149, "pos": "noun", "translation_kk": "үй", "ipa": "/həʊm/", "past": "", "topic": "home"}
+{"word": "long", "rank": 150, "pos": "adj", "translation_kk": "ұзын", "ipa": "/lɒŋ/", "past": "", "topic": ""}
+{"word": "look", "rank": 151, "pos": "verb", "translation_kk": "қарау", "ipa": "[lɵk]", "past": "looked", "topic": ""}
+{"word": "come", "rank": 161, "pos": "verb", "translation_kk": "келу", "ipa": "/kʌm/", "past": "came", "topic": ""}
+{"word": "state", "rank": 163, "pos": "noun", "translation_kk": "жағдай", "ipa": "/steɪt/", "past": "", "topic": ""}
+{"word": "old", "rank": 174, "pos": "adj", "translation_kk": "ескі, кәрі", "ipa": "/əʊld/", "past": "", "topic": ""}
+{"word": "house", "rank": 186, "pos": "noun", "translation_kk": "үй", "ipa": "/haʊ̯s/", "past": "", "topic": "home"}
+{"word": "show", "rank": 199, "pos": "verb", "translation_kk": "көрсету, қарату", "ipa": "/ʃəʊ/", "past": "showed", "topic": ""}
+{"word": "family", "rank": 205, "pos": "noun", "translation_kk": "от басы, әулет, семья", "ipa": "/ˈfæm(ɪ)li/", "past": "", "topic": "family"}
+{"word": "please", "rank": 208, "pos": "intj", "translation_kk": "тәңір жарылқасын, мархабат", "ipa": "/pliːz/", "past": "", "topic": ""}
+{"word": "number", "rank": 216, "pos": "noun", "translation_kk": "нөмір", "ipa": "[ˈnʌmbə]", "past": "", "topic": "numbers"}
+{"word": "play", "rank": 222, "pos": "noun", "translation_kk": "ойын", "ipa": "/pleɪ̯/ [pɫ̥eɪ̯ ~ pʰɫeɪ̯]", "past": "", "topic": "hobbies"}
+{"word": "company", "rank": 224, "pos": "noun", "translation_kk": "компания, фирма", "ipa": "/ˈkʌmp(ə)ni/", "past": "", "topic": "work"}
+{"word": "real", "rank": 229, "pos": "adj", "translation_kk": "нағыз", "ipa": "/ɹiːl/", "past": "", "topic": ""}
+{"word": "god", "rank": 239, "pos": "noun", "translation_kk": "құдай, құдірет", "ipa": "/ɡɒd/", "past": "", "topic": ""}
+{"word": "public", "rank": 243, "pos": "adj", "translation_kk": "қоғамдық", "ipa": "/ˈpʌb.lɪk/", "past": "", "topic": ""}
+{"word": "system", "rank": 249, "pos": "noun", "translation_kk": "жүйе", "ipa": "/ˈsɪstəm/", "past": "", "topic": "it"}
+{"word": "week", "rank": 251, "pos": "noun", "translation_kk": "апта, жұма", "ipa": "/wiːk/", "past": "", "topic": "time"}
+{"word": "person", "rank": 257, "pos": "noun", "translation_kk": "адам, кісі", "ipa": "/ˈpɜː.sən/", "past": "", "topic": "family"}
+{"word": "today", "rank": 258, "pos": "noun", "translation_kk": "бүгінгі күн", "ipa": "/tʊˈdeɪ/", "past": "", "topic": "time"}
+{"word": "enough", "rank": 260, "pos": "det", "translation_kk": "жеткілікті", "ipa": "/ɪˈnʌf/", "past": "", "topic": ""}
+{"word": "live", "rank": 263, "pos": "verb", "translation_kk": "тұру", "ipa": "/ˈlɪv/", "past": "lived", "topic": ""}
+{"word": "read", "rank": 266, "pos": "verb", "translation_kk": "оқу", "ipa": "/ɹiːd/", "past": "read", "topic": "education"}
+{"word": "water", "rank": 284, "pos": "noun", "translation_kk": "су", "ipa": "/ˈwɔː.tə/", "past": "", "topic": "nature"}
+{"word": "head", "rank": 288, "pos": "noun", "translation_kk": "бас, кәллә", "ipa": "/hɛd/", "past": "", "topic": "body"}
+{"word": "small", "rank": 291, "pos": "adj", "translation_kk": "кіші, кішкене, ұсақ", "ipa": "/smɔːl/", "past": "", "topic": ""}
+{"word": "line", "rank": 306, "pos": "noun", "translation_kk": "сызық, жол", "ipa": "/laɪn/", "past": "", "topic": ""}
+{"word": "run", "rank": 309, "pos": "verb", "translation_kk": "жүгіру", "ipa": "/ɹʌn/", "past": "ran", "topic": ""}
+{"word": "country", "rank": 313, "pos": "noun", "translation_kk": "ел", "ipa": "/ˈkʌntɹi/", "past": "", "topic": "travel"}
+{"word": "open", "rank": 314, "pos": "adj", "translation_kk": "ашу", "ipa": "/ˈəʊ.pən/", "past": "", "topic": ""}
+{"word": "season", "rank": 315, "pos": "noun", "translation_kk": "жыл мезгілдері, маусым, мерзім", "ipa": "[ˈsiː.zn̩]", "past": "", "topic": "time"}
+{"word": "law", "rank": 329, "pos": "noun", "translation_kk": "заң, құқық", "ipa": "/lɔː/", "past": "", "topic": ""}
+{"word": "war", "rank": 332, "pos": "noun", "translation_kk": "соғыс", "ipa": "/wɔː/", "past": "", "topic": ""}
+{"word": "post", "rank": 360, "pos": "noun", "translation_kk": "бағана", "ipa": "/pəʊst/", "past": "", "topic": ""}
+{"word": "talk", "rank": 368, "pos": "noun", "translation_kk": "сөйлесім, әңгіме, сұхбат", "ipa": "/tɔːk/", "past": "", "topic": "education"}
+{"word": "court", "rank": 370, "pos": "noun", "translation_kk": "аула, корт", "ipa": "/ˈkɔːt/", "past": "", "topic": ""}
+{"word": "half", "rank": 374, "pos": "noun", "translation_kk": "жарты, жарым", "ipa": "/ˈhɑːf/", "past": "", "topic": "numbers"}
+{"word": "mind", "rank": 378, "pos": "noun", "translation_kk": "ақыл", "ipa": "/maɪnd/", "past": "", "topic": ""}
+{"word": "death", "rank": 385, "pos": "noun", "translation_kk": "өлім, ажал, қаза", "ipa": "/dɛθ/", "past": "", "topic": ""}
+{"word": "office", "rank": 389, "pos": "noun", "translation_kk": "діни жора, кеңсе, құжатхана", "ipa": "/ˈɒf.ɪs/", "past": "", "topic": "work"}
+{"word": "problem", "rank": 391, "pos": "noun", "translation_kk": "мәселе, проблема", "ipa": "/ˈpɹɒbləm/", "past": "", "topic": ""}
+{"word": "south", "rank": 392, "pos": "noun", "translation_kk": "оңтүстік", "ipa": "/ˈsaʊ̯θ/", "past": "", "topic": "travel"}
+{"word": "win", "rank": 408, "pos": "verb", "translation_kk": "жеңу", "ipa": "/ˈwɪn/", "past": "won", "topic": "hobbies"}
+{"word": "wrong", "rank": 409, "pos": "adj", "translation_kk": "теріс", "ipa": "/ˈɹɒŋ/", "past": "", "topic": ""}
+{"word": "matter", "rank": 415, "pos": "noun", "translation_kk": "материя, зат", "ipa": "/ˈmætə/", "past": "", "topic": ""}
+{"word": "air", "rank": 418, "pos": "noun", "translation_kk": "ауа", "ipa": "/ˈɛə̯/", "past": "", "topic": "nature"}
+{"word": "hit", "rank": 421, "pos": "verb", "translation_kk": "ұру, соғу", "ipa": "/hɪt/", "past": "hit", "topic": ""}
+{"word": "understand", "rank": 427, "pos": "verb", "translation_kk": "түсіну, ұғу", "ipa": "/ˌʌndəˈstænd/", "past": "understood", "topic": "education"}
+{"word": "happy", "rank": 443, "pos": "adj", "translation_kk": "бақытты, аруақты, базарлы", "ipa": "/ˈhæpi/", "past": "", "topic": "feelings"}
+{"word": "human", "rank": 444, "pos": "noun", "translation_kk": "адам, кісі", "ipa": "/ˈhjuː.mən/", "past": "", "topic": "family"}
+{"word": "woman", "rank": 452, "pos": "noun", "translation_kk": "қатын, әйел", "ipa": "/ˈwʊmən/", "past": "", "topic": "family"}
+{"word": "ask", "rank": 453, "pos": "verb", "translation_kk": "өтіну", "ipa": "/ɑːsk/", "past": "asked", "topic": "education"}
+{"word": "north", "rank": 458, "pos": "noun", "translation_kk": "солтүстік", "ipa": "/nɔːθ/", "past": "", "topic": "travel"}
+{"word": "saw", "rank": 459, "pos": "noun", "translation_kk": "ара", "ipa": "/sɔː/", "past": "", "topic": "home"}
+{"word": "light", "rank": 467, "pos": "adj", "translation_kk": "жеңіл", "ipa": "[laɪt]", "past": "", "topic": ""}
+{"word": "low", "rank": 468, "pos": "adj", "translation_kk": "аласа", "ipa": "/ˈləʊ/", "past": "", "topic": ""}
+{"word": "morning", "rank": 470, "pos": "noun", "translation_kk": "таң, таңертең, ерте", "ipa": "/ˈmɔːnɪŋ/", "past": "", "topic": "time"}
+{"word": "police", "rank": 471, "pos": "noun", "translation_kk": "полиция, милиция", "ipa": "/pəˈliːs/", "past": "", "topic": "work"}
+{"word": "buy", "rank": 476, "pos": "verb", "translation_kk": "сатып алу", "ipa": "[baɪ]", "past": "bought", "topic": "work"}
+{"word": "reason", "rank": 479, "pos": "noun", "translation_kk": "себеп", "ipa": "/ˈɹiːzən/", "past": "", "topic": ""}
+{"word": "red", "rank": 480, "pos": "adj", "translation_kk": "қызыл", "ipa": "/ɹɛd/", "past": "", "topic": "colors"}
+{"word": "west", "rank": 521, "pos": "noun", "translation_kk": "күнбатыс, батыс, құбыла", "ipa": "/wɛst/", "past": "", "topic": "travel"}
+{"word": "ready", "rank": 532, "pos": "adj", "translation_kk": "даяр, дайын", "ipa": "/ˈɹɛd.i/", "past": "", "topic": ""}
+{"word": "son", "rank": 534, "pos": "noun", "translation_kk": "ұл", "ipa": "/sʌn/", "past": "", "topic": "family"}
+{"word": "current", "rank": 539, "pos": "noun", "translation_kk": "ток, электр тогы", "ipa": "/ˈkʌɹənt/", "past": "", "topic": ""}
+{"word": "program", "rank": 545, "pos": "noun", "translation_kk": "бағдарлама, программа", "ipa": "/ˈpɹəʊ̯ˌɡɹæm/", "past": "", "topic": "it"}
+{"word": "baby", "rank": 547, "pos": "noun", "translation_kk": "бала, сәби, бөбек", "ipa": "/ˈbeɪ.bi/", "past": "", "topic": "family"}
+{"word": "word", "rank": 555, "pos": "noun", "translation_kk": "сөз", "ipa": "/wɜːd/", "past": "", "topic": "education"}
+{"word": "field", "rank": 571, "pos": "noun", "translation_kk": "дала", "ipa": "/ˈfi(ː)ld/", "past": "", "topic": ""}
+{"word": "department", "rank": 583, "pos": "noun", "translation_kk": "бөлім", "ipa": "/dɪˈpɑːtm(ə)nt/", "past": "", "topic": "work"}
+{"word": "force", "rank": 587, "pos": "noun", "translation_kk": "күш", "ipa": "/fɔːs/", "past": "", "topic": ""}
+{"word": "hear", "rank": 588, "pos": "verb", "translation_kk": "есту", "ipa": "/ˈhɪə/", "past": "heard", "topic": ""}
+{"word": "beautiful", "rank": 604, "pos": "adj", "translation_kk": "әдемі, әсем, сұлу", "ipa": "/ˈbjuːtɪ.fəl/", "past": "", "topic": "feelings"}
+{"word": "period", "rank": 623, "pos": "noun", "translation_kk": "кезең", "ipa": "/ˈpɪə.ɹi.əd/", "past": "", "topic": "time"}
+{"word": "record", "rank": 625, "pos": "noun", "translation_kk": "табақ, граммофон табағы", "ipa": "/ˈɹɛk.ɔːd/", "past": "", "topic": ""}
+{"word": "club", "rank": 630, "pos": "noun", "translation_kk": "клуб", "ipa": "/klʌb/", "past": "", "topic": "hobbies"}
+{"word": "center", "rank": 649, "pos": "noun", "translation_kk": "орта", "ipa": "/ˈsɛn.təː/", "past": "", "topic": ""}
+{"word": "dead", "rank": 652, "pos": "adj", "translation_kk": "өлі", "ipa": "/dɛd/", "past": "", "topic": ""}
+{"word": "star", "rank": 666, "pos": "noun", "translation_kk": "жұлдыз", "ipa": "/stɑː(ɹ)/", "past": "", "topic": "nature"}
+{"word": "break", "rank": 670, "pos": "verb", "translation_kk": "сындыру, сыну, уақтау", "ipa": "/bɹeɪk/", "past": "broke", "topic": ""}
+{"word": "hour", "rank": 675, "pos": "noun", "translation_kk": "сағат", "ipa": "/aʊə/", "past": "", "topic": "time"}
+{"word": "wish", "rank": 685, "pos": "noun", "translation_kk": "тілек", "ipa": "/ˈwɪʃ/", "past": "", "topic": "feelings"}
+{"word": "answer", "rank": 687, "pos": "noun", "translation_kk": "жауап", "ipa": "/ˈɑːn.sə/", "past": "", "topic": "education"}
+{"word": "interest", "rank": 695, "pos": "noun", "translation_kk": "қызығу", "ipa": "/ˈɪn.tɹɛst/", "past": "", "topic": ""}
+{"word": "king", "rank": 697, "pos": "noun", "translation_kk": "хан, король, патша", "ipa": "/ˈkɪŋɡ/", "past": "", "topic": "family"}
+{"word": "east", "rank": 709, "pos": "noun", "translation_kk": "шығыс, күншығыс", "ipa": "/ɪjst/", "past": "", "topic": "travel"}
+{"word": "hot", "rank": 711, "pos": "adj", "translation_kk": "ыстық", "ipa": "/hɒt/", "past": "", "topic": "nature"}
+{"word": "movie", "rank": 715, "pos": "noun", "translation_kk": "фильм, кино, кинокартина", "ipa": "/ˈmuːvi/", "past": "", "topic": "hobbies"}
+{"word": "park", "rank": 717, "pos": "noun", "translation_kk": "саябақ", "ipa": "/pɑːk/", "past": "", "topic": "travel"}
+{"word": "official", "rank": 749, "pos": "adj", "translation_kk": "ресми", "ipa": "/əˈfɪʃəl/", "past": "", "topic": ""}
+{"word": "reading", "rank": 753, "pos": "noun", "translation_kk": "оқу", "ipa": "/ˈɹiːdɪŋ/", "past": "", "topic": "education"}
+{"word": "blue", "rank": 761, "pos": "adj", "translation_kk": "көк", "ipa": "/bluː/", "past": "", "topic": "colors"}
+{"word": "green", "rank": 771, "pos": "adj", "translation_kk": "жасыл, көк", "ipa": "/ˈɡɹiːn/", "past": "", "topic": "colors"}
+{"word": "model", "rank": 775, "pos": "noun", "translation_kk": "үлгі, модель", "ipa": "/ˈmɒd.l̩/", "past": "", "topic": ""}
+{"word": "forward", "rank": 785, "pos": "adv", "translation_kk": "алға", "ipa": "/ˈfɔːwəd/", "past": "", "topic": ""}
+{"word": "key", "rank": 788, "pos": "noun", "translation_kk": "кілт", "ipa": "/kiː/", "past": "", "topic": "home"}
+{"word": "brother", "rank": 801, "pos": "noun", "translation_kk": "аға, іні", "ipa": "/ˈbɹʌðə/", "past": "", "topic": "family"}
+{"word": "natural", "rank": 813, "pos": "adj", "translation_kk": "табиғи", "ipa": "/ˈnæt͡ʃ.(ə.)ɹəl/", "past": "", "topic": "nature"}
+{"word": "vote", "rank": 820, "pos": "noun", "translation_kk": "дауыс, вотум", "ipa": "/vəʊt/", "past": "", "topic": ""}
+{"word": "lord", "rank": 832, "pos": "noun", "translation_kk": "әмірші", "ipa": "/lɔːd/", "past": "", "topic": ""}
+{"word": "attack", "rank": 842, "pos": "noun", "translation_kk": "шабуыл", "ipa": "/əˈtæk/", "past": "", "topic": ""}
+{"word": "perhaps", "rank": 854, "pos": "adv", "translation_kk": "мүмкін", "ipa": "/pəˈhæps/", "past": "", "topic": ""}
+{"word": "council", "rank": 866, "pos": "noun", "translation_kk": "кеңес, мәжіліс", "ipa": "/ˈkaʊn.səl/", "past": "", "topic": ""}
+{"word": "lose", "rank": 879, "pos": "verb", "translation_kk": "жоғалту", "ipa": "/luːz/", "past": "lost", "topic": "hobbies"}
+{"word": "sign", "rank": 885, "pos": "noun", "translation_kk": "белгі, таңба", "ipa": "/saɪn/", "past": "", "topic": ""}
+{"word": "simple", "rank": 886, "pos": "adj", "translation_kk": "қарапайым, жеңіл", "ipa": "/ˈsɪm.pəl/", "past": "", "topic": ""}
+{"word": "bed", "rank": 893, "pos": "noun", "translation_kk": "кереует, төсек", "ipa": "/bɛd/", "past": "", "topic": "home"}
+{"word": "die", "rank": 902, "pos": "verb", "translation_kk": "өлу", "ipa": "[däɪ̯]", "past": "died", "topic": ""}
+{"word": "whose", "rank": 919, "pos": "det", "translation_kk": "кімнің", "ipa": "/huːz/", "past": "", "topic": ""}
+{"word": "army", "rank": 921, "pos": "noun", "translation_kk": "әскер", "ipa": "/ˈɑː.mi/", "past": "", "topic": ""}
+{"word": "practice", "rank": 931, "pos": "noun", "translation_kk": "іс-тәжірибе, тәжірибе", "ipa": "/ˈpɹæktɪs/", "past": "", "topic": ""}
+{"word": "sea", "rank": 933, "pos": "noun", "translation_kk": "теңіз", "ipa": "/siː/", "past": "", "topic": "nature"}
+{"word": "risk", "rank": 955, "pos": "noun", "translation_kk": "тәуекел", "ipa": "/ɹɪsk/", "past": "", "topic": ""}
+{"word": "table", "rank": 958, "pos": "noun", "translation_kk": "үстел, стол", "ipa": "[ˈt(ʰ)eɪbɫ̩]", "past": "", "topic": "home"}
+{"word": "ball", "rank": 961, "pos": "noun", "translation_kk": "доп, шар", "ipa": "/bɔːl/", "past": "", "topic": "hobbies"}
+{"word": "dark", "rank": 966, "pos": "adj", "translation_kk": "қараңғы", "ipa": "/dɑːk/", "past": "", "topic": "colors"}
+{"word": "district", "rank": 967, "pos": "noun", "translation_kk": "аудан", "ipa": "/ˈdɪstɹɪkt/", "past": "", "topic": "travel"}
+{"word": "pain", "rank": 996, "pos": "noun", "translation_kk": "ауру, жара, сыздау", "ipa": "/ˈpeɪ̯n/", "past": "", "topic": "body"}
+{"word": "write", "rank": 1008, "pos": "verb", "translation_kk": "жазу", "ipa": "[ɹaɪt]", "past": "wrote", "topic": "education"}
+{"word": "create", "rank": 1014, "pos": "verb", "translation_kk": "жарату, жасау, құру", "ipa": "/kɹiːˈeɪt/", "past": "created", "topic": ""}
+{"word": "network", "rank": 1023, "pos": "noun", "translation_kk": "тор", "ipa": "/ˈnɛt.wɜːk/", "past": "", "topic": "it"}
+{"word": "peace", "rank": 1024, "pos": "noun", "translation_kk": "бейбітшілік, тыныштық", "ipa": "/ˈpiːs/", "past": "", "topic": "feelings"}
+{"word": "student", "rank": 1031, "pos": "noun", "translation_kk": "студент", "ipa": "/ˈstjuː.dn̩t/", "past": "", "topic": "education"}
+{"word": "gas", "rank": 1051, "pos": "noun", "translation_kk": "газ", "ipa": "/ɡæs/", "past": "", "topic": ""}
+{"word": "island", "rank": 1052, "pos": "noun", "translation_kk": "арал, атау", "ipa": "/ˈaɪlənd/", "past": "", "topic": "nature"}
+{"word": "normal", "rank": 1054, "pos": "adj", "translation_kk": "қалыпты", "ipa": "/ˈnɔː.məl/", "past": "", "topic": ""}
+{"word": "station", "rank": 1061, "pos": "noun", "translation_kk": "станция, бекет, станса", "ipa": "/ˈsteɪʃən/", "past": "", "topic": "travel"}
+{"word": "text", "rank": 1062, "pos": "noun", "translation_kk": "мәтін", "ipa": "/tɛkst/", "past": "", "topic": "education"}
+{"word": "western", "rank": 1064, "pos": "adj", "translation_kk": "батыс", "ipa": "/ˈwɛstən/", "past": "", "topic": "travel"}
+{"word": "female", "rank": 1076, "pos": "noun", "translation_kk": "ұрғашы", "ipa": "/ˈfiː.meɪl/", "past": "", "topic": "family"}
+{"word": "region", "rank": 1095, "pos": "noun", "translation_kk": "аймақ", "ipa": "/ˈɹiːd͡ʒən/", "past": "", "topic": "travel"}
+{"word": "drop", "rank": 1103, "pos": "noun", "translation_kk": "тамшы", "ipa": "/dɹɒp/", "past": "", "topic": ""}
+{"word": "kid", "rank": 1107, "pos": "noun", "translation_kk": "лақ", "ipa": "/ˈkɪd/", "past": "", "topic": "family"}
+{"word": "clean", "rank": 1135, "pos": "adj", "translation_kk": "таза, саф", "ipa": "/kliːn/", "past": "", "topic": "home"}
+{"word": "heavy", "rank": 1170, "pos": "adj", "translation_kk": "ауыр", "ipa": "/ˈhɛv.i/", "past": "", "topic": ""}
+{"word": "train", "rank": 1176, "pos": "noun", "translation_kk": "пойыз", "ipa": "/ˈtɹeɪn/", "past": "", "topic": "travel"}
+{"word": "lady", "rank": 1194, "pos": "noun", "translation_kk": "ханым", "ipa": "/ˈleɪ.di/", "past": "", "topic": "family"}
+{"word": "product", "rank": 1204, "pos": "noun", "translation_kk": "өнім", "ipa": "/ˈpɹɒd.əkt/", "past": "", "topic": "work"}
+{"word": "sister", "rank": 1207, "pos": "noun", "translation_kk": "апа, әпеке, әпке", "ipa": "/ˈsɪs.tə(ɹ)/", "past": "", "topic": "family"}
+{"word": "brain", "rank": 1215, "pos": "noun", "translation_kk": "ми", "ipa": "/ˈbɹeɪ̯n/", "past": "", "topic": "body"}
+{"word": "degree", "rank": 1217, "pos": "noun", "translation_kk": "градус, дәреже", "ipa": "/dɪˈɡɹiː/", "past": "", "topic": "education"}
+{"word": "image", "rank": 1225, "pos": "noun", "translation_kk": "сурет, пішін, кескін", "ipa": "/ˈɪm.ɪd͡ʒ/", "past": "", "topic": "it"}
+{"word": "dance", "rank": 1246, "pos": "noun", "translation_kk": "би", "ipa": "/dɑːns/", "past": "", "topic": "hobbies"}
+{"word": "beach", "rank": 1263, "pos": "noun", "translation_kk": "жағажай", "ipa": "/biːt͡ʃ/", "past": "", "topic": "nature"}
+{"word": "learning", "rank": 1276, "pos": "noun", "translation_kk": "оқу, оқыту", "ipa": "/ˈlɜːnɪŋ/", "past": "", "topic": "education"}
+{"word": "operation", "rank": 1279, "pos": "noun", "translation_kk": "амал", "ipa": "/ˌɒp.əˈɹeɪ.ʃən/", "past": "", "topic": ""}
+{"word": "spring", "rank": 1286, "pos": "noun", "translation_kk": "көктем", "ipa": "/ˈspɹɪŋ/", "past": "", "topic": "time"}
+{"word": "commission", "rank": 1299, "pos": "noun", "translation_kk": "комиссия", "ipa": "/kəˈmɪʃən/", "past": "", "topic": "work"}
+{"word": "direct", "rank": 1302, "pos": "verb", "translation_kk": "режиссерлік ету", "ipa": "/daɪˈɹɛkt/", "past": "directed", "topic": ""}
+{"word": "rich", "rank": 1318, "pos": "adj", "translation_kk": "бай, дәулетті", "ipa": "/ˈɹɪt͡ʃ/", "past": "", "topic": ""}
+{"word": "skin", "rank": 1319, "pos": "noun", "translation_kk": "тері", "ipa": "/skɪn/", "past": "", "topic": "body"}
+{"word": "sweet", "rank": 1322, "pos": "adj", "translation_kk": "тәтті", "ipa": "/swiːt/", "past": "", "topic": "food"}
+{"word": "grow", "rank": 1344, "pos": "verb", "translation_kk": "өсу", "ipa": "/ˈɡɹəʊ/", "past": "grew", "topic": ""}
+{"word": "trip", "rank": 1356, "pos": "noun", "translation_kk": "сапар, саяхат", "ipa": "/tɹɪp/", "past": "", "topic": "travel"}
+{"word": "explain", "rank": 1365, "pos": "verb", "translation_kk": "түсіндіру", "ipa": "/ɪkˈspleɪn/", "past": "explained", "topic": "education"}
+{"word": "male", "rank": 1371, "pos": "noun", "translation_kk": "ер, еркек", "ipa": "/meɪl/", "past": "", "topic": "family"}
+{"word": "block", "rank": 1386, "pos": "noun", "translation_kk": "блок", "ipa": "/blɒk/", "past": "", "topic": ""}
+{"word": "nation", "rank": 1400, "pos": "noun", "translation_kk": "ұлт, ұлыс", "ipa": "/ˈneɪʃən/", "past": "", "topic": ""}
+{"word": "environment", "rank": 1424, "pos": "noun", "translation_kk": "айнала, орта, төңірек", "ipa": "/ɪnˈvaɪ.ɹə.mənt/", "past": "", "topic": "nature"}
+{"word": "foot", "rank": 1426, "pos": "noun", "translation_kk": "аяқ", "ipa": "/fʊt/", "past": "", "topic": "body"}
+{"word": "mass", "rank": 1428, "pos": "noun", "translation_kk": "масса", "ipa": "/mæs/", "past": "", "topic": ""}
+{"word": "meaning", "rank": 1429, "pos": "noun", "translation_kk": "мағына", "ipa": "/ˈmiː.nɪŋ/", "past": "", "topic": "education"}
+{"word": "app", "rank": 1445, "pos": "noun", "translation_kk": "қосымша, қолданба", "ipa": "/æp/", "past": "", "topic": "it"}
+{"word": "condition", "rank": 1450, "pos": "noun", "translation_kk": "ахуал, жағдай, күй", "ipa": "/kənˈdɪʃ(ə)n/", "past": "", "topic": ""}
+{"word": "evening", "rank": 1452, "pos": "noun", "translation_kk": "кеш, кешкілік", "ipa": "/ˈiːv.nɪŋ/", "past": "", "topic": "time"}
+{"word": "flight", "rank": 1453, "pos": "noun", "translation_kk": "ұшу", "ipa": "/ˈflaɪ̯t/", "past": "", "topic": "travel"}
+{"word": "library", "rank": 1459, "pos": "noun", "translation_kk": "дерекхана", "ipa": "/ˈlaɪ.bɹi/", "past": "", "topic": "education"}
+{"word": "murder", "rank": 1462, "pos": "noun", "translation_kk": "өлтіру, кісі өлтіру", "ipa": "/ˈmɜːdə(ɹ)/", "past": "", "topic": ""}
+{"word": "channel", "rank": 1478, "pos": "noun", "translation_kk": "канал", "ipa": "/ˈt͡ʃænəl/", "past": "", "topic": ""}
+{"word": "distance", "rank": 1479, "pos": "noun", "translation_kk": "арақашықтық, қашықтық, ара", "ipa": "/ˈdɪst(ə)n(t)s/", "past": "", "topic": "travel"}
+{"word": "fat", "rank": 1482, "pos": "noun", "translation_kk": "май", "ipa": "/ˈfæt/", "past": "", "topic": "body"}
+{"word": "mobile", "rank": 1488, "pos": "adj", "translation_kk": "қозғалғыш", "ipa": "/ˈməʊ.baɪl/", "past": "", "topic": "it"}
+{"word": "screen", "rank": 1501, "pos": "noun", "translation_kk": "бейнебет, экран", "ipa": "/ˈskɹiːn/", "past": "", "topic": "it"}
+{"word": "species", "rank": 1505, "pos": "noun", "translation_kk": "түр", "ipa": "/ˈspiːʃiːz/", "past": "", "topic": "nature"}
+{"word": "traffic", "rank": 1507, "pos": "noun", "translation_kk": "қозғалыс", "ipa": "/ˈtɹæfɪk/", "past": "", "topic": "travel"}
+{"word": "wonderful", "rank": 1514, "pos": "adj", "translation_kk": "таңғажайып, ғажайып", "ipa": "/ˈwʌndəfl̩/", "past": "", "topic": "feelings"}
+{"word": "partner", "rank": 1532, "pos": "noun", "translation_kk": "серіктес, серік", "ipa": "/ˈpɑːt.nə(ɹ)/", "past": "", "topic": "family"}
+{"word": "southern", "rank": 1540, "pos": "adj", "translation_kk": "оңтүстік", "ipa": "/ˈsʌðən/", "past": "", "topic": "travel"}
+{"word": "square", "rank": 1541, "pos": "noun", "translation_kk": "алаң", "ipa": "/skwɛə/", "past": "", "topic": "travel"}
+{"word": "cent", "rank": 1555, "pos": "noun", "translation_kk": "цент", "ipa": "/sɛnt/", "past": "", "topic": "work"}
+{"word": "critical", "rank": 1559, "pos": "adj", "translation_kk": "сыншыл, сыни", "ipa": "/ˈkɹɪt.ɪ.kəl/", "past": "", "topic": ""}
+{"word": "lake", "rank": 1564, "pos": "noun", "translation_kk": "көл", "ipa": "/leɪk/", "past": "", "topic": "nature"}
+{"word": "metal", "rank": 1607, "pos": "noun", "translation_kk": "металл", "ipa": "/ˈmɛ.təl/", "past": "", "topic": "nature"}
+{"word": "rose", "rank": 1614, "pos": "noun", "translation_kk": "раушан", "ipa": "/ɹəʊz/", "past": "", "topic": "nature"}
+{"word": "sexual", "rank": 1617, "pos": "adj", "translation_kk": "жыныстық", "ipa": "/sɛk.ʃuː.əl/", "past": "", "topic": ""}
+{"word": "silver", "rank": 1648, "pos": "noun", "translation_kk": "күміс", "ipa": "/ˈsɪl.və/", "past": "", "topic": "nature"}
+{"word": "artist", "rank": 1656, "pos": "noun", "translation_kk": "суретші, әртіс", "ipa": "/ˈɑːtɪst/", "past": "", "topic": "work"}
+{"word": "edition", "rank": 1658, "pos": "noun", "translation_kk": "басылым", "ipa": "/ɪˈdɪʃ(ə)n/", "past": "", "topic": ""}
+{"word": "wild", "rank": 1679, "pos": "adj", "translation_kk": "жабайы", "ipa": "/ˈwaɪ̯ld/", "past": "", "topic": "nature"}
+{"word": "bag", "rank": 1683, "pos": "noun", "translation_kk": "сумка, сөмке, дорба", "ipa": "/bæɡ/", "past": "", "topic": "travel"}
+{"word": "cat", "rank": 1713, "pos": "noun", "translation_kk": "мысық, мышық", "ipa": "/ˈkæt/", "past": "", "topic": "animals"}
+{"word": "eastern", "rank": 1718, "pos": "adj", "translation_kk": "шығыс", "ipa": "/ˈiː.stən/", "past": "", "topic": "travel"}
+{"word": "proud", "rank": 1735, "pos": "adj", "translation_kk": "көкірекшіл, тәкаппар", "ipa": "/ˈpɹaʊ̯d/", "past": "", "topic": "feelings"}
+{"word": "shut", "rank": 1738, "pos": "verb", "translation_kk": "жабу", "ipa": "/ʃʌt/", "past": "shut", "topic": ""}
+{"word": "bridge", "rank": 1746, "pos": "noun", "translation_kk": "көпір", "ipa": "/bɹɪd͡ʒ/", "past": "", "topic": "travel"}
+{"word": "copy", "rank": 1752, "pos": "noun", "translation_kk": "көшірме", "ipa": "/ˈkɒpi/", "past": "", "topic": "it"}
+{"word": "garden", "rank": 1757, "pos": "noun", "translation_kk": "бақ, бау", "ipa": "/ˈɡɑː.d(ə)n/", "past": "", "topic": "home"}
+{"word": "apple", "rank": 1781, "pos": "noun", "translation_kk": "алма", "ipa": "/ˈæpəl/", "past": "", "topic": "food"}
+{"word": "birthday", "rank": 1783, "pos": "noun", "translation_kk": "туған күн", "ipa": "/ˈbɜːθ.deɪ/", "past": "", "topic": "time"}
+{"word": "magic", "rank": 1796, "pos": "noun", "translation_kk": "сиқыр, сиқыршылық", "ipa": "/ˈmad͡ʒɪk/", "past": "", "topic": "hobbies"}
+{"word": "request", "rank": 1801, "pos": "verb", "translation_kk": "сұрау салу", "ipa": "/ɹɪˈkwɛst/", "past": "requested", "topic": ""}
+{"word": "stick", "rank": 1802, "pos": "noun", "translation_kk": "таяқ, асатаяқ, сойыл", "ipa": "/stɪk/", "past": "", "topic": ""}
+{"word": "conversation", "rank": 1816, "pos": "noun", "translation_kk": "сөйлесім, әңгіме, әңгімелесу", "ipa": "/ˌkɒn.vəˈseɪ.ʃn̩/", "past": "", "topic": "education"}
+{"word": "fly", "rank": 1827, "pos": "verb", "translation_kk": "ұшу", "ipa": "/flaɪ/", "past": "flew", "topic": ""}
+{"word": "responsibility", "rank": 1837, "pos": "noun", "translation_kk": "жауапкершілік", "ipa": "/ɹɪˌspɒn.səˈbɪl.ɪ.ti/", "past": "", "topic": "work"}
+{"word": "magazine", "rank": 1869, "pos": "noun", "translation_kk": "журнал", "ipa": "/ˌmæɡəˈziːn/", "past": "", "topic": "hobbies"}
+{"word": "wine", "rank": 1884, "pos": "noun", "translation_kk": "шарап", "ipa": "/ˈwaɪ̯n/", "past": "", "topic": "food"}
+{"word": "mountain", "rank": 1910, "pos": "noun", "translation_kk": "тау", "ipa": "/ˈmaʊn.tɪn/", "past": "", "topic": "nature"}
+{"word": "nuclear", "rank": 1911, "pos": "adj", "translation_kk": "ядролық", "ipa": "/ˈnjuː.klɪə(ɹ)/", "past": "", "topic": ""}
+{"word": "tea", "rank": 1925, "pos": "noun", "translation_kk": "шай", "ipa": "/tiː/", "past": "", "topic": "food"}
+{"word": "classic", "rank": 1931, "pos": "noun", "translation_kk": "классика", "ipa": "/ˈklæsɪk/", "past": "", "topic": ""}
+{"word": "failure", "rank": 1939, "pos": "noun", "translation_kk": "сәтсіздік", "ipa": "/ˈfeɪ.ljə/", "past": "", "topic": ""}
+{"word": "flat", "rank": 1941, "pos": "adj", "translation_kk": "жазық, жалпак, жайпақ", "ipa": "/ˈflæt/", "past": "", "topic": ""}
+{"word": "hello", "rank": 1944, "pos": "intj", "translation_kk": "сәлем, сәлеметсіздер", "ipa": "/həˈləʊ/", "past": "", "topic": ""}
+{"word": "ill", "rank": 1946, "pos": "adj", "translation_kk": "ауру, науқас, сырқат", "ipa": "/ɪl/", "past": "", "topic": "body"}
+{"word": "kick", "rank": 1950, "pos": "verb", "translation_kk": "тебу", "ipa": "/kɪk/", "past": "kicked", "topic": "hobbies"}
+{"word": "pair", "rank": 1955, "pos": "noun", "translation_kk": "жұп", "ipa": "/pɛə/", "past": "", "topic": "numbers"}
+{"word": "prince", "rank": 1960, "pos": "noun", "translation_kk": "ханзада", "ipa": "/pɹɪns/", "past": "", "topic": "family"}
+{"word": "accident", "rank": 1979, "pos": "noun", "translation_kk": "авария, апат", "ipa": "/ˈæk.sɪ.dənt/", "past": "", "topic": "travel"}
+{"word": "alternative", "rank": 1981, "pos": "adj", "translation_kk": "балама", "ipa": "/ɒlˈtɜː.nə.tɪv/", "past": "", "topic": ""}
+{"word": "bear", "rank": 1985, "pos": "verb", "translation_kk": "алып жүру, көтеріп жүру", "ipa": "/bɛə/", "past": "bore", "topic": ""}
+{"word": "industrial", "rank": 2001, "pos": "adj", "translation_kk": "өндірістік", "ipa": "/ɪnˈdʌs.tɹi.əl/", "past": "", "topic": ""}
+{"word": "remove", "rank": 2013, "pos": "verb", "translation_kk": "аластау", "ipa": "/ɹɪˈmuːv/", "past": "removed", "topic": ""}
+{"word": "warm", "rank": 2025, "pos": "adj", "translation_kk": "жылы", "ipa": "/wɔːm/", "past": "", "topic": "nature"}
+{"word": "command", "rank": 2032, "pos": "noun", "translation_kk": "бұйрық", "ipa": "/kəˈmɑːnd/", "past": "", "topic": ""}
+{"word": "crowd", "rank": 2034, "pos": "noun", "translation_kk": "жиын, жұрт, тобыр", "ipa": "/ˈkɹaʊ̯d/", "past": "", "topic": "family"}
+{"word": "intelligence", "rank": 2044, "pos": "noun", "translation_kk": "ақыл", "ipa": "/ɪnˈtɛl.ɪ.d͡ʒəns/", "past": "", "topic": ""}
+{"word": "labour", "rank": 2046, "pos": "noun", "translation_kk": "жұмыс, еңбек, іс", "ipa": "/ˈleɪ.bə/", "past": "", "topic": "work"}
+{"word": "historical", "rank": 2073, "pos": "adj", "translation_kk": "тарихи", "ipa": "/hɪˈstɒɹɪkəl/", "past": "", "topic": ""}
+{"word": "update", "rank": 2094, "pos": "verb", "translation_kk": "жаңғырту", "ipa": "/ˈʌp.deɪt/", "past": "updated", "topic": "it"}
+{"word": "user", "rank": 2095, "pos": "noun", "translation_kk": "қатысушы, пайдаланушы", "ipa": "/ˈjuːzə/", "past": "", "topic": "it"}
+{"word": "exercise", "rank": 2109, "pos": "noun", "translation_kk": "жаттығу", "ipa": "/ˈɛk.sə.saɪz/", "past": "", "topic": "hobbies"}
+{"word": "era", "rank": 2153, "pos": "noun", "translation_kk": "дәуір, заман", "ipa": "/ˈɪə.ɹə/", "past": "", "topic": "time"}
+{"word": "teach", "rank": 2183, "pos": "verb", "translation_kk": "оқыту, сабақ беру", "ipa": "/ˈtiːt͡ʃ/", "past": "taught", "topic": "education"}
+{"word": "candidate", "rank": 2193, "pos": "noun", "translation_kk": "үміткер, үмітшіл", "ipa": "/ˈkæn.dɪ.dət/", "past": "", "topic": ""}
+{"word": "fox", "rank": 2204, "pos": "noun", "translation_kk": "түлкі", "ipa": "/fɒks/", "past": "", "topic": "animals"}
+{"word": "milk", "rank": 2223, "pos": "noun", "translation_kk": "сүт", "ipa": "/mɪlk/", "past": "", "topic": "food"}
+{"word": "snow", "rank": 2231, "pos": "noun", "translation_kk": "қар", "ipa": "/snəʊ̯/", "past": "", "topic": "nature"}
+{"word": "storm", "rank": 2232, "pos": "noun", "translation_kk": "дауыл, боран", "ipa": "/stɔːm/", "past": "", "topic": "nature"}
+{"word": "chain", "rank": 2244, "pos": "noun", "translation_kk": "шынжыр, тізбек", "ipa": "/ˈt͡ʃeɪn/", "past": "", "topic": ""}
+{"word": "chapter", "rank": 2245, "pos": "noun", "translation_kk": "тарау", "ipa": "/ˈt͡ʃæptə(r)/", "past": "", "topic": "education"}
+{"word": "kitchen", "rank": 2257, "pos": "noun", "translation_kk": "ас үй, ас бөлмесі, асүй", "ipa": "/ˈkɪt͡ʃ(ɪ)n/", "past": "", "topic": "home"}
+{"word": "split", "rank": 2270, "pos": "verb", "translation_kk": "жару", "ipa": "/splɪt/", "past": "split", "topic": ""}
+{"word": "task", "rank": 2271, "pos": "noun", "translation_kk": "тапсырма", "ipa": "/tɑːsk/", "past": "", "topic": "work"}
+{"word": "aircraft", "rank": 2278, "pos": "noun", "translation_kk": "әуе көлігі", "ipa": "/ˈɛə.kɹɑːft/", "past": "", "topic": "travel"}
+{"word": "argument", "rank": 2282, "pos": "noun", "translation_kk": "дәлел", "ipa": "/ˈɑːɡjʊmənt/", "past": "", "topic": ""}
+{"word": "bird", "rank": 2329, "pos": "noun", "translation_kk": "құс", "ipa": "/ˈbɜːd/", "past": "", "topic": "animals"}
+{"word": "bowl", "rank": 2332, "pos": "noun", "translation_kk": "табақ, тегене, тегеш", "ipa": "/bəʊl/", "past": "", "topic": "home"}
+{"word": "chicken", "rank": 2334, "pos": "noun", "translation_kk": "тауық", "ipa": "/ˈt͡ʃɪkɪn/", "past": "", "topic": "food"}
+{"word": "champion", "rank": 2381, "pos": "noun", "translation_kk": "чемпион", "ipa": "/ˈt͡ʃæm.pi.ən/", "past": "", "topic": "hobbies"}
+{"word": "cream", "rank": 2383, "pos": "noun", "translation_kk": "қаймақ", "ipa": "/kɹiːm/", "past": "", "topic": "food"}
+{"word": "mayor", "rank": 2396, "pos": "noun", "translation_kk": "қалабасы, мэр", "ipa": "/ˈmɛə̯/", "past": "", "topic": "work"}
+{"word": "orange", "rank": 2400, "pos": "noun", "translation_kk": "апельсин, бартоқал, қызғылт сары", "ipa": "/ˈɒɹɪnd͡ʒ/", "past": "", "topic": "food"}
+{"word": "suicide", "rank": 2409, "pos": "noun", "translation_kk": "өзін-өзі өлтіру, өзін-өзі қол жұмсау", "ipa": "/ˈs(j)uːɪˌsaɪd/", "past": "", "topic": ""}
+{"word": "alcohol", "rank": 2424, "pos": "noun", "translation_kk": "алкоголь, есірткіш, спирт", "ipa": "/ˈæl.kə.hɒl/", "past": "", "topic": "food"}
+{"word": "wing", "rank": 2471, "pos": "noun", "translation_kk": "қанат", "ipa": "/wɪŋ/", "past": "", "topic": "animals"}
+{"word": "bomb", "rank": 2475, "pos": "noun", "translation_kk": "бомба", "ipa": "/bɒm/", "past": "", "topic": ""}
+{"word": "newspaper", "rank": 2492, "pos": "noun", "translation_kk": "газет, үнжария", "ipa": "/ˈnjuːsˌpeɪpə/", "past": "", "topic": "hobbies"}
+{"word": "republic", "rank": 2495, "pos": "noun", "translation_kk": "республика, жұмхұрият", "ipa": "/ɹɪˈpʌb.lɪk/", "past": "", "topic": ""}
+{"word": "reserve", "rank": 2496, "pos": "noun", "translation_kk": "қор, запас", "ipa": "/ɹɪˈzɜːv/", "past": "", "topic": ""}
+{"word": "row", "rank": 2498, "pos": "noun", "translation_kk": "қатар", "ipa": "/ɹəʊ/", "past": "", "topic": ""}
+{"word": "mile", "rank": 2544, "pos": "noun", "translation_kk": "миля", "ipa": "/maɪ̯l/", "past": "", "topic": "travel"}
+{"word": "heaven", "rank": 2581, "pos": "noun", "translation_kk": "аспан", "ipa": "/ˈhɛvən/", "past": "", "topic": ""}
+{"word": "academy", "rank": 2605, "pos": "noun", "translation_kk": "академия", "ipa": "/əˈkæd.ə.mi/", "past": "", "topic": "education"}
+{"word": "bottle", "rank": 2613, "pos": "noun", "translation_kk": "бөтелке, шөлмек, шиша", "ipa": "/ˈbɒtəl/", "past": "", "topic": "food"}
+{"word": "fruit", "rank": 2625, "pos": "noun", "translation_kk": "жеміс, мәуе", "ipa": "/fɹuːt/", "past": "", "topic": "food"}
+{"word": "yard", "rank": 2654, "pos": "noun", "translation_kk": "ярд", "ipa": "/ˈjɑːd/", "past": "", "topic": "home"}
+{"word": "basketball", "rank": 2657, "pos": "noun", "translation_kk": "баскетбол", "ipa": "/ˈbɑːs.kɪt.bɔːl/", "past": "", "topic": "hobbies"}
+{"word": "consumer", "rank": 2662, "pos": "noun", "translation_kk": "тұтынушы", "ipa": "/kənˈsjuːmə/", "past": "", "topic": "work"}
+{"word": "pregnant", "rank": 2695, "pos": "adj", "translation_kk": "жүкті, екіқабат", "ipa": "/ˈpɹɛɡnənt/", "past": "", "topic": "body"}
+{"word": "tool", "rank": 2704, "pos": "noun", "translation_kk": "аспап, құрал", "ipa": "/tuːl/", "past": "", "topic": "home"}
+{"word": "turkey", "rank": 2706, "pos": "noun", "translation_kk": "түйетауық, күркетауық", "ipa": "/ˈtɜːki/", "past": "", "topic": "food"}
+{"word": "victim", "rank": 2708, "pos": "noun", "translation_kk": "құрбан", "ipa": "/ˈvɪktɪm/", "past": "", "topic": ""}
+{"word": "circle", "rank": 2720, "pos": "noun", "translation_kk": "шеңбер, дөңгелек", "ipa": "/ˈsɜːkəl/", "past": "", "topic": ""}
+{"word": "electronic", "rank": 2730, "pos": "adj", "translation_kk": "электрондық", "ipa": "/ˌɛl.ɛkˈtɹɒn.ɪk/", "past": "", "topic": "it"}
+{"word": "error", "rank": 2731, "pos": "noun", "translation_kk": "қателік, қате", "ipa": "/ˈɛɹə/", "past": "", "topic": "it"}
+{"word": "rice", "rank": 2758, "pos": "noun", "translation_kk": "күріш", "ipa": "/ɹaɪs/", "past": "", "topic": "food"}
+{"word": "absolute", "rank": 2770, "pos": "adj", "translation_kk": "абсолюттік", "ipa": "/ˈæb.sə.luːt/", "past": "", "topic": ""}
+{"word": "bathroom", "rank": 2774, "pos": "noun", "translation_kk": "ванна бөлмесі", "ipa": "/ˈbɑːθɹʊm/", "past": "", "topic": "home"}
+{"word": "cable", "rank": 2776, "pos": "noun", "translation_kk": "кабель, кәбіл, шоғырсым", "ipa": "/ˈkeɪ.bəl/", "past": "", "topic": "it"}
+{"word": "anniversary", "rank": 2817, "pos": "noun", "translation_kk": "мерейтой, жылдық", "ipa": "/ˌænɪˈvɜːs(ə)ɹi/", "past": "", "topic": "time"}
+{"word": "burn", "rank": 2821, "pos": "verb", "translation_kk": "жағу, жану", "ipa": "/bɜːn/", "past": "burned", "topic": ""}
+{"word": "height", "rank": 2836, "pos": "noun", "translation_kk": "биіктік", "ipa": "/haɪt/", "past": "", "topic": ""}
+{"word": "loud", "rank": 2841, "pos": "adj", "translation_kk": "қатты, сартыл", "ipa": "/ˈlaʊ̯d/", "past": "", "topic": ""}
+{"word": "peak", "rank": 2847, "pos": "noun", "translation_kk": "шың", "ipa": "/piːk/", "past": "", "topic": ""}
+{"word": "raw", "rank": 2853, "pos": "adj", "translation_kk": "шикі", "ipa": "/ɹɔː/", "past": "", "topic": "food"}
+{"word": "battery", "rank": 2877, "pos": "noun", "translation_kk": "батарея, аккумулятор", "ipa": "/ˈbæt.(ə)ɹi/", "past": "", "topic": "it"}
+{"word": "external", "rank": 2893, "pos": "adj", "translation_kk": "тысқары", "ipa": "/ɪkˈstɜː.nəl/", "past": "", "topic": ""}
+{"word": "paint", "rank": 2903, "pos": "noun", "translation_kk": "бояу", "ipa": "/peɪnt/", "past": "", "topic": "hobbies"}
+{"word": "smoking", "rank": 2917, "pos": "noun", "translation_kk": "темекі шегу", "ipa": "/ˈsməʊkɪŋ/", "past": "", "topic": "body"}
+{"word": "tall", "rank": 2921, "pos": "adj", "translation_kk": "зәулім", "ipa": "/tɔːl/", "past": "", "topic": "body"}
+{"word": "therapy", "rank": 2924, "pos": "noun", "translation_kk": "терапия", "ipa": "/ˈθɛɹ.ə.pi/", "past": "", "topic": "body"}
+{"word": "comparison", "rank": 2936, "pos": "noun", "translation_kk": "салыстыру", "ipa": "/kəmˈpæɹ.ɪ.sən/", "past": "", "topic": ""}
+{"word": "democracy", "rank": 2941, "pos": "noun", "translation_kk": "демократия, халық билігі", "ipa": "/dɪˈmɒk.ɹə.si/", "past": "", "topic": ""}
+{"word": "bread", "rank": 2981, "pos": "noun", "translation_kk": "нан", "ipa": "/bɹɛd/", "past": "", "topic": "food"}
+{"word": "tower", "rank": 3031, "pos": "noun", "translation_kk": "мұнара", "ipa": "/ˈtaʊ.ə(ɹ)/", "past": "", "topic": "travel"}
+{"word": "wheel", "rank": 3035, "pos": "noun", "translation_kk": "доңғалақ, дөңгелек, тегермеш", "ipa": "/ˈwiːl/", "past": "", "topic": ""}
+{"word": "coal", "rank": 3048, "pos": "noun", "translation_kk": "көмір", "ipa": "/kəʊl/", "past": "", "topic": "nature"}
+{"word": "monster", "rank": 3074, "pos": "noun", "translation_kk": "құбыжық, жалмауыз", "ipa": "/ˈmɒnstə(ɹ)/", "past": "", "topic": ""}
+{"word": "smell", "rank": 3086, "pos": "verb", "translation_kk": "аңку, иістену, иіс шығу", "ipa": "/smɛl/", "past": "smelled", "topic": ""}
+{"word": "finger", "rank": 3104, "pos": "noun", "translation_kk": "бармақ, саусақ", "ipa": "/ˈfɪŋɡəː/", "past": "", "topic": "body"}
+{"word": "bone", "rank": 3148, "pos": "noun", "translation_kk": "сүйек", "ipa": "/bəʊn/", "past": "", "topic": "body"}
+{"word": "defend", "rank": 3159, "pos": "verb", "translation_kk": "қорғау", "ipa": "/dɪˈfɛnd/", "past": "defended", "topic": ""}
+{"word": "killer", "rank": 3176, "pos": "noun", "translation_kk": "қанішер, қаныпезер, өлтіруші", "ipa": "/ˈkɪlə/", "past": "", "topic": ""}
+{"word": "proposal", "rank": 3189, "pos": "noun", "translation_kk": "ұсыныс", "ipa": "/pɹəˈpəʊzəl/", "past": "", "topic": "work"}
+{"word": "egg", "rank": 3227, "pos": "noun", "translation_kk": "жұмыртқа", "ipa": "/ɛɡ/", "past": "", "topic": "food"}
+{"word": "element", "rank": 3228, "pos": "noun", "translation_kk": "элемент", "ipa": "/ˈɛlɪmənt/", "past": "", "topic": ""}
+{"word": "angel", "rank": 3277, "pos": "noun", "translation_kk": "періште", "ipa": "/ˈeɪ̯n.d͡ʒəl/", "past": "", "topic": ""}
+{"word": "temple", "rank": 3339, "pos": "noun", "translation_kk": "ғыйбадатһана, храм, ғибадатхана", "ipa": "/ˈtɛm.pl̩/", "past": "", "topic": ""}
+{"word": "concrete", "rank": 3356, "pos": "noun", "translation_kk": "бетон", "ipa": "/ˈkɒnkɹiːt/", "past": "", "topic": ""}
+{"word": "hearts", "rank": 3367, "pos": "noun", "translation_kk": "түйе, жүрек", "ipa": "/hɑːts/", "past": "", "topic": "hobbies"}
+{"word": "muscle", "rank": 3379, "pos": "noun", "translation_kk": "бұлшықет", "ipa": "/ˈmʌs.əl/", "past": "", "topic": "body"}
+{"word": "sand", "rank": 3392, "pos": "noun", "translation_kk": "құм", "ipa": "/sænd/", "past": "", "topic": "nature"}
+{"word": "ear", "rank": 3425, "pos": "noun", "translation_kk": "құлақ", "ipa": "/ˈɪə̯/", "past": "", "topic": "body"}
+{"word": "diamond", "rank": 3480, "pos": "noun", "translation_kk": "алмаз", "ipa": "/ˈdaɪ.ə.mənd/", "past": "", "topic": "nature"}
+{"word": "disappointed", "rank": 3481, "pos": "adj", "translation_kk": "көңілі қалған, разочаровался", "ipa": "/ˌdɪsəˈpɔɪntɪd/", "past": "", "topic": "feelings"}
+{"word": "economics", "rank": 3483, "pos": "noun", "translation_kk": "экономика, үнемиет, ықтисат", "ipa": "/ˌiːkəˈnɒmɪks/", "past": "", "topic": ""}
+{"word": "virus", "rank": 3537, "pos": "noun", "translation_kk": "вирус", "ipa": "/ˈvaɪ.ɹəs/", "past": "", "topic": "body"}
+{"word": "cousin", "rank": 3550, "pos": "noun", "translation_kk": "бөле", "ipa": "/ˈkʌzn̩/", "past": "", "topic": "family"}
+{"word": "dragon", "rank": 3555, "pos": "noun", "translation_kk": "айдаһар, аждаһа", "ipa": "/ˈdɹæɡən/", "past": "", "topic": ""}
+{"word": "dust", "rank": 3557, "pos": "noun", "translation_kk": "шаң", "ipa": "/dʌst/", "past": "", "topic": "nature"}
+{"word": "institution", "rank": 3565, "pos": "noun", "translation_kk": "ведомство, идара", "ipa": "/ˌɪn.stɪˈtʃuː.ʃən/", "past": "", "topic": ""}
+{"word": "repair", "rank": 3582, "pos": "noun", "translation_kk": "жөндеу", "ipa": "/ɹɪˈpɛə/", "past": "", "topic": "home"}
+{"word": "telephone", "rank": 3587, "pos": "verb", "translation_kk": "телефон соғу, қоңырау шалу", "ipa": "/ˈtɛlɪfəʊn/", "past": "telephoned", "topic": "it"}
+{"word": "butter", "rank": 3605, "pos": "noun", "translation_kk": "май, сармай, сары май", "ipa": "/ˈbʌtə/", "past": "", "topic": "food"}
+{"word": "desert", "rank": 3620, "pos": "noun", "translation_kk": "шөл", "ipa": "/ˈdɛz.ət/", "past": "", "topic": "nature"}
+{"word": "layer", "rank": 3635, "pos": "noun", "translation_kk": "қабат, қат, қаттам", "ipa": "/ˈleɪ.ə/", "past": "", "topic": ""}
+{"word": "marry", "rank": 3637, "pos": "verb", "translation_kk": "жұбайласу", "ipa": "/ˈmæɹi/", "past": "married", "topic": "family"}
+{"word": "nurse", "rank": 3640, "pos": "noun", "translation_kk": "медбике, мейірбике, медбибі", "ipa": "/nɜːs/", "past": "", "topic": "work"}
+{"word": "pot", "rank": 3647, "pos": "noun", "translation_kk": "кәстрөл, құмыра", "ipa": "/pɒt/", "past": "", "topic": "home"}
+{"word": "string", "rank": 3658, "pos": "noun", "translation_kk": "жолдық тұрпат", "ipa": "/stɹɪŋ/", "past": "", "topic": ""}
+{"word": "bench", "rank": 3671, "pos": "noun", "translation_kk": "орындық, сәкі", "ipa": "/ˈbɛnt͡ʃ/", "past": "", "topic": "home"}
+{"word": "broadcast", "rank": 3673, "pos": "noun", "translation_kk": "бағдарлама", "ipa": "/ˈbɹɔːd(ˌ)kɑːst/", "past": "", "topic": ""}
+{"word": "cricket", "rank": 3682, "pos": "noun", "translation_kk": "қара шегіртке", "ipa": "/ˈkɹɪkɪt/", "past": "", "topic": "hobbies"}
+{"word": "translation", "rank": 3731, "pos": "noun", "translation_kk": "аударма", "ipa": "/tɹænzˈleɪʃən/", "past": "", "topic": "education"}
+{"word": "angle", "rank": 3737, "pos": "noun", "translation_kk": "бұрыш", "ipa": "/ˈæŋ.ɡəl/", "past": "", "topic": ""}
+{"word": "bishop", "rank": 3742, "pos": "noun", "translation_kk": "епископ", "ipa": "/ˈbɪʃəp/", "past": "", "topic": ""}
+{"word": "jay", "rank": 3763, "pos": "noun", "translation_kk": "қарға", "ipa": "/ˈd͡ʒeɪ/", "past": "", "topic": "animals"}
+{"word": "pope", "rank": 3776, "pos": "noun", "translation_kk": "Рим папасы, папа", "ipa": "/pəʊp/", "past": "", "topic": ""}
+{"word": "tongue", "rank": 3853, "pos": "noun", "translation_kk": "тіл", "ipa": "/tʌŋ/", "past": "", "topic": "body"}
+{"word": "strip", "rank": 3911, "pos": "noun", "translation_kk": "жолақ", "ipa": "/ˈstɹɪp/", "past": "", "topic": ""}
+{"word": "tube", "rank": 3915, "pos": "noun", "translation_kk": "құбыр", "ipa": "/tuːb/", "past": "", "topic": ""}
+{"word": "ambassador", "rank": 3922, "pos": "noun", "translation_kk": "елші", "ipa": "/æmˈbæs.ə.də(ɹ)/", "past": "", "topic": "work"}
+{"word": "cotton", "rank": 3935, "pos": "noun", "translation_kk": "мақта", "ipa": "/ˈkɒt.n̩/", "past": "", "topic": "clothes"}
+{"word": "exception", "rank": 3942, "pos": "noun", "translation_kk": "ерекшелік", "ipa": "/əkˈsɛpʃən/", "past": "", "topic": ""}
+{"word": "exit", "rank": 3943, "pos": "noun", "translation_kk": "шығу, шығыс", "ipa": "/ˈɛksɪt/", "past": "", "topic": "travel"}
+{"word": "wolf", "rank": 3995, "pos": "noun", "translation_kk": "бөрі, қасқыр", "ipa": "/wʊlf/", "past": "", "topic": "animals"}
+{"word": "delicious", "rank": 4012, "pos": "adj", "translation_kk": "дәмді, татымды, тәтті", "ipa": "/dɪˈlɪ.ʃəs/", "past": "", "topic": "food"}
+{"word": "twin", "rank": 4054, "pos": "noun", "translation_kk": "егіз", "ipa": "/twɪn/", "past": "", "topic": "family"}
+{"word": "density", "rank": 4076, "pos": "noun", "translation_kk": "тығыздық", "ipa": "/ˈdɛn.sɪ.ti/", "past": "", "topic": ""}
+{"word": "fleet", "rank": 4084, "pos": "noun", "translation_kk": "флот, парк", "ipa": "/ˈfliːt/", "past": "", "topic": ""}
+{"word": "operator", "rank": 4178, "pos": "noun", "translation_kk": "оператор", "ipa": "/ˈɒpəˌɹeɪtə/", "past": "", "topic": "work"}
+{"word": "pound", "rank": 4180, "pos": "noun", "translation_kk": "фунт", "ipa": "/ˈpaʊ̯nd/", "past": "", "topic": "work"}
+{"word": "purple", "rank": 4183, "pos": "noun", "translation_kk": "күлгін", "ipa": "/ˈpɜː.pl̩/", "past": "", "topic": "colors"}
+{"word": "mouse", "rank": 4255, "pos": "noun", "translation_kk": "тінтуір, тышқан", "ipa": "/maʊs/", "past": "", "topic": "animals"}
+{"word": "slave", "rank": 4270, "pos": "noun", "translation_kk": "құл", "ipa": "/sleɪv/", "past": "", "topic": ""}
+{"word": "symbol", "rank": 4274, "pos": "noun", "translation_kk": "рәміз, символ", "ipa": "/ˈsɪmbəl/", "past": "", "topic": ""}
+{"word": "toilet", "rank": 4276, "pos": "noun", "translation_kk": "дәретхана, әжетхана", "ipa": "/ˈtɔɪ.lət/", "past": "", "topic": "home"}
+{"word": "bow", "rank": 4287, "pos": "noun", "translation_kk": "қияқ, ысқы", "ipa": "/ˈbəʊ̯/", "past": "", "topic": ""}
+{"word": "tiger", "rank": 4340, "pos": "noun", "translation_kk": "жолбарыс", "ipa": "/ˈtaɪɡə/", "past": "", "topic": "animals"}
+{"word": "beast", "rank": 4350, "pos": "noun", "translation_kk": "хайуан, аң", "ipa": "/biːst/", "past": "", "topic": "animals"}
+{"word": "ton", "rank": 4419, "pos": "noun", "translation_kk": "тонна", "ipa": "/tʌn/", "past": "", "topic": "numbers"}
+{"word": "dispute", "rank": 4521, "pos": "noun", "translation_kk": "дау, талас, жанжал", "ipa": "/dɪˈspjuːt/", "past": "", "topic": ""}
+{"word": "vessel", "rank": 4565, "pos": "noun", "translation_kk": "кеме, қайық, ыдыс", "ipa": "/ˈvɛsəl/", "past": "", "topic": "travel"}
+{"word": "classical", "rank": 4584, "pos": "adj", "translation_kk": "классикалық", "ipa": "/ˈklæs.ɪ.k(ə)l/", "past": "", "topic": "hobbies"}
+{"word": "instrument", "rank": 4608, "pos": "noun", "translation_kk": "аспап", "ipa": "/ˈɪnstɹəmənt/", "past": "", "topic": "hobbies"}
+{"word": "terror", "rank": 4637, "pos": "noun", "translation_kk": "қорқыныш", "ipa": "/ˈtɛɹə/", "past": "", "topic": "feelings"}
+{"word": "forgive", "rank": 4672, "pos": "verb", "translation_kk": "кешіру, кешірім жасау, ғапу ету", "ipa": "/fə(ɹ)ˈɡɪv/", "past": "forgave", "topic": "feelings"}
+{"word": "lion", "rank": 4686, "pos": "noun", "translation_kk": "арыстан", "ipa": "/ˈlaɪən/", "past": "", "topic": "animals"}
+{"word": "pipe", "rank": 4696, "pos": "noun", "translation_kk": "құбыр", "ipa": "/ˈpaɪp/", "past": "", "topic": ""}
+{"word": "powder", "rank": 4699, "pos": "noun", "translation_kk": "ұнтақ", "ipa": "/ˈpaʊ.də(ɹ)/", "past": "", "topic": ""}
+{"word": "shelter", "rank": 4712, "pos": "noun", "translation_kk": "баспана, пана", "ipa": "/ˈʃɛltə/", "past": "", "topic": ""}
+{"word": "shed", "rank": 4894, "pos": "noun", "translation_kk": "сарай", "ipa": "/ʃɛd/", "past": "", "topic": "home"}
+{"word": "substance", "rank": 4900, "pos": "noun", "translation_kk": "зат", "ipa": "/ˈsʌbstəns/", "past": "", "topic": ""}
+{"word": "integration", "rank": 4955, "pos": "noun", "translation_kk": "бірігу, біріктіру", "ipa": "/ˌɪn.tɪˈɡɹeɪ.ʃən/", "past": "", "topic": ""}
+{"word": "interpretation", "rank": 4957, "pos": "noun", "translation_kk": "аударма", "ipa": "/ɪnˌtɜːpɹəˈteɪʃən/", "past": "", "topic": ""}
+{"word": "permit", "rank": 4970, "pos": "noun", "translation_kk": "рұқсат", "ipa": "/pəˈmɪt/", "past": "", "topic": ""}
+{"word": "portrait", "rank": 4974, "pos": "noun", "translation_kk": "портрет", "ipa": "/ˈpɔːtɹeɪt/", "past": "", "topic": "hobbies"}
+{"word": "fence", "rank": 5037, "pos": "noun", "translation_kk": "дуал, қаша", "ipa": "/fɛns/", "past": "", "topic": "home"}
+{"word": "hood", "rank": 5051, "pos": "noun", "translation_kk": "күләпара, башлық, далбай", "ipa": "/hʊd/", "past": "", "topic": "clothes"}
+{"word": "vulnerable", "rank": 5095, "pos": "adj", "translation_kk": "қорғансыз", "ipa": "/ˈvʌln(ə)ɹəbl̩/", "past": "", "topic": ""}
+{"word": "diagnosis", "rank": 5121, "pos": "noun", "translation_kk": "диагноз, диагностика", "ipa": "/daɪəɡˈnəʊsɪs/", "past": "", "topic": "body"}
+{"word": "laser", "rank": 5140, "pos": "noun", "translation_kk": "лазер", "ipa": "/ˈleɪz.ə(ɹ)/", "past": "", "topic": ""}
+{"word": "punk", "rank": 5159, "pos": "noun", "translation_kk": "панк", "ipa": "/ˈpʌŋk/", "past": "", "topic": ""}
+{"word": "radar", "rank": 5160, "pos": "noun", "translation_kk": "радиолокатор, радар", "ipa": "/ˈɹeɪdɑː/", "past": "", "topic": ""}
+{"word": "sheep", "rank": 5264, "pos": "noun", "translation_kk": "қой", "ipa": "/ˈʃiːp/", "past": "", "topic": "animals"}
+{"word": "animation", "rank": 5290, "pos": "noun", "translation_kk": "анимация, мультипликация", "ipa": "/ˌæn.ɪˈmeɪ.ʃən/", "past": "", "topic": "hobbies"}
+{"word": "basement", "rank": 5294, "pos": "noun", "translation_kk": "жертөле", "ipa": "/ˈbeɪsmənt/", "past": "", "topic": "home"}
+{"word": "garbage", "rank": 5327, "pos": "noun", "translation_kk": "ескі-құсқы, қоқым-соқым", "ipa": "/ˈɡɑː.bɪd͡ʒ/", "past": "", "topic": "home"}
+{"word": "oak", "rank": 5343, "pos": "noun", "translation_kk": "емен", "ipa": "/əʊk/", "past": "", "topic": "nature"}
+{"word": "runner", "rank": 5357, "pos": "noun", "translation_kk": "жүгіруші, желаяқ", "ipa": "/ˈɹʌnə/", "past": "", "topic": "hobbies"}
+{"word": "barrel", "rank": 5391, "pos": "noun", "translation_kk": "бөшке", "ipa": "/ˈbæɹ(ə)l/", "past": "", "topic": ""}
+{"word": "grammar", "rank": 5420, "pos": "noun", "translation_kk": "грамматика", "ipa": "/ˈɡɹæm.ə(ɹ)/", "past": "", "topic": "education"}
+{"word": "partial", "rank": 5442, "pos": "adj", "translation_kk": "ішінара, жарым-жартылай", "ipa": "/ˈpɑːʃəl/", "past": "", "topic": ""}
+{"word": "icon", "rank": 5504, "pos": "noun", "translation_kk": "таңбаша", "ipa": "/ˈaɪ.kɒn/", "past": "", "topic": "it"}
+{"word": "paradise", "rank": 5529, "pos": "noun", "translation_kk": "жәннат, бейіш, жұмақ", "ipa": "/ˈpæɹədaɪs/", "past": "", "topic": ""}
+{"word": "sheriff", "rank": 5550, "pos": "noun", "translation_kk": "шериф", "ipa": "/ˈʃɛɹɪf/", "past": "", "topic": "work"}
+{"word": "vocal", "rank": 5563, "pos": "adj", "translation_kk": "вокалды, вокалдық", "ipa": "/ˈvəʊ̯.kəl/", "past": "", "topic": "hobbies"}
+{"word": "bacon", "rank": 5573, "pos": "noun", "translation_kk": "бекон", "ipa": "/ˈbeɪ.kən/", "past": "", "topic": "food"}
+{"word": "soup", "rank": 5629, "pos": "noun", "translation_kk": "сорпа, көже, суп", "ipa": "/suːp/", "past": "", "topic": "food"}
+{"word": "torture", "rank": 5639, "pos": "noun", "translation_kk": "азаптау, азап, қинау", "ipa": "/ˈtɔːt͡ʃə/", "past": "", "topic": ""}
+{"word": "accent", "rank": 5655, "pos": "noun", "translation_kk": "акцент", "ipa": "/ˈak.sənt/", "past": "", "topic": "education"}
+{"word": "horn", "rank": 5689, "pos": "noun", "translation_kk": "мүйіз", "ipa": "/hɔːn/", "past": "", "topic": "animals"}
+{"word": "pearl", "rank": 5721, "pos": "noun", "translation_kk": "інжу, мерүерт", "ipa": "/pɜːl/", "past": "", "topic": ""}
+{"word": "pig", "rank": 5724, "pos": "noun", "translation_kk": "шошқа", "ipa": "/ˈpɪɡ/", "past": "", "topic": "animals"}
+{"word": "plug", "rank": 5726, "pos": "noun", "translation_kk": "штепсель, аша, сүңгіме", "ipa": "/plʌɡ/", "past": "", "topic": "it"}
+{"word": "consciousness", "rank": 5774, "pos": "noun", "translation_kk": "сана", "ipa": "/ˈkɒnʃəsnəs/", "past": "", "topic": ""}
+{"word": "embassy", "rank": 5787, "pos": "noun", "translation_kk": "елшілік", "ipa": "/ˈɛmbəsi/", "past": "", "topic": "travel"}
+{"word": "profession", "rank": 5826, "pos": "noun", "translation_kk": "мамандық, кәсіп", "ipa": "/pɹəˈfɛʃ.ən/", "past": "", "topic": "work"}
+{"word": "protective", "rank": 5828, "pos": "adj", "translation_kk": "қорғауыш", "ipa": "/pɹəˈtɛk.tɪv/", "past": "", "topic": ""}
+{"word": "valve", "rank": 5848, "pos": "noun", "translation_kk": "қақпақша, қысымтығын", "ipa": "/ˈvælv/", "past": "", "topic": ""}
+{"word": "deer", "rank": 5872, "pos": "noun", "translation_kk": "бұғы", "ipa": "/dɪə/", "past": "", "topic": "animals"}
+{"word": "minimal", "rank": 5983, "pos": "adj", "translation_kk": "ең аз, минималды, ең төменгі", "ipa": "/ˈmɪn.ɪ.məl/", "past": "", "topic": ""}
+{"word": "molecular", "rank": 5985, "pos": "adj", "translation_kk": "молекулалық", "ipa": "/məˈlɛk.jʊ.lə/", "past": "", "topic": ""}
+{"word": "potato", "rank": 5998, "pos": "noun", "translation_kk": "картоп, жералма", "ipa": "/pəˈteɪ.təʊ/", "past": "", "topic": "food"}

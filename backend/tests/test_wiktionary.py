@@ -1,0 +1,76 @@
+import json
+
+import pytest
+
+from vocabulary import forms
+from vocabulary.models import Vocabulary
+from vocabulary.wiktionary import load
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def no_imported_words():
+    """The migration already loaded the shipped dataset; these tests import their own rows."""
+    Vocabulary.objects.filter(source="wiktionary").delete()
+
+
+def _write(tmp_path, rows):
+    path = tmp_path / "words.jsonl"
+    path.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows), encoding="utf-8")
+    return path
+
+
+ROWS = [
+    {"word": "buy", "rank": 300, "pos": "verb", "translation_kk": "WRONG", "ipa": "", "past": "bought"},
+    {"word": "swim", "rank": 2000, "pos": "verb", "translation_kk": "жүзу", "ipa": "/swɪm/", "past": "swam"},
+    {"word": "cook", "rank": 1800, "pos": "verb", "translation_kk": "пісіру", "ipa": "/kʊk/", "past": "cooked"},
+    {"word": "can", "rank": 40, "pos": "verb", "translation_kk": "алу", "ipa": "", "past": "could"},
+    {"word": "water", "rank": 500, "pos": "noun", "translation_kk": "су", "ipa": "", "past": "", "topic": "nature"},
+]
+
+
+def test_import_keeps_course_words_and_detects_irregular_verbs(tmp_path, no_imported_words):
+    result = load(Vocabulary, _write(tmp_path, ROWS))
+    assert result == {"created": 4, "updated": 0, "skipped": 1}
+    assert Vocabulary.objects.get(word="buy").translation_kk == "сатып алу"
+
+    swim = Vocabulary.objects.get(word="swim")
+    assert (swim.is_verb, swim.is_irregular, swim.past, swim.source) == (True, True, "swam", "wiktionary")
+    assert swim.course_step is None
+
+    cook = Vocabulary.objects.get(word="cook")
+    assert (cook.is_irregular, cook.past_form, cook.past) == (False, "", "cooked")
+
+    assert Vocabulary.objects.get(word="can").is_verb is False  # modal: not for the do/does/did table
+    assert Vocabulary.objects.get(word="water").topic == "nature"
+    assert Vocabulary.objects.get(word="swim").topic == "general"
+
+
+def test_imported_verbs_build_a_correct_table(tmp_path, no_imported_words):
+    load(Vocabulary, _write(tmp_path, ROWS))
+    swim = Vocabulary.objects.get(word="swim")
+    texts = [c["text"] for c in forms.table(swim, "he")]
+    assert texts[4] == "He swims." and texts[7] == "He swam." and texts[6] == "Did he swim?"
+
+
+def test_import_is_idempotent(tmp_path, no_imported_words):
+    path = _write(tmp_path, ROWS)
+    load(Vocabulary, path)
+    assert load(Vocabulary, path)["created"] == 0
+
+
+def test_shipped_dataset_is_loaded_by_migration():
+    assert Vocabulary.objects.filter(source="wiktionary").count() > 100
+    assert not Vocabulary.objects.filter(source="wiktionary", translation_kk="").exists()
+
+
+def test_topics_file_matches_the_dataset():
+    from vocabulary.wiktionary import DATA_FILE, TOPICS_KK
+
+    topics = json.loads((DATA_FILE.parent / "topics.json").read_text(encoding="utf-8"))
+    words = {json.loads(line)["word"] for line in DATA_FILE.read_text(encoding="utf-8").splitlines() if line}
+    assigned = [w for topic, ws in topics.items() if not topic.startswith("_") for w in ws]
+    assert len(assigned) == len(set(assigned)), "a word is in two topics"
+    assert set(assigned) <= words, set(assigned) - words
+    assert {t for t in topics if not t.startswith("_")} <= set(TOPICS_KK)
