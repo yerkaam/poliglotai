@@ -1,0 +1,44 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repository and branch.
+services:
+  - type: web
+    name: poliglot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: poliglot-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: AUTH_COOKIE_SECURE
+        value: "1"
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: TIME_ZONE
+        value: Asia/Almaty
+      # AI chat: enter the key in the dashboard. Without it an offline tutor answers.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CHAT_MODEL
+        value: claude-opus-5
+      - key: CHAT_EFFORT
+        value: low
+      - key: CHAT_DAILY_LIMIT
+        value: "30"
+      # Password-reset emails: set an SMTP service here; the console backend only logs them.
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.console.EmailBackend
+
+databases:
+  - name: poliglot-db
+    plan: free
+    region: frankfurt
+    databaseName: poliglot
+    user: poliglot

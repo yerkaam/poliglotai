@@ -20,6 +20,19 @@ docker compose exec backend python manage.py createsuperuser
 
 Письма для восстановления пароля с `EMAIL_BACKEND=console` печатаются в лог: `docker compose logs backend`.
 
+## Деплой на Render
+
+В корне лежат `Dockerfile` (один образ: сборка Angular + Django, который отдаёт и API, и сайт) и `render.yaml` (Blueprint).
+
+1. Render Dashboard → **New → Blueprint** → подключить GitLab-репозиторий `poliglot-group/poliglot`, выбрать ветку.
+2. Render создаст веб-сервис `poliglot` и базу `poliglot-db`, сам сгенерирует `DJANGO_SECRET_KEY`.
+3. Ввести `ANTHROPIC_API_KEY` (без него работает офлайн-заглушка чата).
+4. Сайт откроется на `https://poliglot-<...>.onrender.com`; миграции и начальные данные применяются при старте.
+
+Админ: в Render Shell выполнить `python manage.py createsuperuser`.
+
+Бесплатный план: сервис засыпает после 15 минут простоя (первый запрос ~50 с), бесплатная база удаляется через 30 дней — для реальных учеников перейти на платные планы. Тот же образ подходит для Railway и Fly.io (нужны `DATABASE_URL` и `PORT`).
+
 ## Разработка
 
 ```bash

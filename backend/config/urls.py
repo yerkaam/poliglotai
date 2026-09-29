@@ -1,6 +1,9 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib import admin
-from django.http import JsonResponse
-from django.urls import include, path
+from django.http import FileResponse, Http404, JsonResponse
+from django.urls import include, path, re_path
 
 from chat import views as chat
 from progress import views as progress
@@ -34,3 +37,17 @@ urlpatterns = [
     path("api/", include(api)),
     path("healthz", lambda request: JsonResponse({"ok": True})),
 ]
+
+
+def spa_index(request):
+    """Angular routes (/words, /chat …) all load index.html; the app routes in the browser."""
+    index = Path(settings.SPA_DIR) / "index.html"
+    if not index.is_file():
+        raise Http404
+    response = FileResponse(index.open("rb"), content_type="text/html")
+    response["Cache-Control"] = "no-cache"
+    return response
+
+
+if settings.SPA_DIR:
+    urlpatterns.append(re_path(r"^(?!api/|admin/|static/|healthz).*$", spa_index))

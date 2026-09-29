@@ -4,6 +4,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -17,6 +19,10 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").sp
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:4200").split(",") if o
 ]
+# Render publishes the service's public hostname; trust it automatically.
+if RENDER_HOST := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(RENDER_HOST)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -66,7 +72,9 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
-    "default": {
+    "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=60)
+    if os.environ.get("DATABASE_URL")
+    else {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "poliglot"),
         "USER": os.environ.get("POSTGRES_USER", "poliglot"),
@@ -127,13 +135,20 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 LOGIN_MAX_FAILURES = 5
 LOGIN_LOCKOUT_SECONDS = 15 * 60
 
-CACHES = {
-    "default": (
-        {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": os.environ["REDIS_URL"]}
-        if os.environ.get("REDIS_URL")
-        else {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
-    )
-}
+# Login lockout and chat limits need a cache shared by all gunicorn workers:
+# Redis when available, otherwise a database table (run `createcachetable`).
+if os.environ.get("REDIS_URL"):
+    _cache = {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": os.environ["REDIS_URL"]}
+elif DEBUG:
+    _cache = {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+else:
+    _cache = {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "cache_table"}
+CACHES = {"default": _cache}
+
+# Single-image deploy: Django also serves the built Angular app from this folder.
+SPA_DIR = os.environ.get("SPA_DIR", "")
+if SPA_DIR:
+    WHITENOISE_ROOT = SPA_DIR
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
