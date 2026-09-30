@@ -90,8 +90,10 @@
             }
           </span>
         </p>
+      } @else if (verbs.failed()) {
+        <app-load-error (retry)="verbs.reload()" />
       } @else if (loadError()) {
-        <div class="alert" role="alert" i18n>Кестені жүктеу мүмкін болмады. Бетті жаңартыңыз.</div>
+        <app-load-error (retry)="retryForms()" />
       } @else {
         <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
       }

@@ -4,9 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { ToastService } from '../../core/toast.service';
 import { IconComponent } from '../../shared/icon.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
+import { GuardedPage } from '../../core/leave.guard';
 
 const RESEND_SECONDS = 60;
 
@@ -28,9 +30,6 @@ const RESEND_SECONDS = 60;
 
       @if (error()) {
         <div class="alert" role="alert"><app-icon name="alert" /><span>{{ error() }}</span></div>
-      }
-      @if (notice()) {
-        <div class="alert alert-ok" role="status"><app-icon name="check" /><span>{{ notice() }}</span></div>
       }
 
       <form class="form" (submit)="submit($event)" novalidate>
@@ -82,25 +81,34 @@ const RESEND_SECONDS = 60;
     .link:disabled { color: var(--muted); cursor: default; }
   `,
 })
-export class VerifyComponent {
+export class VerifyComponent extends GuardedPage {
   protected auth = inject(AuthService);
   private api = inject(ApiService);
   private router = inject(Router);
+  private toasts = inject(ToastService);
   private codeInput = viewChild<ElementRef<HTMLInputElement>>('codeInput');
 
   protected code = signal('');
   protected busy = signal(false);
   protected resending = signal(false);
   protected error = signal('');
-  protected notice = signal('');
   protected countdown = signal(0);
   private timer: ReturnType<typeof setInterval> | undefined;
 
   constructor() {
+    super();
     inject(DestroyRef).onDestroy(() => clearInterval(this.timer));
     // Right after registration the code has just been sent: resending waits 60 seconds.
     if (inject(ActivatedRoute).snapshot.queryParamMap.get('sent')) this.startCountdown(RESEND_SECONDS);
     afterNextRender(() => this.codeInput()?.nativeElement.focus());
+  }
+
+  hasUnsavedWork() {
+    return this.code().length > 0 && !this.busy();
+  }
+
+  override leaveMessage() {
+    return $localize`Пошта әлі расталмады. Кодты кейін енгізуге болады.`;
   }
 
   protected pad(n: number) {
@@ -120,7 +128,6 @@ export class VerifyComponent {
     event?.preventDefault();
     if (this.code().length !== 6 || this.busy()) return;
     this.busy.set(true);
-    this.notice.set('');
     try {
       await this.auth.verifyEmail(this.code());
       const onboarded = this.auth.user()?.profile.onboarded;
@@ -143,7 +150,7 @@ export class VerifyComponent {
     this.error.set('');
     try {
       const res = await firstValueFrom(this.api.resendCode());
-      this.notice.set($localize`Жаңа код жіберілді.`);
+      this.toasts.success($localize`Жаңа код жіберілді. Поштаңызды тексеріңіз.`);
       this.startCountdown(res.retry_after);
     } catch (e) {
       if (e instanceof HttpErrorResponse && e.status === 429) this.startCountdown(e.error?.retry_after ?? RESEND_SECONDS);

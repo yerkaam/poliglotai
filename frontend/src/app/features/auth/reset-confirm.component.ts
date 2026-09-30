@@ -8,6 +8,7 @@ import { IconComponent } from '../../shared/icon.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
 import { PasswordInputComponent } from './password-input.component';
+import { GuardedPage } from '../../core/leave.guard';
 
 @Component({
   selector: 'app-reset-confirm',
@@ -45,13 +46,14 @@ import { PasswordInputComponent } from './password-input.component';
   `,
   styleUrl: './auth.scss',
 })
-export class ResetConfirmComponent {
+export class ResetConfirmComponent extends GuardedPage {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private router = inject(Router);
   private params = inject(ActivatedRoute).snapshot.queryParamMap;
 
   protected busy = signal(false);
+  private done = false;
   protected error = signal('');
   protected form = this.fb.nonNullable.group({
     password: ['', Validators.required],
@@ -62,6 +64,10 @@ export class ResetConfirmComponent {
   protected hasDigit = computed(() => /\d/.test(this.value().password ?? ''));
   protected mismatch = computed(() => !!this.value().password2 && this.value().password !== this.value().password2);
 
+  hasUnsavedWork() {
+    return !this.done && this.form.dirty;
+  }
+
   async submit() {
     if (!this.longEnough() || !this.hasDigit() || this.mismatch() || this.form.invalid) return;
     this.busy.set(true);
@@ -70,6 +76,7 @@ export class ResetConfirmComponent {
       await firstValueFrom(
         this.api.confirmReset(this.params.get('uid') ?? '', this.params.get('token') ?? '', this.form.getRawValue().password),
       );
+      this.done = true;
       await this.router.navigate(['/login'], { queryParams: { reset: 1 } });
     } catch (e) {
       const { general, fields } = apiErrors(e);

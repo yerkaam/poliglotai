@@ -13,6 +13,9 @@
   <div class="grid">
     <div class="col-main">
       <section class="goal" aria-labelledby="goalTitle">
+        @if (store.failed() && !store.progress()) {
+          <app-load-error (retry)="store.refresh()" />
+        }
         <div class="goal-head">
           <h2 id="goalTitle" class="eyebrow on-red" i18n>Күннің мақсаты</h2>
           <span class="goal-count">{{ goal()?.done ?? 0 }} / {{ goal()?.total ?? 0 }}</span>
@@ -44,6 +47,9 @@
         </button>
       </section>
 
+      @if (verbs.failed()) {
+        <section class="card"><app-load-error (retry)="verbs.reload()" /></section>
+      }
       @if (verbOfDay(); as v) {
         <section class="card verb" aria-labelledby="verbTitle">
           <div class="verb-head">
@@ -102,8 +108,11 @@
 
       <section class="card side-card">
         <h3 i18n>Курс · 16 қадам</h3>
+        @if (course.failed()) {
+          <app-load-error (retry)="course.reload()" />
+        }
         <ol class="steps">
-          @for (s of course().slice(0, 3); track s.number) {
+          @for (s of course.value().slice(0, 3); track s.number) {
             <li [class.open]="s.status === 'open'">
               <span class="num">{{ s.number }}</span>
               <span class="name">{{ s.title_kk }}</span>

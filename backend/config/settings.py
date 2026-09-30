@@ -111,6 +111,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["users.authentication.CookieJWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["users.permissions.IsVerified"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
         "chat": os.environ.get("CHAT_DAILY_LIMIT", "30") + "/day",
         "reset_email": "1/min",

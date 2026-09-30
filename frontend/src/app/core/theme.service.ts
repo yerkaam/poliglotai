@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 
 export type Theme = 'light' | 'dark' | 'system';
 const KEY = 'poliglot-theme';
@@ -7,16 +7,21 @@ const KEY = 'poliglot-theme';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   readonly theme = signal<Theme>(this.read());
+  private systemDark = signal(false);
+  /** The theme actually shown — the toggle icon and label follow it. */
+  readonly isDark = computed(() => this.theme() === 'dark' || (this.theme() === 'system' && this.systemDark()));
 
   constructor() {
+    if (typeof matchMedia !== 'undefined') {
+      const media = matchMedia('(prefers-color-scheme: dark)');
+      this.systemDark.set(media.matches);
+      media.addEventListener('change', () => this.systemDark.set(media.matches));
+    }
     this.apply(this.theme());
   }
 
   toggle() {
-    const isDark =
-      this.theme() === 'dark' ||
-      (this.theme() === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
-    this.set(isDark ? 'light' : 'dark');
+    this.set(this.isDark() ? 'light' : 'dark');
   }
 
   set(theme: Theme) {

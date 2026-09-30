@@ -9,10 +9,17 @@
   /* phone: top bar and bottom nav stay, the message feed scrolls on its own */
   height: calc(100dvh - var(--topbar-h, 140px) - 76px - env(safe-area-inset-bottom));
   min-height: 420px;
+  /* desktop: no bottom nav */
   @media (min-width: 1024px) {
-    grid-template-columns: 200px minmax(0, 1fr) 320px;
-    grid-template-rows: minmax(0, 1fr);
     height: calc(100vh - var(--topbar-h, 69px));
+  }
+  /* columns follow the room the chat actually gets (the sidebar may be open or a narrow rail) */
+  @container main (min-width: 760px) {
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  @container main (min-width: 1080px) {
+    grid-template-columns: 200px minmax(0, 1fr) 320px;
   }
 }
 
@@ -21,7 +28,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px 16px 0;
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     padding: 28px 16px;
     border-right: 1px solid var(--line);
     background: var(--surface);
@@ -32,7 +39,7 @@
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     flex-direction: column;
     overflow: visible;
   }
@@ -46,7 +53,7 @@
     text-align: left;
     font-size: 14px;
     color: var(--muted);
-    @media (min-width: 1024px) {
+    @container main (min-width: 760px) {
       border-color: transparent;
       background: none;
     }
@@ -65,7 +72,7 @@
   min-width: 0;
   min-height: 0;
   background: var(--surface);
-  @media (max-width: 1023px) {
+  @container main (max-width: 759px) {
     background: none;
   }
 }
@@ -76,7 +83,7 @@
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--line);
-  @media (max-width: 1023px) {
+  @container main (max-width: 759px) {
     .bot {
       width: 36px;
       height: 36px;
@@ -89,7 +96,7 @@
       display: none;
     }
   }
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     padding: 20px 32px;
   }
 }
@@ -141,14 +148,14 @@
   }
 }
 .summary-btn {
-  @media (min-width: 1024px) {
+  @container main (min-width: 1080px) {
     display: none;
   }
 }
 
 .modes {
   margin: 12px 16px 0;
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     margin: 12px 32px 0;
     align-self: flex-start;
   }
@@ -162,7 +169,7 @@
   flex-direction: column;
   gap: 14px;
   padding: 20px 16px;
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     padding: 24px 32px;
     background: var(--bg);
     margin-top: 12px;
@@ -315,7 +322,7 @@
   flex-direction: column;
   gap: 10px;
   background: var(--surface);
-  @media (min-width: 1024px) {
+  @container main (min-width: 760px) {
     padding: 16px 32px 24px;
   }
 }
@@ -354,17 +361,18 @@
   h2 {
     font-size: 17px;
   }
-  @media (max-width: 1023px) {
+  @container main (max-width: 1079px) {
     &.open {
       display: flex;
       position: fixed;
       inset: 0;
       z-index: 40;
       background: var(--bg);
-      padding: 20px 16px 32px;
+      /* the chat column is a size container, so "fixed" is relative to it; keep clear of the bottom nav */
+      padding: 20px 16px calc(100px + env(safe-area-inset-bottom));
     }
   }
-  @media (min-width: 1024px) {
+  @container main (min-width: 1080px) {
     display: flex;
     padding: 28px 24px;
   }
@@ -383,7 +391,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  @media (min-width: 1024px) {
+  @container main (min-width: 1080px) {
     display: none;
   }
 }

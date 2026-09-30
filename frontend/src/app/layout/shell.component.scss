@@ -1,6 +1,8 @@
 :host {
   display: block;
   min-height: 100vh;
+  --sidebar-w: 248px;
+  --rail-w: 76px;
 }
 
 .skip {
@@ -21,18 +23,31 @@
   min-height: 100vh;
 }
 
+/* ---- sidebar (desktop) ---------------------------------------------------- */
+
 .sidebar {
   display: none;
-  width: 248px;
+  width: var(--sidebar-w);
   flex-shrink: 0;
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
+  overflow-y: auto; /* short screens: the footer never overlaps the menu */
+  overscroll-behavior: contain;
   background: var(--surface);
   border-right: 1px solid var(--line);
-  padding: 28px 16px;
+  padding: 24px 16px 16px;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
+  transition: width 0.2s ease, padding 0.2s ease;
+  scrollbar-width: thin;
+}
+
+.side-head {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
 }
 
 .brand {
@@ -48,15 +63,17 @@
   flex-direction: column;
   gap: 4px;
   a {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 44px;
+    min-height: 44px;
     padding: 0 12px;
     border-radius: 12px;
     color: var(--ink);
     font-weight: 400;
     font-size: 15px;
+    white-space: nowrap;
     &:hover {
       background: var(--bg);
     }
@@ -66,6 +83,11 @@
       font-weight: 600;
     }
   }
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .badge {
@@ -94,16 +116,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--r-md);
   background: var(--bg);
+  min-width: 0;
 }
 .avatar {
   width: 36px;
   height: 36px;
   border-radius: 18px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  flex-shrink: 0;
+  background: var(--red);
+  color: var(--on-red);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,10 +155,20 @@
   display: flex;
   gap: 6px;
 }
+.collapse-btn {
+  margin-left: auto;
+  app-icon {
+    transition: transform 0.2s ease;
+  }
+  .flip {
+    transform: rotate(180deg);
+  }
+}
 
 .icon-btn {
   width: 44px;
   height: 44px;
+  flex-shrink: 0;
   border-radius: 22px;
   border: 1px solid var(--line);
   background: var(--surface);
@@ -144,11 +181,64 @@
   }
 }
 
+/* Collapsed: a narrow icon rail. Labels stay in the DOM for screen readers, tooltips show them. */
+.rail .sidebar {
+  width: var(--rail-w);
+  padding: 24px 10px 16px;
+  align-items: center;
+  .brand {
+    padding: 0;
+  }
+  .side-nav {
+    width: 100%;
+    a {
+      justify-content: center;
+      padding: 0;
+    }
+  }
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 11px;
+    margin: 0;
+  }
+  .side-foot {
+    align-items: center;
+  }
+  .me {
+    padding: 0;
+    background: none;
+  }
+  .side-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .collapse-btn {
+    margin-left: 0;
+  }
+}
+
+/* ---- main column ---------------------------------------------------------- */
+
 .main-col {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  /* Pages lay out by the width they actually get, not by the window width. */
+  container: main / inline-size;
 }
 
 .topbar {
@@ -220,6 +310,8 @@ main {
   outline: none;
 }
 
+/* ---- bottom navigation (phone and tablet) --------------------------------- */
+
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -268,7 +360,7 @@ main {
   }
   .topbar {
     justify-content: flex-end;
-    padding: 16px 40px;
+    padding: 16px 32px;
   }
   .stats {
     order: 0;
@@ -290,5 +382,12 @@ main {
   }
   main {
     padding-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .collapse-btn app-icon {
+    transition: none;
   }
 }

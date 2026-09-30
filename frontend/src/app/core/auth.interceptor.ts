@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Observable, catchError, finalize, shareReplay, switchMap, throwError } from 'rxjs';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
+import { ConfirmService } from './confirm.service';
 
 const NO_REFRESH = ['/api/auth/login/', '/api/auth/register/', '/api/auth/refresh/', '/api/auth/logout/', '/api/auth/csrf/'];
 
@@ -12,6 +13,7 @@ let refreshing$: Observable<unknown> | null = null;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const api = inject(ApiService);
   const auth = inject(AuthService);
+  const confirm = inject(ConfirmService);
 
   return next(req).pipe(
     catchError((error: unknown) => {
@@ -28,7 +30,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return refreshing$.pipe(
         switchMap(() => next(req)),
         catchError((refreshError: unknown) => {
-          if (auth.isLoggedIn()) auth.clear();
+          if (auth.isLoggedIn()) {
+            // The session is gone: nothing on the page can be saved, so leave without asking.
+            confirm.bypassLeaveGuards = true;
+            auth.clear().finally(() => (confirm.bypassLeaveGuards = false));
+          }
           return throwError(() => refreshError);
         }),
       );

@@ -7,7 +7,7 @@
 .method {
   display: grid;
   gap: 12px;
-  @media (min-width: 800px) {
+  @container main (min-width: 720px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -40,7 +40,7 @@
 .layout {
   display: grid;
   gap: 20px;
-  @media (min-width: 1100px) {
+  @container main (min-width: 960px) {
     grid-template-columns: minmax(0, 1fr) 340px;
     align-items: start;
   }

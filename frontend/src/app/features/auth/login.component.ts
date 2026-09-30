@@ -6,6 +6,7 @@ import { IconComponent } from '../../shared/icon.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
 import { PasswordInputComponent } from './password-input.component';
+import { GuardedPage } from '../../core/leave.guard';
 
 @Component({
   selector: 'app-login',
@@ -60,13 +61,14 @@ import { PasswordInputComponent } from './password-input.component';
   `,
   styleUrl: './auth.scss',
 })
-export class LoginComponent {
+export class LoginComponent extends GuardedPage {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   protected busy = signal(false);
+  private done = false;
   protected error = signal('');
   protected notice = signal(this.route.snapshot.queryParamMap.get('reset') ? $localize`Құпиясөз жаңартылды. Енді кіре аласыз.` : '');
 
@@ -75,6 +77,10 @@ export class LoginComponent {
     password: ['', Validators.required],
     remember: [true],
   });
+
+  hasUnsavedWork() {
+    return !this.done && this.form.dirty && !!(this.form.value.email || this.form.value.password);
+  }
 
   async submit() {
     this.notice.set('');
@@ -87,6 +93,7 @@ export class LoginComponent {
     const { email, password, remember } = this.form.getRawValue();
     try {
       await this.auth.login(email, password, remember);
+      this.done = true;
       const next = this.route.snapshot.queryParamMap.get('next');
       await this.router.navigateByUrl(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
     } catch (e) {

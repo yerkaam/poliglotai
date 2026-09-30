@@ -26,8 +26,11 @@
   <div class="layout">
     <section class="card map" aria-labelledby="mapTitle">
       <h2 id="mapTitle" class="section-title" i18n>Қадамдар картасы</h2>
+      @if (steps.failed()) {
+        <app-load-error (retry)="steps.reload()" />
+      }
       <ol class="steps">
-        @for (s of steps(); track s.number) {
+        @for (s of steps.value(); track s.number) {
           <li [class.open]="s.status === 'open'">
             <span class="num">{{ s.number }}</span>
             <div class="info">
@@ -79,9 +82,6 @@
       <section class="card panel">
         <h2 class="section-title" i18n>Прогресті тазарту</h2>
         <p class="muted" i18n>Барлық сөздер, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
-        @if (message()) {
-          <div class="alert alert-ok" role="status">{{ message() }}</div>
-        }
         <button type="button" class="btn btn-ghost" (click)="openReset()" i18n>Тазарту…</button>
       </section>
     </aside>

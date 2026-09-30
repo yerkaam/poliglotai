@@ -7,6 +7,7 @@ import { IconComponent } from '../../shared/icon.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
 import { PasswordInputComponent } from './password-input.component';
+import { GuardedPage } from '../../core/leave.guard';
 
 @Component({
   selector: 'app-register',
@@ -73,12 +74,13 @@ import { PasswordInputComponent } from './password-input.component';
   `,
   styleUrl: './auth.scss',
 })
-export class RegisterComponent {
+export class RegisterComponent extends GuardedPage {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
 
   protected busy = signal(false);
+  private done = false;
   protected general = signal('');
   protected serverErrors = signal<Record<string, string>>({});
   protected submitted = signal(false);
@@ -110,6 +112,14 @@ export class RegisterComponent {
     return $localize`Толтырыңыз.`;
   }
 
+  hasUnsavedWork() {
+    return !this.done && this.form.dirty;
+  }
+
+  override leaveMessage() {
+    return $localize`Тіркелу аяқталмады, енгізілген деректер сақталмайды.`;
+  }
+
   async submit() {
     this.submitted.set(true);
     this.serverErrors.set({});
@@ -121,6 +131,7 @@ export class RegisterComponent {
     this.busy.set(true);
     try {
       await this.auth.register(this.form.getRawValue());
+      this.done = true;
       await this.router.navigate(['/verify'], { queryParams: { sent: 1 } });
     } catch (e) {
       const { general, fields } = apiErrors(e);

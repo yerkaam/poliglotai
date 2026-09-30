@@ -7,6 +7,7 @@ import { ApiService } from '../../core/api.service';
 import { IconComponent } from '../../shared/icon.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
+import { GuardedPage } from '../../core/leave.guard';
 
 @Component({
   selector: 'app-reset',
@@ -52,7 +53,7 @@ import { apiErrors } from './errors';
   `,
   styleUrl: './auth.scss',
 })
-export class ResetComponent {
+export class ResetComponent extends GuardedPage {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
 
@@ -64,7 +65,12 @@ export class ResetComponent {
   private timer: ReturnType<typeof setInterval> | undefined;
 
   constructor() {
+    super();
     inject(DestroyRef).onDestroy(() => clearInterval(this.timer));
+  }
+
+  hasUnsavedWork() {
+    return !this.sent() && !!this.form.value.email;
   }
 
   protected clock() {

@@ -3,15 +3,17 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, filter, of, switchMap, tap } from 'rxjs';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { apiResource } from '../../core/api-resource';
 import { PRONOUN_KK, PRONOUNS, STATUS_KK, TENSE_KK, TENSE_RULE_KK, TENSES } from '../../core/labels';
 import { Form, Pronoun, Tense, VerbForms, Word } from '../../core/models';
 import { IconComponent } from '../../shared/icon.component';
+import { LoadErrorComponent } from '../../shared/load-error.component';
 import { VerbGridComponent } from '../../shared/verb-grid.component';
 
 @Component({
   selector: 'app-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [VerbGridComponent, IconComponent, RouterLink],
+  imports: [VerbGridComponent, IconComponent, RouterLink, LoadErrorComponent],
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
 })
@@ -32,7 +34,9 @@ export class TableComponent {
   protected rules = TENSE_RULE_KK;
   protected statusKk = STATUS_KK;
 
-  protected verbs = toSignal(this.api.verbs(), { initialValue: [] as Word[] });
+  protected verbs = apiResource(() => this.api.verbs(), [] as Word[]);
+  /** Bumped by "Қайталау" to request the nine forms again. */
+  private retryTick = signal(0);
   protected pickerOpen = signal(false);
   protected query = signal('');
   protected loadError = signal(false);
@@ -42,7 +46,7 @@ export class TableComponent {
     return PRONOUNS.includes(p) ? p : 'she';
   });
   protected currentVerb = computed<Word | null>(() => {
-    const list = this.verbs();
+    const list = this.verbs.value();
     if (!list.length) return null;
     const wanted = (this.verb() ?? '').toLowerCase();
     return list.find((v) => v.word === wanted) ?? list.find((v) => v.status === 'learning') ?? list[0];
@@ -52,11 +56,12 @@ export class TableComponent {
 
   protected filtered = computed(() => {
     const q = this.query().trim().toLowerCase();
-    return this.verbs().filter((v) => v.is_verb && (!q || v.word.includes(q) || v.translation_kk.toLowerCase().includes(q)));
+    return this.verbs.value().filter((v) => v.is_verb && (!q || v.word.includes(q) || v.translation_kk.toLowerCase().includes(q)));
   });
 
   private request = computed(() => {
     const verb = this.currentVerb();
+    this.retryTick();
     return verb ? { id: verb.id, pronoun: this.currentPronoun() } : null;
   });
 
@@ -76,6 +81,10 @@ export class TableComponent {
     ),
     { initialValue: null as VerbForms | null },
   );
+
+  protected retryForms() {
+    this.retryTick.update((n) => n + 1);
+  }
 
   protected setPronoun(p: Pronoun) {
     this.navigate({ pronoun: p, tense: null, form: null });

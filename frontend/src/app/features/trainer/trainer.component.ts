@@ -18,6 +18,7 @@ import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
 import { SentenceComponent } from '../../shared/sentence.component';
 import { apiErrors } from '../auth/errors';
+import { GuardedPage } from '../../core/leave.guard';
 
 @Component({
   selector: 'app-trainer',
@@ -26,7 +27,7 @@ import { apiErrors } from '../auth/errors';
   templateUrl: './trainer.component.html',
   styleUrl: './trainer.component.scss',
 })
-export class TrainerComponent implements OnInit {
+export class TrainerComponent extends GuardedPage implements OnInit {
   private api = inject(ApiService);
   private speech = inject(SpeechService);
   private store = inject(ProgressStore);
@@ -41,9 +42,26 @@ export class TrainerComponent implements OnInit {
   protected sign = FORM_SIGN;
   protected aux = TENSE_AUX;
   private nextTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Sentences checked since the learner opened the trainer. */
+  protected sessionAnswers = signal(0);
 
   constructor() {
+    super();
     inject(DestroyRef).onDestroy(() => clearTimeout(this.nextTimer));
+  }
+
+  hasUnsavedWork() {
+    return this.sessionAnswers() > 0 || (!!this.answer().trim() && !this.result());
+  }
+
+  override leaveTitle() {
+    return $localize`Жаттығудан шығасыз ба?`;
+  }
+
+  override leaveMessage() {
+    return this.answer().trim() && !this.result()
+      ? $localize`Жазылған сөйлем тексерілмей қалады.`
+      : $localize`Осы жаттығуда ${this.sessionAnswers()}:count: сөйлем жаздыңыз. Нәтижелер сақталды, бірақ жаттығу тоқтайды.`;
   }
 
   ngOnInit() {
@@ -88,6 +106,7 @@ export class TrainerComponent implements OnInit {
       );
       this.result.set(result);
       this.stats.set(result.stats);
+      this.sessionAnswers.update((n) => n + 1);
       this.store.refresh();
       if (result.correct) {
         this.speech.speak(result.expected);

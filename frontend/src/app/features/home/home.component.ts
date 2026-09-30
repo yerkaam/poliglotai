@@ -4,11 +4,13 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, filter, of, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { apiResource } from '../../core/api-resource';
 import { AuthService } from '../../core/auth.service';
 import { INTERVAL_LABELS, PRONOUNS, capitalize } from '../../core/labels';
 import { CourseStep, GoalTask, Pronoun, VerbForms, Word } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { IconComponent } from '../../shared/icon.component';
+import { LoadErrorComponent } from '../../shared/load-error.component';
 import { VerbGridComponent } from '../../shared/verb-grid.component';
 
 const TASK_ROUTE: Record<GoalTask['key'], string> = {
@@ -29,7 +31,7 @@ const SCENARIO_KK: Record<string, string> = {
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink, VerbGridComponent, DatePipe],
+  imports: [IconComponent, RouterLink, VerbGridComponent, DatePipe, LoadErrorComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -45,12 +47,12 @@ export class HomeComponent {
   protected capitalize = capitalize;
   protected pronoun = signal<Pronoun>('she');
 
-  private verbs = toSignal(this.api.verbs(), { initialValue: [] as Word[] });
-  protected course = toSignal(this.api.course(), { initialValue: [] as CourseStep[] });
+  protected verbs = apiResource(() => this.api.verbs(), [] as Word[]);
+  protected course = apiResource(() => this.api.course(), [] as CourseStep[]);
 
   /** Verb of the day: rotates daily through the verbs being learned (or the course verbs). */
   protected verbOfDay = computed<Word | null>(() => {
-    const all = this.verbs().filter((v) => v.is_verb && v.course_step !== null);
+    const all = this.verbs.value().filter((v) => v.is_verb && v.course_step !== null);
     if (!all.length) return null;
     const learning = all.filter((v) => v.status === 'learning');
     const pool = learning.length ? learning : all;

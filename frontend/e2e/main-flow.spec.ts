@@ -87,8 +87,13 @@ test('learner goes through table, words, trainer and chat', async ({ page }) => 
 
   // Logout closes private pages.
   await page.goto('/course');
-  const logout = page.getByRole('button', { name: 'Шығу' }).locator('visible=true').first();
+  const logout = page.getByRole('button', { name: 'Аккаунттан шығу' }).locator('visible=true').first();
   await logout.click();
+  const dialog = page.getByRole('dialog', { name: 'Аккаунттан шығасыз ба?' });
+  await dialog.getByRole('button', { name: 'Қалу' }).click();
+  await expect(page).toHaveURL(/\/course/);
+  await logout.click();
+  await dialog.getByRole('button', { name: 'Шығу' }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto('/trainer');
   await expect(page).toHaveURL(/\/login/);
@@ -113,4 +118,35 @@ test('login fields are recognisable by password managers', async ({ page }) => {
   await expect(page.locator('#loginEmail')).toHaveAttribute('name', 'email');
   await expect(page.locator('#loginPassword')).toHaveAttribute('autocomplete', 'current-password');
   await expect(page.locator('#loginPassword')).toHaveAttribute('name', 'password');
+});
+
+test('leaving a started training asks first', async ({ page }) => {
+  await register(page);
+  await page.goto('/trainer');
+  await page.getByLabel('Сіздің сөйлеміңіз').fill('She will');
+  const nav = page.locator('aside nav, nav.bottom-nav').locator('visible=true').first();
+  await nav.getByRole('link', { name: /Басты бет/ }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Жаттығудан шығасыз ба?' });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape'); // "stay" is the default
+  await expect(page).toHaveURL(/\/trainer/);
+  await expect(page.getByLabel('Сіздің сөйлеміңіз')).toHaveValue('She will');
+
+  await nav.getByRole('link', { name: /Басты бет/ }).click();
+  await dialog.getByRole('button', { name: 'Шығу' }).click();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('the sidebar folds into an icon rail and remembers it', async ({ page, isMobile }) => {
+  test.skip(!!isMobile, 'desktop sidebar only');
+  await register(page);
+  const sidebar = page.locator('aside.sidebar');
+  const wide = (await sidebar.boundingBox())!.width;
+  await page.getByRole('button', { name: 'Мәзірді жию' }).click();
+  await expect.poll(async () => (await sidebar.boundingBox())!.width).toBeLessThan(100);
+  await page.reload();
+  await expect.poll(async () => (await sidebar.boundingBox())!.width).toBeLessThan(100);
+  await page.getByRole('button', { name: 'Мәзірді ашу' }).click();
+  await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(wide);
 });

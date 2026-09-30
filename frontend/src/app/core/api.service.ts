@@ -1,4 +1,5 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
+import { HANDLED_STATUSES } from './error.interceptor';
 import { Injectable, inject } from '@angular/core';
 import {
   AnswerResult,
@@ -36,7 +37,7 @@ export class ApiService {
     return this.http.get<User>('/api/auth/me/');
   }
   login(email: string, password: string, remember: boolean) {
-    return this.http.post<User>('/api/auth/login/', { email, password, remember });
+    return this.http.post<User>('/api/auth/login/', { email, password, remember }, handles(429));
   }
   register(data: { name: string; email: string; password: string; password2: string; accept_terms: boolean }) {
     return this.http.post<User>('/api/auth/register/', data);
@@ -51,13 +52,13 @@ export class ApiService {
     return this.http.post<User>('/api/auth/verify-email/', { code });
   }
   resendCode() {
-    return this.http.post<{ detail: string; retry_after: number }>('/api/auth/verify-email/resend/', {});
+    return this.http.post<{ detail: string; retry_after: number }>('/api/auth/verify-email/resend/', {}, handles(429));
   }
   updateProfile(data: Partial<Profile>) {
     return this.http.patch<User>('/api/auth/profile/', data);
   }
   requestReset(email: string) {
-    return this.http.post<{ detail: string; retry_after: number }>('/api/auth/password-reset/', { email });
+    return this.http.post<{ detail: string; retry_after: number }>('/api/auth/password-reset/', { email }, handles(429));
   }
   confirmReset(uid: string, token: string, password: string) {
     return this.http.post<{ detail: string }>('/api/auth/password-reset/confirm/', { uid, token, password });
@@ -110,15 +111,20 @@ export class ApiService {
     return this.http.get<{ scenarios: Scenario[]; usage: ChatUsage }>('/api/chat/scenarios/');
   }
   startConversation(mode: ChatMode, scenario?: string) {
-    return this.http.post<Conversation>('/api/chat/conversations/', { mode, scenario: scenario ?? null });
+    return this.http.post<Conversation>('/api/chat/conversations/', { mode, scenario: scenario ?? null }, handles(503));
   }
   conversation(id: number) {
     return this.http.get<Conversation>(`/api/chat/conversations/${id}/`);
   }
   send(id: number, text: string) {
-    return this.http.post<SendResult>(`/api/chat/conversations/${id}/messages/`, { text });
+    return this.http.post<SendResult>(`/api/chat/conversations/${id}/messages/`, { text }, handles(429, 503));
   }
   summary(id: number) {
     return this.http.get<ChatSummary>(`/api/chat/conversations/${id}/summary/`);
   }
+}
+
+/** The screen shows its own message for these statuses (a countdown, "AI unavailable"), so no pop-up. */
+function handles(...statuses: number[]) {
+  return { context: new HttpContext().set(HANDLED_STATUSES, statuses) };
 }

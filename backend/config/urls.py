@@ -51,3 +51,6 @@ def spa_index(request):
 
 if settings.SPA_DIR:
     urlpatterns.append(re_path(r"^(?!api/|admin/|static/|healthz).*$", spa_index))
+
+handler404 = "config.exceptions.json_404"
+handler500 = "config.exceptions.json_500"

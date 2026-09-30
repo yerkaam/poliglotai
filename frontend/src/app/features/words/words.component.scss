@@ -1,7 +1,7 @@
 .layout {
   display: grid;
   gap: 20px;
-  @media (min-width: 1024px) {
+  @container main (min-width: 900px) {
     grid-template-columns: minmax(0, 560px) 320px;
     justify-content: center;
     align-items: start;

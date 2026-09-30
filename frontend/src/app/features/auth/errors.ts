@@ -1,7 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { isReported } from '../../core/error.interceptor';
 
 /** Turns a DRF error body into { field: message } plus a general message. */
 export function apiErrors(error: unknown): { general: string; fields: Record<string, string> } {
+  // Already shown as a pop-up (no connection, server error): the screen does not repeat it.
+  if (isReported(error)) return { general: '', fields: {} };
   const fallback = $localize`Байланыс қатесі. Қайталап көріңіз.`;
   if (!(error instanceof HttpErrorResponse) || typeof error.error !== 'object' || error.error === null) {
     return { general: fallback, fields: {} };

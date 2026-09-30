@@ -16,8 +16,10 @@ import { FORM_KK, TENSE_KK } from '../../core/labels';
 import { ChatMessage, ChatMode, ChatSummary, ChatUsage, Conversation, Correction, NewWord, Scenario } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
+import { ToastService } from '../../core/toast.service';
 import { IconComponent } from '../../shared/icon.component';
 import { apiErrors } from '../auth/errors';
+import { GuardedPage } from '../../core/leave.guard';
 
 const ACTIVE_KEY = 'poliglot-chat';
 
@@ -28,10 +30,11 @@ const ACTIVE_KEY = 'poliglot-chat';
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent extends GuardedPage implements OnInit {
   private api = inject(ApiService);
   protected speech = inject(SpeechService);
   private store = inject(ProgressStore);
+  private toasts = inject(ToastService);
   private feed = viewChild<ElementRef<HTMLElement>>('feed');
   private inputRef = viewChild<ElementRef<HTMLInputElement>>('chatInput');
 
@@ -65,6 +68,22 @@ export class ChatComponent implements OnInit {
     if (c.mode === 'dialog' && c.scenario) return $localize`«${c.scenario.title_kk}:scenario:» диалогы`;
     return c.mode === 'builder' ? $localize`Фраза құрастырғыш` : $localize`Еркін әңгіме`;
   });
+
+  hasUnsavedWork() {
+    const c = this.conversation();
+    const inDialog = !!c && !c.finished && c.messages.some((m) => m.role === 'user');
+    return !!this.text().trim() || this.sending() || inDialog;
+  }
+
+  override leaveTitle() {
+    return $localize`Диалогтан шығасыз ба?`;
+  }
+
+  override leaveMessage() {
+    return this.text().trim()
+      ? $localize`Жазылған хабарлама жіберілмейді.`
+      : $localize`Диалог аяқталмады. Кейін осы беттен жалғастыра аласыз.`;
+  }
 
   async ngOnInit() {
     try {
@@ -159,20 +178,25 @@ export class ChatComponent implements OnInit {
     this.inputRef()?.nativeElement.focus();
   }
 
-  protected async addWord(word: NewWord) {
+  protected async addWord(word: NewWord, quiet = false) {
     try {
       await firstValueFrom(this.api.addWord(word.word, word.translation_kk));
       this.added.update((s) => new Set(s).add(word.word.toLowerCase()));
       this.store.refresh();
+      if (!quiet) this.toasts.success($localize`«${word.word}:word:» карточкаларға қосылды.`);
+      return true;
     } catch (e) {
       this.error.set(apiErrors(e).general);
+      return false;
     }
   }
 
   protected async addAll() {
+    let count = 0;
     for (const w of this.summary()?.new_words ?? []) {
-      if (!this.isAdded(w)) await this.addWord(w);
+      if (!this.isAdded(w) && (await this.addWord(w, true))) count++;
     }
+    if (count) this.toasts.success($localize`${count}:count: сөз карточкаларға қосылды.`);
     this.loadSummary();
   }
 

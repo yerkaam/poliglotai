@@ -1,8 +1,13 @@
 <a class="skip" href="#main" i18n>Негізгі мазмұнға өту</a>
 
-<div class="layout">
-  <aside class="sidebar">
-    <a routerLink="/" class="brand" i18n-aria-label aria-label="PoliglotAi, басты бет"><app-logo /></a>
+<div class="layout" [class.rail]="collapsed()">
+  <aside class="sidebar" i18n-aria-label aria-label="Бүйірлік мәзір">
+    <div class="side-head">
+      <a routerLink="/" class="brand" i18n-aria-label aria-label="PoliglotAi, басты бет">
+        <app-logo [compact]="collapsed()" />
+      </a>
+    </div>
+
     <nav class="side-nav" i18n-aria-label aria-label="Негізгі мәзір">
       @for (item of nav; track item.path) {
         <a
@@ -10,30 +15,41 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: item.path === '/' }"
           ariaCurrentWhenActive="page"
+          [attr.title]="collapsed() ? item.label : null"
         >
           <app-icon [name]="item.icon" />
-          <span>{{ item.label }}</span>
+          <span class="label">{{ item.label }}</span>
           @if (item.path === '/words' && stats()?.due) {
-            <span class="badge" i18n-aria-label aria-label="қайталауға">{{ stats()!.due }}</span>
+            <span class="badge"><span class="visually-hidden" i18n>қайталауға:</span> {{ stats()!.due }}</span>
           }
         </a>
       }
     </nav>
 
     <div class="side-foot">
-      <div class="me">
-        <span class="avatar"><app-icon name="user" [size]="18" /></span>
-        <span class="me-text">
+      <div class="me" [attr.title]="collapsed() ? auth.user()?.name : null">
+        <span class="avatar" aria-hidden="true">{{ initial() }}</span>
+        <span class="me-text label">
           <b>{{ auth.user()?.name }}</b>
           <span class="muted" i18n>Деңгей {{ auth.user()?.profile?.level }} → A2</span>
         </span>
       </div>
       <div class="side-actions">
-        <button type="button" class="icon-btn" (click)="theme.toggle()" i18n-aria-label aria-label="Тақырыпты ауыстыру">
-          <app-icon name="moon" />
+        <button type="button" class="icon-btn" (click)="theme.toggle()" [attr.aria-label]="themeLabel()" [attr.title]="themeLabel()">
+          <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
         </button>
-        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Шығу">
+        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Аккаунттан шығу" i18n-title title="Аккаунттан шығу">
           <app-icon name="logout" />
+        </button>
+        <button
+          type="button"
+          class="icon-btn collapse-btn"
+          (click)="toggleSidebar()"
+          [attr.aria-expanded]="!collapsed()"
+          [attr.aria-label]="collapsed() ? expandLabel : collapseLabel"
+          [attr.title]="collapsed() ? expandLabel : collapseLabel"
+        >
+          <app-icon name="chevron" [class.flip]="!collapsed()" />
         </button>
       </div>
     </div>
@@ -68,10 +84,10 @@
       </dl>
 
       <div class="top-actions mobile-only">
-        <button type="button" class="icon-btn" (click)="theme.toggle()" i18n-aria-label aria-label="Тақырыпты ауыстыру">
-          <app-icon name="moon" />
+        <button type="button" class="icon-btn" (click)="theme.toggle()" [attr.aria-label]="themeLabel()">
+          <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
         </button>
-        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Шығу">
+        <button type="button" class="icon-btn" (click)="logout()" i18n-aria-label aria-label="Аккаунттан шығу">
           <app-icon name="logout" />
         </button>
       </div>
@@ -85,17 +101,17 @@
 
 <nav class="bottom-nav" i18n-aria-label aria-label="Негізгі мәзір">
   @for (item of nav; track item.path) {
-      <a
-        [routerLink]="item.path"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-        ariaCurrentWhenActive="page"
-      >
-        <app-icon [name]="item.icon" [size]="22" />
-        <span>{{ item.short }}</span>
-        @if (item.path === '/words' && stats()?.due) {
-          <span class="dot" aria-hidden="true"></span>
-        }
-      </a>
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+      ariaCurrentWhenActive="page"
+    >
+      <app-icon [name]="item.icon" [size]="22" />
+      <span>{{ item.short }}</span>
+      @if (item.path === '/words' && stats()?.due) {
+        <span class="dot" aria-hidden="true"></span>
+      }
+    </a>
   }
 </nav>

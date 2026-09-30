@@ -45,7 +45,7 @@ export class AuthService {
     try {
       await firstValueFrom(this.api.logout());
     } finally {
-      this.clear();
+      await this.clear();
     }
   }
 
@@ -66,6 +66,6 @@ export class AuthService {
 
   clear() {
     this.user.set(null);
-    this.router.navigate(['/login']);
+    return this.router.navigate(['/login']);
   }
 }

@@ -3,6 +3,7 @@ import { registerLocaleData } from '@angular/common';
 import localeKk from '@angular/common/locales/kk';
 import {
   ApplicationConfig,
+  ErrorHandler,
   LOCALE_ID,
   inject,
   provideAppInitializer,
@@ -12,6 +13,8 @@ import {
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
+import { errorInterceptor } from './core/error.interceptor';
+import { GlobalErrorHandler } from './core/global-error-handler';
 import { AuthService } from './core/auth.service';
 
 registerLocaleData(localeKk);
@@ -24,9 +27,11 @@ export const appConfig: ApplicationConfig = {
     // Django's CSRF cookie is echoed back on every unsafe request.
     provideHttpClient(
       withXsrfConfiguration({ cookieName: 'csrftoken', headerName: 'X-CSRFToken' }),
-      withInterceptors([authInterceptor]),
+      // outermost first: the error interceptor sees the final result, after a token refresh and retry
+      withInterceptors([errorInterceptor, authInterceptor]),
     ),
     { provide: LOCALE_ID, useValue: 'kk' },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideAppInitializer(() => inject(AuthService).init()),
   ],
 };

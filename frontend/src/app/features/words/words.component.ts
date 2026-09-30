@@ -8,6 +8,7 @@ import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
 import { apiErrors } from '../auth/errors';
+import { GuardedPage } from '../../core/leave.guard';
 
 interface QueueItem {
   word: Word;
@@ -21,7 +22,7 @@ interface QueueItem {
   templateUrl: './words.component.html',
   styleUrl: './words.component.scss',
 })
-export class WordsComponent implements OnInit {
+export class WordsComponent extends GuardedPage implements OnInit {
   private api = inject(ApiService);
   protected speech = inject(SpeechService);
   protected store = inject(ProgressStore);
@@ -44,6 +45,18 @@ export class WordsComponent implements OnInit {
   protected total = computed(() => this.done() + this.queue().length);
   protected percent = computed(() => (this.total() ? Math.round((100 * this.done()) / this.total()) : 0));
   protected stageMax = computed(() => Math.max(1, ...(this.store.progress()?.stages.map((s) => s.count) ?? [1])));
+
+  hasUnsavedWork() {
+    return (this.done() > 0 || this.revealed()) && this.queue().length > 0;
+  }
+
+  override leaveTitle() {
+    return $localize`Сабақтан шығасыз ба?`;
+  }
+
+  override leaveMessage() {
+    return $localize`Тағы ${this.queue().length}:count: сөз қалды. Берілген жауаптар сақталды.`;
+  }
 
   async ngOnInit() {
     await this.load();
