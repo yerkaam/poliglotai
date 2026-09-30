@@ -23,11 +23,12 @@ from .serializers import (
     ProfileSerializer,
     RegisterSerializer,
     UserSerializer,
+    VerifyEmailSerializer,
 )
+from .verification import RESEND_SECONDS, check_code, send_code
 
 LOGIN_ERROR = "Пошта немесе құпиясөз қате"
 RESET_SENT = "Егер бұл пошта тіркелген болса, 5 минут ішінде сілтеме келеді."
-RESEND_SECONDS = 60
 
 
 def _login_response(user, remember: bool, status_code=status.HTTP_200_OK):
@@ -60,6 +61,12 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        if settings.REQUIRE_EMAIL_VERIFICATION:
+            send_code(user)
+            cache.set(f"email-code-sent:{user.pk}", 1, RESEND_SECONDS)
+        else:
+            user.email_verified = True
+            user.save(update_fields=["email_verified"])
         return _login_response(user, remember=True, status_code=status.HTTP_201_CREATED)
 
 
@@ -136,16 +143,48 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
+    # Also for learners who have not confirmed the email yet: the app sends them to the code screen.
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
 
-class ProfileView(APIView):
-    """AUTH-04: after registration the learner sets level and daily goal."""
+class VerifyEmailView(APIView):
+    """POST /api/auth/verify-email/ {code} — confirms the email with the 6-digit code."""
 
     permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if request.user.email_verified:
+            return Response(UserSerializer(request.user).data)
+        error = check_code(request.user, serializer.validated_data["code"])
+        if error:
+            return Response({"detail": error}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(UserSerializer(request.user).data)
+
+
+class ResendCodeView(APIView):
+    """POST /api/auth/verify-email/resend/ — a new code, no sooner than 60 seconds after the last one."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.email_verified:
+            return Response({"detail": "Пошта расталған."})
+        if not cache.add(f"email-code-sent:{request.user.pk}", 1, RESEND_SECONDS):
+            return Response(
+                {"detail": "Жаңа кодты 60 секундтан кейін сұрауға болады.", "retry_after": RESEND_SECONDS},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        send_code(request.user)
+        return Response({"detail": "Жаңа код жіберілді.", "retry_after": RESEND_SECONDS})
+
+
+class ProfileView(APIView):
+    """AUTH-04: after confirming the email the learner sets level and daily goal."""
 
     def patch(self, request):
         profile, _ = Profile.objects.get_or_create(user=request.user)

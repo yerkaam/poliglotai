@@ -16,7 +16,7 @@ def _clear_cache():
 
 @pytest.fixture
 def user(db):
-    return User.objects.create_user(email="aigerim@mail.kz", password=PASSWORD, name="Айгерім")
+    return User.objects.create_user(email="aigerim@mail.kz", password=PASSWORD, name="Айгерім", email_verified=True)
 
 
 @pytest.fixture

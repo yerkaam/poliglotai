@@ -18,6 +18,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra):
         extra.setdefault("is_staff", True)
         extra.setdefault("is_superuser", True)
+        extra.setdefault("email_verified", True)
         return self.create_user(email, password, **extra)
 
 
@@ -26,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=80)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()
@@ -56,3 +58,18 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile({self.user_id})"
+
+
+class EmailCode(models.Model):
+    """A one-time 6-digit code sent to confirm the email. Only its HMAC is stored."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="email_codes")
+    code_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "email_codes"
+        ordering = ["-created_at"]

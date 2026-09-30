@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "profile"]
+        fields = ["id", "email", "name", "email_verified", "profile"]
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -69,3 +69,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def validate_password(self, value):
         password_validation.validate_password(value)
         return value
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    code = serializers.RegexField(r"^\s*\d{6}\s*$", error_messages={"invalid": "Код 6 саннан тұрады."})

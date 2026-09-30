@@ -47,6 +47,12 @@ export class ApiService {
   refresh() {
     return this.http.post<{ ok: boolean }>('/api/auth/refresh/', {});
   }
+  verifyEmail(code: string) {
+    return this.http.post<User>('/api/auth/verify-email/', { code });
+  }
+  resendCode() {
+    return this.http.post<{ detail: string; retry_after: number }>('/api/auth/verify-email/resend/', {});
+  }
   updateProfile(data: Partial<Profile>) {
     return this.http.patch<User>('/api/auth/profile/', data);
   }

@@ -109,7 +109,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["users.authentication.CookieJWTAuthentication"],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PERMISSION_CLASSES": ["users.permissions.IsVerified"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_THROTTLE_RATES": {
         "chat": os.environ.get("CHAT_DAILY_LIMIT", "30") + "/day",
@@ -130,6 +130,13 @@ CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = AUTH_COOKIE_SECURE
 SESSION_COOKIE_SECURE = AUTH_COOKIE_SECURE
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Email confirmation with a 6-digit code after registration.
+REQUIRE_EMAIL_VERIFICATION = env_bool("REQUIRE_EMAIL_VERIFICATION", True)
+EMAIL_CODE_TTL_MINUTES = 10
+EMAIL_CODE_MAX_ATTEMPTS = 5
+# Fixed code for local end-to-end tests; ignored unless DEBUG is on.
+EMAIL_CODE_OVERRIDE = os.environ.get("EMAIL_CODE_OVERRIDE", "") if DEBUG else ""
 
 # Login brute-force protection (AUTH-09).
 LOGIN_MAX_FAILURES = 5

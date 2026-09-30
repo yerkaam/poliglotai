@@ -24,10 +24,16 @@ export class AuthService {
 
   async login(email: string, password: string, remember: boolean) {
     this.user.set(await firstValueFrom(this.api.login(email, password, remember)));
+    await this.offerToSavePassword(email, password);
   }
 
   async register(data: { name: string; email: string; password: string; password2: string; accept_terms: boolean }) {
     this.user.set(await firstValueFrom(this.api.register(data)));
+    await this.offerToSavePassword(data.email, data.password, data.name);
+  }
+
+  async verifyEmail(code: string) {
+    this.user.set(await firstValueFrom(this.api.verifyEmail(code)));
   }
 
   async updateProfile(data: Partial<Profile>) {
@@ -40,6 +46,21 @@ export class AuthService {
       await firstValueFrom(this.api.logout());
     } finally {
       this.clear();
+    }
+  }
+
+  /**
+   * The page never reloads after login, so browsers do not always notice it. Where the Credential
+   * Management API exists (Chrome, Edge), hand the login to the password manager explicitly.
+   */
+  private async offerToSavePassword(email: string, password: string, name?: string) {
+    const PasswordCredentialCtor = (window as unknown as { PasswordCredential?: new (data: object) => Credential })
+      .PasswordCredential;
+    if (!PasswordCredentialCtor || !navigator.credentials?.store) return;
+    try {
+      await navigator.credentials.store(new PasswordCredentialCtor({ id: email, password, name: name ?? email }));
+    } catch {
+      /* the browser or the user declined */
     }
   }
 

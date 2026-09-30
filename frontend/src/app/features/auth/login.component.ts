@@ -33,10 +33,10 @@ import { PasswordInputComponent } from './password-input.component';
         <div class="alert alert-ok" role="status"><app-icon name="check" /><span>{{ notice() }}</span></div>
       }
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form" method="post" action="/login" novalidate>
         <div class="field">
           <label for="loginEmail" i18n>Электрондық пошта</label>
-          <input id="loginEmail" class="input" type="email" formControlName="email" autocomplete="email"
+          <input id="loginEmail" class="input" type="email" name="email" formControlName="email" autocomplete="username"
                  placeholder="name@mail.kz" [attr.aria-invalid]="!!error() || null" />
         </div>
         <div class="field">
@@ -44,7 +44,7 @@ import { PasswordInputComponent } from './password-input.component';
             <label for="loginPassword" i18n>Құпиясөз</label>
             <a routerLink="/reset" i18n>Құпиясөзді ұмыттыңыз ба?</a>
           </div>
-          <app-password-input inputId="loginPassword" formControlName="password" [invalid]="!!error()" />
+          <app-password-input inputId="loginPassword" name="password" formControlName="password" [invalid]="!!error()" />
         </div>
         <label class="check">
           <input type="checkbox" formControlName="remember" />

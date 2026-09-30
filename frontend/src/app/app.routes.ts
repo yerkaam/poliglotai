@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, onboardedGuard } from './core/auth.guard';
+import { authGuard, guestGuard, onboardedGuard, unverifiedGuard, verifiedGuard } from './core/auth.guard';
 import { ShellComponent } from './layout/shell.component';
 
 export const routes: Routes = [
@@ -26,15 +26,21 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/reset-confirm.component').then((m) => m.ResetConfirmComponent),
   },
   {
+    path: 'verify',
+    canActivate: [authGuard, unverifiedGuard],
+    title: $localize`Поштаны растау · PoliglotAi`,
+    loadComponent: () => import('./features/auth/verify.component').then((m) => m.VerifyComponent),
+  },
+  {
     path: 'onboarding',
-    canActivate: [authGuard],
+    canActivate: [authGuard, verifiedGuard],
     title: $localize`Баптау · PoliglotAi`,
     loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
   },
   {
     path: '',
     component: ShellComponent,
-    canActivate: [authGuard, onboardedGuard],
+    canActivate: [authGuard, verifiedGuard, onboardedGuard],
     children: [
       {
         path: '',

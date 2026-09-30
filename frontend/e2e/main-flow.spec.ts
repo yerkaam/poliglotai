@@ -1,6 +1,8 @@
 import { Page, expect, test } from '@playwright/test';
 
 const password = 'englishday1';
+// The backend under test runs with EMAIL_CODE_OVERRIDE (DEBUG only) or REQUIRE_EMAIL_VERIFICATION=0.
+const emailCode = process.env['E2E_EMAIL_CODE'] ?? '246810';
 
 async function register(page: Page) {
   const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@mail.kz`;
@@ -11,6 +13,13 @@ async function register(page: Page) {
   await page.locator('#regPassword2').fill(password);
   await page.getByText('Пайдалану шарттарымен').click();
   await page.getByRole('button', { name: 'Аккаунт ашу' }).click();
+  await expect(page).toHaveURL(/\/(verify|onboarding)/);
+  if (page.url().includes('/verify')) {
+    await expect(page.getByText(email)).toBeVisible();
+    await page.getByLabel('6 таңбалы код').fill('000000');
+    await expect(page.getByRole('alert')).toContainText('Код қате');
+    await page.getByLabel('6 таңбалы код').fill(emailCode); // six digits submit on their own
+  }
   await expect(page).toHaveURL(/\/onboarding/);
   await page.getByRole('button', { name: /^A0/ }).click();
   await page.getByRole('button', { name: /^5/ }).click();
@@ -83,4 +92,25 @@ test('learner goes through table, words, trainer and chat', async ({ page }) => 
   await expect(page).toHaveURL(/\/login/);
   await page.goto('/trainer');
   await expect(page).toHaveURL(/\/login/);
+});
+
+test('the session survives a reload and an expired access token', async ({ page, context }) => {
+  await register(page);
+  await page.reload();
+  await expect(page.getByText('Күннің мақсаты')).toBeVisible();
+
+  // The 15-minute access token is gone: the refresh cookie brings the learner back in silently.
+  const cookies = await context.cookies();
+  await context.clearCookies();
+  await context.addCookies(cookies.filter((c) => c.name !== 'access_token'));
+  await page.goto('/words');
+  await expect(page).toHaveURL(/\/words/);
+});
+
+test('login fields are recognisable by password managers', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.locator('#loginEmail')).toHaveAttribute('autocomplete', 'username');
+  await expect(page.locator('#loginEmail')).toHaveAttribute('name', 'email');
+  await expect(page.locator('#loginPassword')).toHaveAttribute('autocomplete', 'current-password');
+  await expect(page.locator('#loginPassword')).toHaveAttribute('name', 'password');
 });

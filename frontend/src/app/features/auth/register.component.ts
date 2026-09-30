@@ -30,19 +30,19 @@ import { PasswordInputComponent } from './password-input.component';
       <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
         <div class="field">
           <label for="regName" i18n>Атыңыз</label>
-          <input id="regName" class="input" formControlName="name" autocomplete="given-name"
+          <input id="regName" class="input" name="name" formControlName="name" autocomplete="given-name"
                  [attr.aria-invalid]="!!fieldError('name') || null" aria-describedby="regNameErr" />
           @if (fieldError('name')) { <span id="regNameErr" class="field-error">{{ fieldError('name') }}</span> }
         </div>
         <div class="field">
           <label for="regEmail" i18n>Электрондық пошта</label>
-          <input id="regEmail" class="input" type="email" formControlName="email" autocomplete="email"
+          <input id="regEmail" class="input" type="email" name="email" formControlName="email" autocomplete="username"
                  placeholder="name@mail.kz" [attr.aria-invalid]="!!fieldError('email') || null" aria-describedby="regEmailErr" />
           @if (fieldError('email')) { <span id="regEmailErr" class="field-error" role="alert">{{ fieldError('email') }}</span> }
         </div>
         <div class="field">
           <label for="regPassword" i18n>Құпиясөз</label>
-          <app-password-input inputId="regPassword" formControlName="password" autocomplete="new-password"
+          <app-password-input inputId="regPassword" name="password" formControlName="password" autocomplete="new-password"
                               describedBy="regRules" [invalid]="!!fieldError('password')" />
           <!-- AUTH-02: rules are checked while typing -->
           <div class="rules" id="regRules" aria-live="polite">
@@ -55,7 +55,7 @@ import { PasswordInputComponent } from './password-input.component';
         </div>
         <div class="field">
           <label for="regPassword2" i18n>Құпиясөзді қайталаңыз</label>
-          <app-password-input inputId="regPassword2" formControlName="password2" autocomplete="new-password"
+          <app-password-input inputId="regPassword2" name="password2" formControlName="password2" autocomplete="new-password"
                               [invalid]="mismatch() || !!fieldError('password2')" describedBy="regPassword2Err" />
           @if (mismatch() || fieldError('password2')) {
             <span id="regPassword2Err" class="field-error" i18n>Құпиясөздер сәйкес емес.</span>
@@ -121,7 +121,7 @@ export class RegisterComponent {
     this.busy.set(true);
     try {
       await this.auth.register(this.form.getRawValue());
-      await this.router.navigate(['/onboarding']);
+      await this.router.navigate(['/verify'], { queryParams: { sent: 1 } });
     } catch (e) {
       const { general, fields } = apiErrors(e);
       this.serverErrors.set(fields);

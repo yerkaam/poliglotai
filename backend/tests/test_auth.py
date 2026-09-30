@@ -17,11 +17,16 @@ REGISTER = {
 }
 
 
+def _code_from_email():
+    return re.search(r"\b(\d{6})\b", mail.outbox[-1].subject).group(1)
+
+
 def test_register_logs_in_and_needs_onboarding(anon):
     r = anon.post("/api/auth/register/", REGISTER, format="json")
     assert r.status_code == 201
     assert r.json()["profile"]["onboarded"] is False
     assert anon.get("/api/auth/me/").json()["email"] == "new@mail.kz"
+    anon.post("/api/auth/verify-email/", {"code": _code_from_email()}, format="json")
     r = anon.patch("/api/auth/profile/", {"level": "A1", "daily_new_limit": 15, "onboarded": True}, format="json")
     assert r.json()["profile"] == {"level": "A1", "daily_new_limit": 15, "daily_minutes": 15, "onboarded": True}
 
@@ -130,3 +135,69 @@ def test_csrf_is_enforced_for_cookie_sessions(user):
     api.post("/api/auth/login/", {"email": user.email, "password": "englishday1"}, format="json")
     r = api.post("/api/progress/reset/", {"confirm": True}, format="json")
     assert r.status_code == 403
+
+
+def test_email_must_be_confirmed_with_the_code(anon):
+    r = anon.post("/api/auth/register/", REGISTER, format="json")
+    assert r.json()["email_verified"] is False
+    assert len(mail.outbox) == 1 and "растау коды" in mail.outbox[0].subject
+    code = _code_from_email()
+    assert code not in str(User.objects.get(email="new@mail.kz").email_codes.first().code_hash)
+
+    # the app itself is closed until the email is confirmed
+    assert anon.get("/api/verbs/").status_code == 403
+    assert anon.get("/api/auth/me/").status_code == 200
+
+    wrong = "000000" if code != "000000" else "111111"
+    bad = anon.post("/api/auth/verify-email/", {"code": wrong}, format="json")
+    assert bad.status_code == 400 and "4 әрекет" in bad.json()["detail"]
+    assert anon.post("/api/auth/verify-email/", {"code": "12ab"}, format="json").status_code == 400
+
+    ok = anon.post("/api/auth/verify-email/", {"code": f" {code} "}, format="json")
+    assert ok.status_code == 200 and ok.json()["email_verified"] is True
+    assert anon.get("/api/verbs/").status_code == 200
+
+
+def test_code_stops_working_after_five_wrong_attempts(anon):
+    anon.post("/api/auth/register/", REGISTER, format="json")
+    code = _code_from_email()
+    wrong = "000000" if code != "000000" else "111111"
+    for _ in range(5):
+        anon.post("/api/auth/verify-email/", {"code": wrong}, format="json")
+    r = anon.post("/api/auth/verify-email/", {"code": code}, format="json")
+    assert r.status_code == 400 and "Жаңа код" in r.json()["detail"]
+
+
+def test_code_expires_after_ten_minutes(anon):
+    from datetime import timedelta
+    from unittest import mock
+
+    from django.utils import timezone
+
+    anon.post("/api/auth/register/", REGISTER, format="json")
+    code = _code_from_email()
+    later = timezone.now() + timedelta(minutes=11)
+    with mock.patch("users.verification.timezone.now", return_value=later):
+        r = anon.post("/api/auth/verify-email/", {"code": code}, format="json")
+    assert r.status_code == 400 and "мерзімі өтті" in r.json()["detail"]
+
+
+def test_resend_waits_60_seconds_and_only_the_new_code_works(anon):
+    anon.post("/api/auth/register/", REGISTER, format="json")
+    first = _code_from_email()
+    assert anon.post("/api/auth/verify-email/resend/").status_code == 429  # just sent at registration
+
+    from django.core.cache import cache
+
+    cache.clear()
+    assert anon.post("/api/auth/verify-email/resend/").status_code == 200
+    second = _code_from_email()
+    if first != second:
+        assert anon.post("/api/auth/verify-email/", {"code": first}, format="json").status_code == 400
+    assert anon.post("/api/auth/verify-email/", {"code": second}, format="json").status_code == 200
+
+
+def test_verification_can_be_switched_off(anon, settings):
+    settings.REQUIRE_EMAIL_VERIFICATION = False
+    r = anon.post("/api/auth/register/", REGISTER, format="json")
+    assert r.json()["email_verified"] is True and not mail.outbox

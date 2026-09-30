@@ -18,7 +18,7 @@ open http://localhost:8080
 docker compose exec backend python manage.py createsuperuser
 ```
 
-Письма для восстановления пароля с `EMAIL_BACKEND=console` печатаются в лог: `docker compose logs backend`.
+После регистрации на почту приходит 6-значный код подтверждения (10 минут, 5 попыток, повтор через 60 с). С `EMAIL_BACKEND=console` коды и письма для сброса пароля печатаются в лог: `docker compose logs backend`. Для реальных пользователей нужен SMTP (`EMAIL_*` в `.env`); отключить подтверждение: `REQUIRE_EMAIL_VERIFICATION=0`.
 
 ## Деплой на Render
 
@@ -47,6 +47,9 @@ export POSTGRES_PORT=5454
 python manage.py migrate                     # создаёт схему и загружает 40 глаголов, 16 шагов, 5 сценариев
 python manage.py runserver 8000
 
+# для e2e-тестов бэкенд можно запустить с фиксированным кодом подтверждения (работает только при DEBUG):
+# EMAIL_CODE_OVERRIDE=246810 python manage.py runserver 8000
+
 # фронтенд (проксирует /api на :8000)
 cd frontend
 npm ci
@@ -57,7 +60,7 @@ npx ng serve --port 4300
 
 | Что | Команда | Что проверяет |
 | --- | --- | --- |
-| Бэкенд | `cd backend && POSTGRES_PORT=5454 pytest` | Все 54 формы (6 местоимений × 9 клеток) для каждого из 40 глаголов, этапы SRS, лимит новых слов, авторизация (httpOnly, блокировка после 5 ошибок, ссылка сброса на 1 час и 1 раз), тренажёр, AI-чат |
+| Бэкенд | `cd backend && POSTGRES_PORT=5454 pytest` | Код подтверждения почты (неверный, просроченный, 5 попыток, повтор), все 54 формы (6 местоимений × 9 клеток) для каждого из 40 глаголов, этапы SRS, лимит новых слов, авторизация (httpOnly, блокировка после 5 ошибок, ссылка сброса на 1 час и 1 раз), тренажёр, AI-чат |
 | Линтер | `cd backend && ruff check . && ruff format --check .` | |
 | Фронтенд | `cd frontend && npx ng test --watch=false --browsers=ChromeHeadless` | Компоненты таблицы, guards, разбор ошибок API |
 | E2E | `cd frontend && npx playwright test` (`E2E_BASE_URL=http://localhost:8080` для Docker) | Регистрация → таблица → слова → тренажёр → чат → выход, на 1440 px и 360 px без горизонтальной прокрутки |

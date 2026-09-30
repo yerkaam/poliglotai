@@ -10,6 +10,18 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return router.createUrlTree(['/login'], { queryParams: state.url !== '/' ? { next: state.url } : {} });
 };
 
+/** After registration the learner confirms the email with the code. */
+export const verifiedGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.user()?.email_verified ? true : inject(Router).createUrlTree(['/verify']);
+};
+
+/** The code screen is only for learners who have not confirmed the email yet. */
+export const unverifiedGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.user()?.email_verified ? inject(Router).createUrlTree(['/']) : true;
+};
+
 /** AUTH-04: after registration the learner first sets up the profile. */
 export const onboardedGuard: CanActivateFn = () => {
   const auth = inject(AuthService);

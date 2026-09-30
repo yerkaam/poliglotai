@@ -13,6 +13,7 @@ import { IconComponent } from '../../shared/icon.component';
       <input
         class="input"
         [id]="inputId()"
+        [attr.name]="name() || null"
         [type]="visible() ? 'text' : 'password'"
         [attr.autocomplete]="autocomplete()"
         [attr.aria-invalid]="invalid() || null"
@@ -42,6 +43,8 @@ import { IconComponent } from '../../shared/icon.component';
 })
 export class PasswordInputComponent implements ControlValueAccessor {
   readonly inputId = input.required<string>();
+  /** name + autocomplete let password managers recognise the field */
+  readonly name = input('');
   readonly autocomplete = input('current-password');
   readonly invalid = input(false);
   readonly describedBy = input<string>('');

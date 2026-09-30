@@ -53,7 +53,9 @@ jobs:
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env
+      # The fixed test code only works with DEBUG, so the Docker stack skips email confirmation here;
+      # backend tests and local e2e (EMAIL_CODE_OVERRIDE) cover it.
+      - run: cp .env.example .env && echo "REQUIRE_EMAIL_VERIFICATION=0" >> .env
       - run: docker compose up -d --build --wait
       - uses: actions/setup-node@v4
         with:
