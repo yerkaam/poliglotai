@@ -8,6 +8,7 @@ from chat.models import Conversation
 from srs.models import MAX_STAGE, UserVocabulary
 from srs.views import new_words_left
 from trainer.models import TrainerAttempt, trainer_stats
+from vocabulary.course import unlocked_steps
 from vocabulary.models import Vocabulary
 
 from .models import DailyGoal, ProgressLog
@@ -35,9 +36,10 @@ class ProgressView(APIView):
         learning = words.filter(status=UserVocabulary.Status.LEARNING)
         due = learning.filter(next_review_date__lte=today).count()
         learned = words.filter(status__in=[UserVocabulary.Status.LEARNED, UserVocabulary.Status.KNOWN]).count()
-        total = Vocabulary.objects.filter(course_step__is_open=True).count()
+        course_words = Vocabulary.objects.filter(course_step__in=unlocked_steps(user))
+        total = course_words.count()
         started_ids = words.values_list("vocabulary_id", flat=True)
-        not_started = Vocabulary.objects.filter(course_step__is_open=True).exclude(id__in=started_ids).count()
+        not_started = course_words.exclude(id__in=started_ids).count()
 
         stages = [{"stage": s, "count": learning.filter(stage=s).count()} for s in range(1, MAX_STAGE + 1)]
         log = ProgressLog.objects.filter(user=user, date=today).first()

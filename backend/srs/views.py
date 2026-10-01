@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from chat.models import Message
 from progress.services import log_activity
 from users.models import Profile
+from vocabulary.course import unlocked_steps
 from vocabulary.models import Vocabulary
 from vocabulary.views import VocabularySerializer, progress_map
 
@@ -32,7 +33,9 @@ def next_new_words(user, count: int) -> list:
         return []
     taken = UserVocabulary.objects.filter(user=user).values_list("vocabulary_id", flat=True)
     untouched = Vocabulary.objects.exclude(id__in=taken)
-    words = list(untouched.filter(course_step__is_open=True)[:count])
+    # Words of the steps this learner has opened, in course order.
+    steps = unlocked_steps(user)
+    words = list(untouched.filter(course_step__in=steps).order_by("course_step__number", "frequency_rank")[:count])
     if len(words) < count:
         dictionary = untouched.filter(course_step__isnull=True, source=Vocabulary.Source.WIKTIONARY)
         words += list(dictionary[: count - len(words)])

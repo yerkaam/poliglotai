@@ -11,8 +11,8 @@ from progress.models import ProgressLog
 from progress.services import log_activity
 from srs.models import UserVocabulary
 from users.models import Profile
+from vocabulary.course import course_state
 from vocabulary.forms import FORM_LABELS_KK, TENSE_LABELS_KK
-from vocabulary.models import CourseStep
 
 from .llm import BLOCKLIST, TutorUnavailable, ask_tutor, build_system_prompt
 from .models import Conversation, Message, Scenario
@@ -74,9 +74,17 @@ def _system_prompt(conversation: Conversation) -> str:
         .exclude(status=UserVocabulary.Status.KNOWN)
         .values_list("vocabulary__word", flat=True)[:60]
     )
-    steps = [f"{s.number}. {s.title_en}" for s in CourseStep.objects.filter(is_open=True)]
+    states = course_state(user)
+    steps = [f"{s.step.number}. {s.step.title_en}" for s in states if s.unlocked]
+    done = [s.step for s in states if s.status == "done"]
     return build_system_prompt(
-        level=profile.level, steps=steps, verbs=verbs, mode=conversation.mode, scenario=conversation.scenario
+        level=profile.level,
+        steps=steps,
+        verbs=verbs,
+        mode=conversation.mode,
+        scenario=conversation.scenario,
+        grammar=[s.grammar_en for s in done if s.grammar_en],
+        done_numbers={s.number for s in done},
     )
 
 

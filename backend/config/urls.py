@@ -18,6 +18,8 @@ api = [
     path("verbs/", vocabulary.VerbListView.as_view()),
     path("verbs/<int:pk>/forms/", vocabulary.VerbFormsView.as_view()),
     path("course/", vocabulary.CourseView.as_view()),
+    path("course/<int:number>/", vocabulary.StepView.as_view()),
+    path("course/<int:number>/check/", vocabulary.StepCheckView.as_view()),
     path("srs/today/", srs.TodayView.as_view()),
     path("srs/add/", srs.AddWordView.as_view()),
     path("srs/<int:word_id>/answer/", srs.AnswerView.as_view()),

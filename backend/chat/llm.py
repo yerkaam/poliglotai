@@ -53,11 +53,12 @@ beginners (level {level}). All explanations, translations and hints are in Kazak
 
 The learner knows only these structures: the basic verb table — Future Simple, Present Simple and \
 Past Simple, each as question, affirmative and negative (will/won't, do/does/don't/doesn't, did/didn't). \
-Completed course steps: {steps}.
+Course steps opened so far: {steps}.
+Also completed: {grammar}.
 Verbs they are learning now: {verbs}.
 
-Speak only at this level: short sentences, these three tenses, mostly the verbs above and very common \
-everyday words. Never use Continuous, Perfect or passive forms.
+Speak only at this level: short sentences, the structures above, mostly the verbs above and very common \
+everyday words.{forbidden}
 
 {mode_rules}
 
@@ -100,15 +101,32 @@ class TutorUnavailable(Exception):
     pass
 
 
-def build_system_prompt(*, level: str, steps: list[str], verbs: list[str], mode: str, scenario=None) -> str:
+# Structures the tutor must avoid until the learner has completed the course step that teaches them.
+LATER_STRUCTURES = {8: "Continuous forms", 9: "Perfect forms", 12: "the passive voice"}
+
+
+def build_system_prompt(
+    *,
+    level: str,
+    steps: list[str],
+    verbs: list[str],
+    mode: str,
+    scenario=None,
+    grammar: list[str] | None = None,
+    done_numbers: set[int] | None = None,
+) -> str:
     rules = MODE_RULES[mode].format(
         scenario=f"Scenario: {scenario.brief_en}" if scenario else "",
         turns=scenario.max_turns if scenario else 8,
     )
+    done = done_numbers or set()
+    forbidden = [name for number, name in LATER_STRUCTURES.items() if number not in done]
     return SYSTEM_PROMPT.format(
         level=level,
         steps=", ".join(steps) or "none yet",
+        grammar="; ".join(grammar or []) or "nothing beyond the verb table yet",
         verbs=", ".join(verbs) or "the 40 most common verbs",
+        forbidden=f" Never use {', '.join(forbidden)}." if forbidden else "",
         mode_rules=rules,
     )
 
