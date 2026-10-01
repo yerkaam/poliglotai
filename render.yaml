@@ -43,6 +43,11 @@ services:
       # Teachers register like learners and enter this code in the settings (share it with teachers only).
       - key: TEACHER_INVITE_CODE
         sync: false
+      # Optional administrator for /admin/ (manage users, content): set both and redeploy.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
       - key: DEMO_STUDENT_PASSWORD
         sync: false
       - key: DEMO_TEACHER_PASSWORD

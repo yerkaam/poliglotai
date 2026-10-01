@@ -30,7 +30,7 @@ docker compose exec backend python manage.py createsuperuser
 3a. Почта: бесплатный план Render блокирует исходящий SMTP, поэтому там письма шлются через HTTPS API Brevo (бесплатно до ~300 писем в день). На brevo.com: Senders → добавить и подтвердить адрес отправителя; SMTP & API → API Keys → создать ключ. В группе `poliglot-mail` задать `BREVO_API_KEY` и `DEFAULT_FROM_EMAIL` = `PoliglotAi <подтверждённый@адрес>`. На платном плане подойдёт и обычный SMTP.
 4. Сайт откроется на `https://poliglot-<...>.onrender.com`; миграции и начальные данные применяются при старте.
 
-Админ: в Render Shell выполнить `python manage.py createsuperuser`.
+Админ: в Render Shell выполнить `python manage.py createsuperuser`. Без Shell (бесплатный план): задать в Environment `ADMIN_EMAIL` и `ADMIN_PASSWORD` (от 8 символов, с цифрой) — администратор создаётся при запуске, вход на `/admin/`.
 
 ### Кабинет учителя
 
