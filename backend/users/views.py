@@ -8,6 +8,7 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
+from django.utils.crypto import constant_time_compare
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -306,6 +307,41 @@ class PasswordResetConfirmView(APIView):
         # Whoever knew the old password is logged out everywhere.
         _end_all_sessions(user)
         return Response({"detail": "Құпиясөз жаңартылды. Енді кіре аласыз."})
+
+
+TEACHER_CODE_TRIES_PER_HOUR = 5
+
+
+class BecomeTeacherView(APIView):
+    """POST /api/auth/become-teacher/ {code}: the teacher's code from the school opens the teacher's cabinet."""
+
+    def post(self, request):
+        code = str(request.data.get("code", "")).strip()
+        expected = settings.TEACHER_INVITE_CODE
+        if not expected:
+            return Response(
+                {"detail": "Мұғалім коды әлі қосылмаған. Әкімшіге хабарласыңыз.", "code": "invalid_code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        key = f"teacher-code-fail:{request.user.pk}"
+        if (cache.get(key) or 0) >= TEACHER_CODE_TRIES_PER_HOUR:
+            return Response(
+                {"detail": "Тым көп қате код. Бір сағаттан кейін қайталаңыз.", "code": "throttled"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        if not code or not constant_time_compare(code.upper(), expected.upper()):
+            if not cache.add(key, 1, 3600):
+                try:
+                    cache.incr(key)
+                except ValueError:
+                    cache.set(key, 1, 3600)
+            return Response(
+                {"detail": "Код қате. Әкімшіден қайта сұраңыз.", "code": "invalid_code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        request.user.is_teacher = True
+        request.user.save(update_fields=["is_teacher"])
+        return Response(UserSerializer(request.user).data)
 
 
 def _password_checked(request, password, field):

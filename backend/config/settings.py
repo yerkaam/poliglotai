@@ -202,6 +202,10 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "INFO"},
 }
 
+# Teachers sign up like learners, then enter this code in the settings to get the teacher's cabinet.
+# Empty = only an admin can make someone a teacher (admin site or `manage.py grant_teacher`).
+TEACHER_INVITE_CODE = os.environ.get("TEACHER_INVITE_CODE", "").strip()
+
 # Error monitoring: Sentry, only when a DSN is configured. The frontend gets its own (public) DSN from /api/config/.
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 SENTRY_FRONTEND_DSN = os.environ.get("SENTRY_FRONTEND_DSN", "")

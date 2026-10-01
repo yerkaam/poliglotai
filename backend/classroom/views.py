@@ -142,9 +142,12 @@ class JoinGroupView(APIView):
                     cache.incr(key)
                 except ValueError:  # expired between add and incr
                     cache.set(key, 1, 3600)
-            return Response({"code": ["Мұндай код жоқ. Мұғалімнен қайта сұраңыз."]}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Мұндай код жоқ. Мұғалімнен қайта сұраңыз.", "code": "invalid_code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if group.teacher_id == request.user.id:
-            return Response({"code": ["Бұл — өз тобыңыз."]}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Бұл — өз тобыңыз.", "code": "invalid_code"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             Membership.objects.get_or_create(group=group, student=request.user)
         except IntegrityError:

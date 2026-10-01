@@ -40,6 +40,9 @@ services:
         value: "0"
       # Optional ready-made accounts for trying the site: set both passwords (8+ characters with a digit)
       # and redeploy; student@poliglot.test and teacher@poliglot.test then log in with them.
+      # Teachers register like learners and enter this code in the settings (share it with teachers only).
+      - key: TEACHER_INVITE_CODE
+        sync: false
       - key: DEMO_STUDENT_PASSWORD
         sync: false
       - key: DEMO_TEACHER_PASSWORD

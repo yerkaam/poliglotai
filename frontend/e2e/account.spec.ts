@@ -84,3 +84,23 @@ test('the delete confirmation can be cancelled', async ({ page }) => {
   await page.reload();
   await expect(page.locator('app-account-section')).toBeVisible();
 });
+
+test('a teacher signs up like a learner and opens the cabinet with the school code', async ({ page }) => {
+  const code = process.env['E2E_TEACHER_CODE'];
+  test.skip(!code, 'needs E2E_TEACHER_CODE (TEACHER_INVITE_CODE on the server)');
+  await signUp(page);
+  await page.goto('/settings');
+  // A wrong group code says so (not "connection error").
+  await page.getByLabel('Мұғалім берген код').fill('ZZZZZZ');
+  await page.getByRole('button', { name: 'Қосылу' }).click();
+  await expect(page.locator('app-onboarding [role="alert"]').first()).toContainText('Мұндай код жоқ');
+  await page.getByText('Мен мұғаліммін').click();
+  await page.getByLabel('Мұғалім коды').fill('WRONG-CODE');
+  await page.getByRole('button', { name: 'Растау' }).click();
+  await expect(page.locator('.teacher-code [role="alert"]')).toContainText('Код қате');
+  await page.getByLabel('Мұғалім коды').fill(code!);
+  await page.getByRole('button', { name: 'Растау' }).click();
+  await expect(page.locator('app-toasts')).toContainText('Мұғалім кабинеті ашылды');
+  await page.getByRole('link', { name: 'Мұғалім кабинетін ашу' }).click();
+  await expect(page).toHaveURL(/\/teacher/);
+});

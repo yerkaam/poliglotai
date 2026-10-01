@@ -163,6 +163,10 @@ export class ApiService {
   }
 
   // the learner's groups
+  becomeTeacher(code: string) {
+    return this.http.post<User>('/api/auth/become-teacher/', { code }, handles(429));
+  }
+
   myGroups() {
     return this.http.get<MyGroup[]>('/api/groups/');
   }

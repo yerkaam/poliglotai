@@ -83,6 +83,21 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
           <legend i18n>Мұғалім тобы</legend>
           @if (auth.user()?.is_teacher) {
             <a class="btn btn-outline" routerLink="/teacher" i18n>Мұғалім кабинетін ашу</a>
+          } @else {
+            <details class="teacher-code">
+              <summary i18n>Мен мұғаліммін</summary>
+              <p class="muted" i18n>Мектеп әкімшісі берген мұғалім кодын енгізіңіз — мұғалім кабинеті ашылады.</p>
+              <form class="join" (submit)="becomeTeacher($event)">
+                <label for="teacherCode" class="visually-hidden" i18n>Мұғалім коды</label>
+                <input id="teacherCode" class="input mono" autocomplete="off" autocapitalize="characters"
+                       i18n-placeholder placeholder="Мұғалім коды"
+                       [value]="teacherCode()" (input)="teacherCode.set($any($event.target).value)" />
+                <button type="submit" class="btn btn-outline" [disabled]="!teacherCode().trim() || joining()" i18n>Растау</button>
+              </form>
+              @if (teacherError()) {
+                <div class="alert" role="alert">{{ teacherError() }}</div>
+              }
+            </details>
           }
           @for (g of myGroups(); track g.id) {
             <div class="group-row">
@@ -141,6 +156,9 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
       border-bottom: 1px solid var(--line); }
     .join { display: flex; gap: 8px; }
     .join .input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.1em; }
+    .teacher-code { display: flex; flex-direction: column; gap: 8px; }
+    .teacher-code summary { cursor: pointer; min-height: 32px; color: var(--muted); }
+    .teacher-code[open] { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
   `,
 })
 export class OnboardingComponent {
@@ -160,6 +178,8 @@ export class OnboardingComponent {
   protected code = signal('');
   protected joining = signal(false);
   protected joinError = signal('');
+  protected teacherCode = signal('');
+  protected teacherError = signal('');
   protected editing = !!this.auth.user()?.profile.onboarded;
   protected hours = [8, 12, 18, 19, 20, 21];
   protected reminders = signal(this.auth.user()?.profile.reminder_enabled ?? true);
@@ -186,7 +206,24 @@ export class OnboardingComponent {
     }
   }
 
-  protected async leave(group: MyGroup) {
+  protected async becomeTeacher(event: Event) {
+    event.preventDefault();
+    this.joining.set(true);
+    this.teacherError.set('');
+    try {
+      await firstValueFrom(this.api.becomeTeacher(this.teacherCode().trim()));
+      await this.auth.reload();
+      this.teacherCode.set('');
+      this.toasts.success($localize`Мұғалім кабинеті ашылды.`);
+    } catch (e) {
+      const errors = apiErrors(e);
+      this.teacherError.set(errors.fields['code'] || errors.general);
+    } finally {
+      this.joining.set(false);
+    }
+  }
+
+    protected async leave(group: MyGroup) {
     await firstValueFrom(this.api.leaveGroup(group.id));
     this.myGroups.update((list) => list.filter((g) => g.id !== group.id));
     this.toasts.success($localize`«${group.name}:name:» тобынан шықтыңыз.`);
