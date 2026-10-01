@@ -383,3 +383,39 @@ test('a first word earns a badge; the progress page shows the week and the badge
   await expect(page.locator('.badges li:not(.earned)').first().locator('.meter')).toBeVisible();
   await noHorizontalScroll(page);
 });
+
+test('the placement test credits known steps and sets the level', async ({ page }) => {
+  await page.goto('/register');
+  await page.getByLabel('Атыңыз').fill('Айгерім');
+  await page.getByLabel('Электрондық пошта').fill(`pl-${Date.now()}-${Math.floor(Math.random() * 1e6)}@mail.kz`);
+  await page.locator('#regPassword').fill(password);
+  await page.locator('#regPassword2').fill(password);
+  await page.getByText('Пайдалану шарттарымен').click();
+  await page.getByRole('button', { name: 'Аккаунт ашу' }).click();
+  await expect(page).toHaveURL(/\/(verify|onboarding)/);
+  if (page.url().includes('/verify')) await page.getByLabel('6 таңбалы код').fill(emailCode);
+  await expect(page).toHaveURL(/\/onboarding/);
+
+  await page.getByRole('link', { name: /тестпен анықтайық/ }).click();
+  await expect(page.getByRole('heading', { name: 'Деңгейді анықтайық' })).toBeVisible();
+  await page.getByRole('button', { name: 'Бастау' }).click();
+  // Steps 1-3 known, then "I don't know" three times in a row ends the test.
+  for (const answer of ['drink', 'Does', 'went', "won't", 'Where', 'How many', 'are', 'was']) {
+    await page.getByRole('button', { name: answer, exact: true }).click();
+  }
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Білмеймін' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Сіздің деңгейіңіз: A1' })).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('1–3-қадамдары есептелді');
+  await page.getByRole('button', { name: 'Жалғастыру' }).click();
+  await expect(page).toHaveURL(/\/onboarding/);
+  await expect(page.getByRole('button', { name: /^A1/ })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: /^10/ }).click();
+  await page.getByRole('button', { name: 'Бастау' }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto('/course');
+  const steps = page.locator('.steps li');
+  await expect(steps.nth(2).getByRole('link', { name: 'Қайталау' })).toBeVisible(); // step 3 done
+  await expect(steps.nth(3).getByRole('link', { name: 'Ашу' })).toBeVisible(); // step 4 open
+});

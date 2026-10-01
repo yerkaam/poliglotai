@@ -36,6 +36,10 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
             <b>A1</b><small i18n>Мектепте оқығанмын</small>
           </button>
         </div>
+        <a class="placement-link" routerLink="/placement">
+          <b i18n>Сенімді емеспін — тестпен анықтайық</b>
+          <small i18n>3–4 минут. Білетін қадамдарыңыз есептеледі.</small>
+        </a>
       </fieldset>
 
       <fieldset>
@@ -93,6 +97,12 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
     </app-auth-layout>
   `,
   styleUrl: './auth.scss',
+  styles: `
+    .placement-link { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--r-md);
+      border: 1.5px dashed var(--line); color: var(--ink); text-decoration: none; }
+    .placement-link:hover { border-color: var(--ink); }
+    .placement-link small { color: var(--muted); font-size: 13px; }
+  `,
 })
 export class OnboardingComponent {
   protected auth = inject(AuthService);

@@ -44,6 +44,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
   },
   {
+    path: 'placement',
+    canActivate: [authGuard, verifiedGuard],
+    canDeactivate: [leaveGuard],
+    title: $localize`Деңгейді анықтау · PoliglotAi`,
+    loadComponent: () => import('./features/placement/placement.component').then((m) => m.PlacementComponent),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard, verifiedGuard, onboardedGuard],
     title: $localize`Баптаулар · PoliglotAi`,

@@ -293,3 +293,15 @@ export interface WeekSummary {
   streak: number;
   achievements: string[];
 }
+
+export interface PlacementQuestion extends Exercise {
+  step: number;
+}
+
+export interface PlacementResult {
+  items: { correct: boolean; right: string }[];
+  score: number;
+  total: number;
+  steps_credited: number[];
+  level: Level;
+}

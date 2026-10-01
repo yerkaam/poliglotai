@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from srs.models import UserVocabulary
 
-from . import course, forms
+from . import course, forms, placement
 from .models import Vocabulary
 
 
@@ -139,3 +139,17 @@ class StepCheckView(APIView):
         serializer = CheckAnswersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(course.check(request.user, state.step, serializer.validated_data["answers"]))
+
+
+class PlacementView(APIView):
+    """GET /api/placement/ — the questions (no answers); POST {answers} — the level and the credited steps."""
+
+    def get(self, request):
+        return Response({"questions": placement.public_questions()})
+
+    def post(self, request):
+        serializer = CheckAnswersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = placement.score(serializer.validated_data["answers"])
+        placement.apply(request.user, result)
+        return Response(result)

@@ -11,6 +11,8 @@ import {
   Conversation,
   CourseStep,
   Form,
+  PlacementQuestion,
+  PlacementResult,
   Profile,
   Progress,
   ReviewCheck,
@@ -117,6 +119,12 @@ export class ApiService {
   // progress
   progress() {
     return this.http.get<Progress>('/api/progress/');
+  }
+  placement() {
+    return this.http.get<{ questions: PlacementQuestion[] }>('/api/placement/');
+  }
+  submitPlacement(answers: string[]) {
+    return this.http.post<PlacementResult>('/api/placement/', { answers });
   }
   week() {
     return this.http.get<WeekSummary>('/api/progress/week/');

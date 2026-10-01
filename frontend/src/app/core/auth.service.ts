@@ -34,6 +34,11 @@ export class AuthService {
     await this.offerToSavePassword(data.email, data.password, data.name);
   }
 
+  /** Fetches the profile again (e.g. after the placement test changed the level). */
+  async reload() {
+    this.user.set(await firstValueFrom(this.api.me()));
+  }
+
   async verifyEmail(code: string) {
     this.user.set(await firstValueFrom(this.api.verifyEmail(code)));
   }
