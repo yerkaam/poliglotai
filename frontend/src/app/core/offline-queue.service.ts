@@ -29,6 +29,8 @@ export class OfflineQueueService {
   private toasts = inject(ToastService);
   private auth = inject(AuthService);
   private flushing = false;
+  private retryTimer: ReturnType<typeof setTimeout> | undefined;
+  private retries = 0;
 
   readonly pending = signal<QueuedAnswer[]>(read());
 
@@ -63,6 +65,7 @@ export class OfflineQueueService {
     if (this.flushing || !this.mine().length || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
     this.flushing = true;
     let sent = 0;
+    let failed = false;
     try {
       for (let item = this.mine()[0]; item; item = this.mine()[0]) {
         try {
@@ -73,7 +76,10 @@ export class OfflineQueueService {
           // No connection after all, or the session ended: keep the rest for the next try. Anything else
           // (already answered, limit reached, the card changed meanwhile) the server has decided: drop it.
           const status = e instanceof HttpErrorResponse ? e.status : 0;
-          if (isNetworkError(e) || status === 401 || status === 403 || status >= 500) break;
+          if (isNetworkError(e) || status === 401 || status === 403 || status >= 500) {
+            failed = true;
+            break;
+          }
         }
         const done = item;
         this.pending.update((list) => list.filter((i) => i !== done));
@@ -81,6 +87,15 @@ export class OfflineQueueService {
       }
     } finally {
       this.flushing = false;
+    }
+    // The "online" event often comes a moment before requests get through (a phone switching networks):
+    // try again a few times instead of waiting for the next event, which may never come.
+    clearTimeout(this.retryTimer);
+    if (failed && this.retries < 5) {
+      this.retries++;
+      this.retryTimer = setTimeout(() => void this.flush(), 3000 * this.retries);
+    } else if (!failed) {
+      this.retries = 0;
     }
     if (sent) {
       this.toasts.success($localize`Интернетсіз берілген ${sent}:count: жауап сақталды.`);

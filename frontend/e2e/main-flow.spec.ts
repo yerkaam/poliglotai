@@ -225,7 +225,11 @@ test('a course step: short lessons with practice, then the check opens the next 
   // The learner resumes where they stopped.
   await page.reload();
   await expect(page.getByText('Сабақ 2 / 8')).toBeVisible();
-  for (let i = 2; i <= 8; i++) await finishLesson();
+  for (let i = 2; i <= 8; i++) {
+    // Answer only once lesson i is on screen, not the previous lesson's (already answered) questions.
+    await expect(page.getByText(`Сабақ ${i} / 8`)).toBeVisible();
+    await finishLesson();
+  }
 
   await expect(page.getByRole('heading', { name: /Тест · 7 сұрақ/ })).toBeVisible();
   const choices = ['Does', 'went', 'will', 'does'];

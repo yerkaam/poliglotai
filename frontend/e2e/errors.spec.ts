@@ -74,7 +74,10 @@ test('adding a word from the chat confirms with a pop-up', async ({ page }) => {
   await page.goto('/chat');
   await page.getByRole('button', { name: 'Бастау' }).click();
   await page.getByRole('button', { name: /yesterday — кеше/ }).click();
-  await expect(toasts(page).getByRole('status')).toContainText('«yesterday» карточкаларға қосылды');
+  // The first word may also unlock a badge, whose congratulation pops up at the same time.
+  await expect(toasts(page).getByRole('status').filter({ hasText: '«yesterday»' })).toContainText(
+    '«yesterday» карточкаларға қосылды',
+  );
 });
 
 test('cards that failed to load offer a retry instead of "all done"', async ({ page }) => {

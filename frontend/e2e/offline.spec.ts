@@ -41,5 +41,6 @@ test('the app is installable and cards work without internet', async ({ page, co
   // Back online: the answer is sent.
   await context.unroute('**/*');
   await context.setOffline(false);
-  await expect(page.locator('app-toasts')).toContainText('жауап сақталды');
+  // Sent on the "online" event, or by the retry a few seconds later if the network was not quite back yet.
+  await expect(page.locator('app-toasts')).toContainText('жауап сақталды', { timeout: 15_000 });
 });
