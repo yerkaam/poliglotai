@@ -37,6 +37,12 @@ services:
         value: "30"
       - key: REQUIRE_EMAIL_VERIFICATION
         value: "1"
+      # Optional ready-made accounts for trying the site: set both passwords (8+ characters with a digit)
+      # and redeploy; student@poliglot.test and teacher@poliglot.test then log in with them.
+      - key: DEMO_STUDENT_PASSWORD
+        sync: false
+      - key: DEMO_TEACHER_PASSWORD
+        sync: false
       # Error monitoring (sentry.io, free plan is enough): the DSNs of a Django and a browser project.
       # Empty = off. The browser DSN is public by design; the server one stays here.
       - key: SENTRY_DSN

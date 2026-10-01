@@ -45,3 +45,25 @@ def test_running_again_sets_new_passwords_without_duplicates():
     assert first != second
     assert User.objects.filter(email__endswith="@poliglot.test").count() == 2
     assert Membership.objects.count() == 1
+
+
+def test_from_env_uses_the_owners_passwords_and_keeps_them_out_of_the_output(monkeypatch):
+    out = StringIO()
+    call_command("create_demo_accounts", "--from-env", stdout=out)
+    assert not User.objects.exists()  # nothing configured: nothing happens
+
+    monkeypatch.setenv("DEMO_STUDENT_PASSWORD", "learner2026")
+    monkeypatch.setenv("DEMO_TEACHER_PASSWORD", "teacher2026")
+    call_command("create_demo_accounts", "--from-env", stdout=out)
+    assert "learner2026" not in out.getvalue() and "teacher2026" not in out.getvalue()
+    for email, password in [("student@poliglot.test", "learner2026"), ("teacher@poliglot.test", "teacher2026")]:
+        r = APIClient().post("/api/auth/login/", {"email": email, "password": password}, format="json")
+        assert r.status_code == 200, email
+
+
+def test_from_env_skips_a_weak_password_without_failing(monkeypatch):
+    monkeypatch.setenv("DEMO_STUDENT_PASSWORD", "short")
+    monkeypatch.setenv("DEMO_TEACHER_PASSWORD", "teacher2026")
+    err = StringIO()
+    call_command("create_demo_accounts", "--from-env", stdout=StringIO(), stderr=err)
+    assert "skipped" in err.getvalue() and not User.objects.exists()
