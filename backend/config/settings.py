@@ -173,11 +173,15 @@ WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
 # Brevo's HTTPS API when its key is set (Render's free plan blocks outgoing SMTP), otherwise EMAIL_BACKEND.
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-EMAIL_BACKEND = (
-    "users.email_backends.BrevoEmailBackend"
-    if BREVO_API_KEY
-    else os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-)
+# Or the owner's own Gmail through a Google Apps Script web app (deploy/gmail-sender.gs).
+GMAIL_SCRIPT_URL = os.environ.get("GMAIL_SCRIPT_URL", "")
+GMAIL_SCRIPT_SECRET = os.environ.get("GMAIL_SCRIPT_SECRET", "")
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "users.email_backends.BrevoEmailBackend"
+elif GMAIL_SCRIPT_URL:
+    EMAIL_BACKEND = "users.email_backends.AppsScriptEmailBackend"
+else:
+    EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 # Seconds to wait for the mail server: a blocked or slow one must not hang the learner's request.
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "15"))
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")

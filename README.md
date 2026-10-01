@@ -43,6 +43,13 @@ docker compose exec backend python manage.py createsuperuser
 - скачивает все свои данные одним JSON-файлом: профиль, слова, курс, тренажёр, чаты, прогресс, достижения, группы (`/api/auth/export/`, `users/account.py`);
 - удаляет аккаунт навсегда (пароль + подтверждение). Вместе с ним удаляются все его данные; у учителя — и его группы.
 
+### Почта через Gmail без SMTP
+
+Если SMTP закрыт (бесплатный Render), а Brevo недоступен: письма может отправлять ваш Gmail через Google Apps Script (около 100 писем в день).
+1. script.google.com → «Новый проект» → вставить `deploy/gmail-sender.gs`, в `SECRET` вписать свою длинную случайную строку.
+2. «Начать развертывание» → «Новое развертывание» → тип «Веб-приложение»; «Запуск от имени»: я; «Доступ»: все → разрешить доступ к Gmail.
+3. В Render задать `GMAIL_SCRIPT_URL` (ссылка …/exec) и `GMAIL_SCRIPT_SECRET` (та же строка).
+
 ### Демо-аккаунты
 
 `python manage.py create_demo_accounts` (на Render — в Shell сервиса) создаёт готовых ученика `student@poliglot.test` и учителя `teacher@poliglot.test`: почта подтверждена, анкета пройдена, ученик в «Демо-топ» учителя. Пароли печатаются один раз; повторный запуск задаёт новые. Адреса можно задать: `--student-email`, `--teacher-email`. Без Shell (бесплатный Render): задайте в Environment `DEMO_STUDENT_PASSWORD` и `DEMO_TEACHER_PASSWORD` (от 8 символов, с цифрой) — аккаунты создаются при каждом запуске с этими паролями.

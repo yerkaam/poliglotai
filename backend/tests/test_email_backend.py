@@ -51,3 +51,38 @@ def test_brevo_error_is_raised_with_its_explanation(settings, monkeypatch):
     message = EmailMessage("s", "b", "a@b.kz", ["c@d.kz"])
     with pytest.raises(RuntimeError, match="sender not valid"):
         _backend(settings).send_messages([message])
+
+
+def test_gmail_script_posts_the_message_with_the_secret(settings, monkeypatch):
+    settings.GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/x/exec"
+    settings.GMAIL_SCRIPT_SECRET = "s3cret"
+    calls = []
+
+    def fake_urlopen(request, timeout):
+        calls.append(request)
+        return FakeResponse(b'{"ok": true, "left_today": 99}')
+
+    monkeypatch.setattr(email_backends.urllib.request, "urlopen", fake_urlopen)
+    message = EmailMessage("Код: 123456", "Сәлем!", "PoliglotAi <me@gmail.com>", ["learner@mail.kz"])
+    assert get_connection("users.email_backends.AppsScriptEmailBackend").send_messages([message]) == 1
+    body = json.loads(calls[0].data)
+    assert body == {
+        "secret": "s3cret",
+        "to": "learner@mail.kz",
+        "subject": "Код: 123456",
+        "body": "Сәлем!",
+        "name": "PoliglotAi",
+    }
+
+
+def test_gmail_script_refusal_is_an_error(settings, monkeypatch):
+    settings.GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/x/exec"
+    monkeypatch.setattr(
+        email_backends.urllib.request,
+        "urlopen",
+        lambda request, timeout: FakeResponse(b'{"ok": false, "error": "wrong secret"}'),
+    )
+    with pytest.raises(RuntimeError, match="wrong secret"):
+        get_connection("users.email_backends.AppsScriptEmailBackend").send_messages(
+            [EmailMessage("s", "b", "a@b.kz", ["c@d.kz"])]
+        )

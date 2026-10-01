@@ -63,6 +63,11 @@ envVarGroups:
     envVars:
       - key: BREVO_API_KEY
         sync: false
+      # Or your own Gmail through a Google Apps Script web app (deploy/gmail-sender.gs): no domain, no phone.
+      - key: GMAIL_SCRIPT_URL
+        sync: false
+      - key: GMAIL_SCRIPT_SECRET
+        sync: false
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST
