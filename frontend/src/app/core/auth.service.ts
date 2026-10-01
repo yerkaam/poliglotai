@@ -41,11 +41,11 @@ export class AuthService {
   }
 
   /** AUTH-13: the token cookies are removed and the learner lands on the login screen. */
-  async logout() {
+  async logout(then: '/login' | '/register' = '/login') {
     try {
       await firstValueFrom(this.api.logout());
     } finally {
-      await this.clear();
+      await this.clear(then);
     }
   }
 
@@ -64,8 +64,8 @@ export class AuthService {
     }
   }
 
-  clear() {
+  clear(then: '/login' | '/register' = '/login') {
     this.user.set(null);
-    return this.router.navigate(['/login']);
+    return this.router.navigate([then]);
   }
 }

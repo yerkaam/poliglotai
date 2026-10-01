@@ -86,7 +86,7 @@ export class HomeComponent {
       case 'reviews':
         return $localize`${task.target}:count: сөзді қайталау`;
       case 'new':
-        return $localize`${task.target}:count: жаңа етістік`;
+        return $localize`${task.target}:count: жаңа сөз`;
       case 'trainer':
         return $localize`Жаттықтырғыш: ${task.target}:count: сөйлем`;
       case 'chat':

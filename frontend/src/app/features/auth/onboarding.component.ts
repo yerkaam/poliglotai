@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { Level } from '../../core/models';
 import { AuthLayoutComponent } from './auth-layout.component';
@@ -8,16 +8,21 @@ import { apiErrors } from './errors';
 type Limit = 5 | 10 | 15 | 20;
 const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
 
-/** AUTH-04: after registration the learner picks a level and a daily goal. */
+/** AUTH-04: after registration the learner picks a level and a daily goal; later the same screen is the settings. */
 @Component({
   selector: 'app-onboarding',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AuthLayoutComponent],
+  imports: [AuthLayoutComponent, RouterLink],
   template: `
     <app-auth-layout>
       <div class="intro">
-        <h2 class="page-title" i18n>Сәлем, {{ auth.user()?.name }}!</h2>
-        <p class="muted" i18n>Екі сұрақ — және бастаймыз.</p>
+        @if (editing) {
+          <h2 class="page-title" i18n>Баптаулар</h2>
+          <p class="muted" i18n>Деңгей мен күнделікті жаңа сөздер санын кез келген уақытта өзгертуге болады.</p>
+        } @else {
+          <h2 class="page-title" i18n>Сәлем, {{ auth.user()?.name }}!</h2>
+          <p class="muted" i18n>Екі сұрақ — және бастаймыз.</p>
+        }
       </div>
 
       <fieldset>
@@ -44,7 +49,12 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
       </fieldset>
 
       @if (error()) { <div class="alert" role="alert">{{ error() }}</div> }
-      <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Бастау</button>
+      @if (editing) {
+        <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Сақтау</button>
+        <a class="btn btn-ghost btn-lg" routerLink="/" i18n>Артқа</a>
+      } @else {
+        <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Бастау</button>
+      }
     </app-auth-layout>
   `,
   styleUrl: './auth.scss',
@@ -58,6 +68,8 @@ export class OnboardingComponent {
   protected limit = signal<Limit>(this.auth.user()?.profile.daily_new_limit ?? 10);
   protected busy = signal(false);
   protected error = signal('');
+  /** Opened from the menu after onboarding: the same choices, as settings. */
+  protected editing = !!this.auth.user()?.profile.onboarded;
 
   protected minutes(n: Limit) {
     return $localize`~${MINUTES[n]}:minutes: мин`;
@@ -65,6 +77,7 @@ export class OnboardingComponent {
 
   async save() {
     this.busy.set(true);
+    this.error.set('');
     try {
       const n = this.limit();
       await this.auth.updateProfile({

@@ -150,3 +150,45 @@ test('the sidebar folds into an icon rail and remembers it', async ({ page, isMo
   await page.getByRole('button', { name: 'Мәзірді ашу' }).click();
   await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(wide);
 });
+
+test('switching the scenario in the middle of a dialog asks first', async ({ page }) => {
+  await register(page);
+  await page.goto('/chat');
+  await page.getByRole('button', { name: 'Бастау' }).click();
+  await page.getByLabel('Сіздің жауабыңыз').fill('I like tea.');
+  await page.getByLabel('Сіздің жауабыңыз').press('Enter');
+  await expect(page.locator('.msg.me')).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Әуежайда' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Жаңа диалог бастайсыз ба?' });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.msg.me')).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Әуежайда' }).click();
+  await dialog.getByRole('button', { name: 'Жаңасын бастау' }).click();
+  await expect(page.locator('.msg.me')).toHaveCount(0);
+});
+
+test('the daily word limit can be changed in the settings', async ({ page }) => {
+  await register(page);
+  await page.getByRole('link', { name: 'Баптаулар' }).locator('visible=true').first().click();
+  await expect(page.getByRole('heading', { name: 'Баптаулар' })).toBeVisible();
+  await page.getByRole('button', { name: /^20/ }).click();
+  await page.getByRole('button', { name: 'Сақтау' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/settings');
+  await expect(page.getByRole('button', { name: /^20/ })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('the stats bar fits a phone without breaking words', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone layout');
+  await register(page);
+  const bar = page.locator('header.topbar');
+  expect((await bar.boundingBox())!.height).toBeLessThan(110);
+  for (const label of await page.locator('.stat dt').all()) {
+    const box = await label.boundingBox();
+    if (box && box.height > 0) expect(box.height).toBeLessThan(20); // one line
+  }
+  await noHorizontalScroll(page);
+});

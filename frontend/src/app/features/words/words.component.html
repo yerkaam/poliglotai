@@ -18,6 +18,8 @@
 
       @if (loading()) {
         <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
+      } @else if (loadFailed()) {
+        <div class="card"><app-load-error (retry)="load()" /></div>
       } @else if (current(); as item) {
         <article class="word-card" [attr.aria-label]="item.word.word">
           <div class="card-top">

@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -7,8 +8,8 @@ import { Word } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
+import { LoadErrorComponent } from '../../shared/load-error.component';
 import { apiErrors } from '../auth/errors';
-import { GuardedPage } from '../../core/leave.guard';
 
 interface QueueItem {
   word: Word;
@@ -18,16 +19,18 @@ interface QueueItem {
 @Component({
   selector: 'app-words',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink],
+  imports: [IconComponent, RouterLink, LoadErrorComponent],
   templateUrl: './words.component.html',
   styleUrl: './words.component.scss',
 })
-export class WordsComponent extends GuardedPage implements OnInit {
+export class WordsComponent implements OnInit {
   private api = inject(ApiService);
   protected speech = inject(SpeechService);
   protected store = inject(ProgressStore);
 
   protected loading = signal(true);
+  /** Today's cards could not be loaded: the screen offers a retry instead of "all done". */
+  protected loadFailed = signal(false);
   protected queue = signal<QueueItem[]>([]);
   protected done = signal(0);
   protected revealed = signal(false);
@@ -46,24 +49,14 @@ export class WordsComponent extends GuardedPage implements OnInit {
   protected percent = computed(() => (this.total() ? Math.round((100 * this.done()) / this.total()) : 0));
   protected stageMax = computed(() => Math.max(1, ...(this.store.progress()?.stages.map((s) => s.count) ?? [1])));
 
-  hasUnsavedWork() {
-    return (this.done() > 0 || this.revealed()) && this.queue().length > 0;
-  }
-
-  override leaveTitle() {
-    return $localize`Сабақтан шығасыз ба?`;
-  }
-
-  override leaveMessage() {
-    return $localize`Тағы ${this.queue().length}:count: сөз қалды. Берілген жауаптар сақталды.`;
-  }
-
   async ngOnInit() {
     await this.load();
   }
 
-  private async load() {
+  protected async load() {
     this.loading.set(true);
+    this.loadFailed.set(false);
+    this.error.set('');
     try {
       const today = await firstValueFrom(this.api.today());
       // SRS-06: words due for review come first, then new ones.
@@ -76,8 +69,8 @@ export class WordsComponent extends GuardedPage implements OnInit {
       this.newLeft.set(today.new_left);
       this.done.set(0);
       this.revealed.set(false);
-    } catch (e) {
-      this.error.set(apiErrors(e).general);
+    } catch {
+      this.loadFailed.set(true);
     } finally {
       this.loading.set(false);
     }
@@ -110,9 +103,10 @@ export class WordsComponent extends GuardedPage implements OnInit {
       this.store.refresh();
     } catch (e) {
       this.error.set(apiErrors(e).general);
-      if (answer === 'start') {
-        // Limit reached: drop the remaining new words from today's queue.
+      if (e instanceof HttpErrorResponse && e.error?.code === 'limit') {
+        // Limit reached: drop the remaining new words from today's queue. Other errors keep the card for a retry.
         this.queue.update((q) => q.filter((i) => i.mode !== 'new'));
+        this.newLeft.set(0);
       }
     } finally {
       this.busy.set(false);

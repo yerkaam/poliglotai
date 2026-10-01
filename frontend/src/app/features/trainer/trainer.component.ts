@@ -42,16 +42,15 @@ export class TrainerComponent extends GuardedPage implements OnInit {
   protected sign = FORM_SIGN;
   protected aux = TENSE_AUX;
   private nextTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Sentences checked since the learner opened the trainer. */
-  protected sessionAnswers = signal(0);
 
   constructor() {
     super();
     inject(DestroyRef).onDestroy(() => clearTimeout(this.nextTimer));
   }
 
+  /** Checked sentences are saved on the server; only a typed, unchecked sentence would be lost. */
   hasUnsavedWork() {
-    return this.sessionAnswers() > 0 || (!!this.answer().trim() && !this.result());
+    return !!this.answer().trim() && !this.result();
   }
 
   override leaveTitle() {
@@ -59,17 +58,20 @@ export class TrainerComponent extends GuardedPage implements OnInit {
   }
 
   override leaveMessage() {
-    return this.answer().trim() && !this.result()
-      ? $localize`Жазылған сөйлем тексерілмей қалады.`
-      : $localize`Осы жаттығуда ${this.sessionAnswers()}:count: сөйлем жаздыңыз. Нәтижелер сақталды, бірақ жаттығу тоқтайды.`;
+    return $localize`Жазылған сөйлем тексерілмей қалады.`;
   }
 
   ngOnInit() {
     this.next();
   }
 
+  private loadingNext = false;
+
   protected async next() {
     clearTimeout(this.nextTimer);
+    // Enter right after a correct answer and the automatic step must not load two tasks.
+    if (this.loadingNext) return;
+    this.loadingNext = true;
     this.error.set('');
     try {
       const { task, stats } = await firstValueFrom(this.api.trainerTask());
@@ -80,6 +82,8 @@ export class TrainerComponent extends GuardedPage implements OnInit {
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     } catch (e) {
       this.error.set(apiErrors(e).general);
+    } finally {
+      this.loadingNext = false;
     }
   }
 
@@ -106,7 +110,6 @@ export class TrainerComponent extends GuardedPage implements OnInit {
       );
       this.result.set(result);
       this.stats.set(result.stats);
-      this.sessionAnswers.update((n) => n + 1);
       this.store.refresh();
       if (result.correct) {
         this.speech.speak(result.expected);

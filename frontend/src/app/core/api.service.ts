@@ -82,12 +82,9 @@ export class ApiService {
   answer(wordId: number, answer: 'start' | 'known' | 'remember' | 'forget') {
     return this.http.post<AnswerResult>(`/api/srs/${wordId}/answer/`, { answer });
   }
-  addWord(word: string, translation_kk: string, example_en = '') {
-    return this.http.post<{ word_id: number; word: string; added: boolean }>('/api/srs/add/', {
-      word,
-      translation_kk,
-      example_en,
-    });
+  /** The server takes the translation the tutor gave in the chat, never one sent from here. */
+  addWord(word: string) {
+    return this.http.post<{ word_id: number; word: string; added: boolean }>('/api/srs/add/', { word });
   }
 
   // trainer
@@ -111,7 +108,7 @@ export class ApiService {
     return this.http.get<{ scenarios: Scenario[]; usage: ChatUsage }>('/api/chat/scenarios/');
   }
   startConversation(mode: ChatMode, scenario?: string) {
-    return this.http.post<Conversation>('/api/chat/conversations/', { mode, scenario: scenario ?? null }, handles(503));
+    return this.http.post<Conversation>('/api/chat/conversations/', { mode, scenario: scenario ?? null }, handles(429, 503));
   }
   conversation(id: number) {
     return this.http.get<Conversation>(`/api/chat/conversations/${id}/`);

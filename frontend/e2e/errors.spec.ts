@@ -76,3 +76,18 @@ test('adding a word from the chat confirms with a pop-up', async ({ page }) => {
   await page.getByRole('button', { name: /yesterday — кеше/ }).click();
   await expect(toasts(page).getByRole('status')).toContainText('«yesterday» карточкаларға қосылды');
 });
+
+test('cards that failed to load offer a retry instead of "all done"', async ({ page }) => {
+  await signUp(page);
+  let fail = true;
+  await page.route('**/api/srs/today/', (route) =>
+    fail ? route.fulfill({ status: 500, json: { detail: 'boom', code: 'server_error' } }) : route.fallback(),
+  );
+  await page.goto('/words');
+  const block = page.locator('app-load-error');
+  await expect(block).toContainText('Жүктеу мүмкін болмады');
+  await expect(page.getByText('Бүгінге бәрі!')).toHaveCount(0);
+  fail = false;
+  await block.getByRole('button', { name: 'Қайталау' }).click();
+  await expect(page.getByRole('button', { name: 'Үйренуді бастау' })).toBeVisible();
+});

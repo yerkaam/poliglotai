@@ -35,6 +35,9 @@
         </span>
       </div>
       <div class="side-actions">
+        <a class="icon-btn" routerLink="/settings" i18n-aria-label aria-label="Баптаулар" i18n-title title="Баптаулар">
+          <app-icon name="user" />
+        </a>
         <button type="button" class="icon-btn" (click)="theme.toggle()" [attr.aria-label]="themeLabel()" [attr.title]="themeLabel()">
           <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
         </button>
@@ -84,6 +87,9 @@
       </dl>
 
       <div class="top-actions mobile-only">
+        <a class="icon-btn" routerLink="/settings" i18n-aria-label aria-label="Баптаулар">
+          <app-icon name="user" />
+        </a>
         <button type="button" class="icon-btn" (click)="theme.toggle()" [attr.aria-label]="themeLabel()">
           <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
         </button>

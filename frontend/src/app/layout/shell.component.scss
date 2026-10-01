@@ -247,7 +247,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px 12px;
-  padding: 14px 16px 12px;
+  padding: 10px 16px;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   position: sticky;
@@ -255,29 +255,37 @@
   z-index: 10;
 }
 
+/* phone: one compact row of pills that scrolls sideways, so labels never break inside a word
+   and the sticky bar leaves room for the lesson */
 .stats {
   order: 3;
-  width: 100%;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  padding: 0 16px;
+  display: flex;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 .stat {
+  flex: none;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 6px 8px;
+  border-radius: 999px;
+  padding: 4px 10px;
   display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  min-width: 0;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 5px;
   dt {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.15;
     color: var(--muted);
-    text-align: center;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
   }
   dd {
     margin: 0;
@@ -295,7 +303,7 @@
   }
   &.streak {
     flex-direction: row;
-    justify-content: center;
+    align-items: center;
     gap: 4px;
     dt {
       color: var(--red);
@@ -365,7 +373,8 @@ main {
   .stats {
     order: 0;
     width: auto;
-    display: flex;
+    margin: 0;
+    padding: 0;
     gap: 8px;
   }
   .stat {

@@ -21,7 +21,7 @@
       <div class="titles">
         <h1 id="chatTitle">{{ title() }}</h1>
         <span class="muted small">
-          <ng-container i18n>1-қадам · тек сіздің етістіктеріңіз</ng-container>
+          <ng-container i18n>Тек сіздің етістіктеріңіз</ng-container>
           @if (conversation()?.scenario; as s) {
             · <ng-container i18n>{{ s.max_turns }} репликаның {{ turn() }}-і</ng-container>
           }
@@ -190,7 +190,7 @@
           <p class="muted small" i18n>Жаңа сөздер осында шығады.</p>
         }
       </div>
-      @if (summary()?.new_words?.length) {
+      @if (wordsToAdd().length) {
         <button type="button" class="btn btn-outline" (click)="addAll()" i18n>Барлығын карточкаға қосу</button>
       }
     </div>

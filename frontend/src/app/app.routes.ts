@@ -44,6 +44,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
   },
   {
+    path: 'settings',
+    canActivate: [authGuard, verifiedGuard, onboardedGuard],
+    title: $localize`Баптаулар · PoliglotAi`,
+    loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
+  },
+  {
     path: '',
     component: ShellComponent,
     canActivate: [authGuard, verifiedGuard, onboardedGuard],
@@ -60,19 +66,18 @@ export const routes: Routes = [
       },
       {
         path: 'words',
-    canDeactivate: [leaveGuard],
         title: $localize`Сөздер · PoliglotAi`,
         loadComponent: () => import('./features/words/words.component').then((m) => m.WordsComponent),
       },
       {
         path: 'trainer',
-    canDeactivate: [leaveGuard],
+        canDeactivate: [leaveGuard],
         title: $localize`Жаттықтырғыш · PoliglotAi`,
         loadComponent: () => import('./features/trainer/trainer.component').then((m) => m.TrainerComponent),
       },
       {
         path: 'chat',
-    canDeactivate: [leaveGuard],
+        canDeactivate: [leaveGuard],
         title: $localize`AI-чат · PoliglotAi`,
         loadComponent: () => import('./features/chat/chat.component').then((m) => m.ChatComponent),
       },

@@ -64,7 +64,7 @@ const RESEND_SECONDS = 60;
         </button>
       </div>
       <p class="foot muted">
-        <ng-container i18n>Пошта қате ме?</ng-container>&ngsp;<button type="button" class="link" (click)="auth.logout()" i18n>
+        <ng-container i18n>Пошта қате ме?</ng-container>&ngsp;<button type="button" class="link" (click)="registerAgain()" i18n>
           Басқа поштамен тіркелу
         </button>
       </p>
@@ -109,6 +109,12 @@ export class VerifyComponent extends GuardedPage {
 
   override leaveMessage() {
     return $localize`Пошта әлі расталмады. Кодты кейін енгізуге болады.`;
+  }
+
+  /** A typo in the email: leave this unconfirmed account and register again. */
+  protected registerAgain() {
+    this.code.set('');
+    return this.auth.logout('/register');
   }
 
   protected pad(n: number) {
