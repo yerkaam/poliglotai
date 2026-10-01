@@ -167,6 +167,8 @@ CACHES = {"default": _cache}
 SPA_DIR = os.environ.get("SPA_DIR", "")
 if SPA_DIR:
     WHITENOISE_ROOT = SPA_DIR
+# The web app manifest needs its own type, or browsers may not offer to install the app.
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")

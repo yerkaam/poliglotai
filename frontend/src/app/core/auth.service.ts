@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { Profile, User } from './models';
+import { clearOfflineData } from './pwa.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,7 +16,8 @@ export class AuthService {
   /** Runs once at start-up: gets the CSRF cookie, then asks who is logged in. */
   async init(): Promise<void> {
     try {
-      await firstValueFrom(this.api.csrf());
+      // Without internet there is no new CSRF cookie, but the cached profile still opens the app offline.
+      await firstValueFrom(this.api.csrf()).catch(() => undefined);
       this.user.set(await firstValueFrom(this.api.me()));
     } catch {
       this.user.set(null);
@@ -66,6 +68,7 @@ export class AuthService {
 
   clear(then: '/login' | '/register' = '/login') {
     this.user.set(null);
+    void clearOfflineData(); // the next person on this device must not see this learner's cached data
     return this.router.navigate([then]);
   }
 }

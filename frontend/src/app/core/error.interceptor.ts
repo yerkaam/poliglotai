@@ -12,6 +12,17 @@ export function isReported(error: unknown): boolean {
   return typeof error === 'object' && error !== null && reported.has(error);
 }
 
+/**
+ * No connection: the browser gave up (status 0), or the service worker answered for it — Angular's worker
+ * replies with an empty 504 when the network is gone and nothing is cached.
+ */
+export function isNetworkError(error: unknown): boolean {
+  if (!(error instanceof HttpErrorResponse)) return false;
+  if (error.status === 0) return true;
+  const body = error.error;
+  return error.status === 504 && (body === null || body === '' || body instanceof Blob || typeof body === 'string');
+}
+
 /** After this long the free Render server is probably waking up: say so instead of a silent spinner. */
 const SLOW_MS = 5000;
 let pending = 0;
@@ -56,7 +67,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 };
 
 function globalMessage(error: HttpErrorResponse): string | null {
-  if (error.status === 0) {
+  if (isNetworkError(error)) {
     // Offline is announced once by NetworkService; this is "online, but the server did not answer".
     return navigator.onLine ? $localize`Серверге қосылу мүмкін болмады. Интернетті тексеріп, қайталаңыз.` : null;
   }

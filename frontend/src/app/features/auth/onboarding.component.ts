@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { PwaService } from '../../core/pwa.service';
 import { Level } from '../../core/models';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
@@ -68,6 +69,20 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
         </fieldset>
       }
 
+      @if (editing && (pwa.canInstall() || pwa.iosHint() || pwa.installed())) {
+        <fieldset>
+          <legend i18n>Телефондағы қосымша</legend>
+          @if (pwa.installed()) {
+            <p class="muted" i18n>PoliglotAi осы құрылғыда қосымша ретінде орнатылған.</p>
+          } @else if (pwa.canInstall()) {
+            <p class="muted" i18n>Басты экраннан бір басумен ашылады, интернетсіз де карточкаларды қайталауға болады.</p>
+            <button type="button" class="btn btn-outline" (click)="pwa.install()" i18n>Телефонға орнату</button>
+          } @else {
+            <p class="muted" i18n>iPhone-да: Safari-де «Бөлісу» батырмасын басып, «Басты экранға қосу» таңдаңыз.</p>
+          }
+        </fieldset>
+      }
+
       @if (error()) { <div class="alert" role="alert">{{ error() }}</div> }
       @if (editing) {
         <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Сақтау</button>
@@ -89,6 +104,7 @@ export class OnboardingComponent {
   protected busy = signal(false);
   protected error = signal('');
   /** Opened from the menu after onboarding: the same choices, as settings. */
+  protected pwa = inject(PwaService);
   protected editing = !!this.auth.user()?.profile.onboarded;
   protected hours = [8, 12, 18, 19, 20, 21];
   protected reminders = signal(this.auth.user()?.profile.reminder_enabled ?? true);

@@ -16,7 +16,10 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { INTERVAL_LABELS } from '../../core/labels';
 import { ReviewCheck, Word } from '../../core/models';
+import { isNetworkError } from '../../core/error.interceptor';
+import { OfflineQueueService } from '../../core/offline-queue.service';
 import { ProgressStore } from '../../core/progress.store';
+import { localVerdict } from '../../core/review-check';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadErrorComponent } from '../../shared/load-error.component';
@@ -39,6 +42,7 @@ export class WordsComponent implements OnInit {
   private api = inject(ApiService);
   protected speech = inject(SpeechService);
   protected store = inject(ProgressStore);
+  private offline = inject(OfflineQueueService);
 
   protected loading = signal(true);
   /** Today's cards could not be loaded: the screen offers a retry instead of "all done". */
@@ -99,10 +103,13 @@ export class WordsComponent implements OnInit {
     this.error.set('');
     try {
       const today = await firstValueFrom(this.api.today());
+      // Words answered without internet (still waiting to be sent) are not asked again from a cached list.
+      const answered = this.offline.pendingWordIds();
+      const fresh = (word: Word) => !answered.has(word.id);
       // SRS-06: words due for review come first, then new ones.
       this.queue.set([
-        ...today.review.map((word) => ({ word, mode: 'review' as const })),
-        ...today.new.map((word) => ({ word, mode: 'new' as const })),
+        ...today.review.filter(fresh).map((word) => ({ word, mode: 'review' as const })),
+        ...today.new.filter(fresh).map((word) => ({ word, mode: 'new' as const })),
       ]);
       this.reviewTotal.set(today.review.length);
       this.newLimit.set(today.new_limit);
@@ -137,7 +144,17 @@ export class WordsComponent implements OnInit {
     this.error.set('');
     this.given.set(answer);
     try {
-      const res = await firstValueFrom(this.api.checkReview(item.word.id, quiz.mode, answer));
+      let res: ReviewCheck;
+      let savedOffline = false;
+      try {
+        res = await firstValueFrom(this.api.checkReview(item.word.id, quiz.mode, answer));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        // No internet: check on the phone and send the answer once the connection is back.
+        res = localVerdict(item.word, quiz.mode, answer);
+        this.offline.add({ kind: 'check', wordId: item.word.id, mode: quiz.mode, answer });
+        savedOffline = true;
+      }
       this.verdict.set(res);
       this.store.refresh();
       if (res.correct) {
@@ -147,6 +164,7 @@ export class WordsComponent implements OnInit {
       } else {
         this.note.set($localize`Сөз ${res.stage}:stage:-кезеңге оралды, соңында тағы көрсетеміз.`);
       }
+      if (savedOffline) this.note.set($localize`Интернет жоқ: жауап сақталды, байланыс болғанда жіберіледі.`);
       queueMicrotask(() => this.nextButton()?.nativeElement.focus());
     } catch (e) {
       this.error.set(apiErrors(e).general);
@@ -191,11 +209,20 @@ export class WordsComponent implements OnInit {
     this.busy.set(true);
     this.error.set('');
     try {
-      const res = await firstValueFrom(this.api.answer(item.word.id, answer));
+      let note: string;
+      try {
+        const res = await firstValueFrom(this.api.answer(item.word.id, answer));
+        note = this.noteFor(answer, res.status, res.next_review_date);
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        // No internet: keep the answer on the phone and send it once the connection is back.
+        this.offline.add({ kind: 'answer', wordId: item.word.id, answer });
+        note = $localize`Интернет жоқ: жауап сақталды, байланыс болғанда жіберіледі.`;
+      }
       this.queue.set(this.queue().slice(1));
       this.done.update((d) => d + 1);
       this.said.set(null);
-      this.note.set(this.noteFor(answer, res.status, res.next_review_date));
+      this.note.set(note);
       if (answer === 'start') this.newLeft.update((n) => Math.max(0, n - 1));
       this.store.refresh();
     } catch (e) {

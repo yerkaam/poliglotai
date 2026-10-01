@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**", "!/api/**", "!/admin/**", "!/static/**", "!/healthz"],
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": ["/favicon.svg", "/index.html", "/manifest.webmanifest", "/*.css", "/*.js"]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/icons/**", "/**/*.(svg|png|jpg|webp|woff2)"],
+        "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "study-data",
+      "urls": [
+        "/api/auth/me/",
+        "/api/srs/today/",
+        "/api/progress/",
+        "/api/course/**",
+        "/api/verbs/**",
+        "/api/chat/scenarios/"
+      ],
+      "cacheConfig": { "strategy": "freshness", "timeout": "4s", "maxAge": "7d", "maxSize": 200 }
+    }
+  ]
+}
