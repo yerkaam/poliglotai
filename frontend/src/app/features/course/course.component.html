@@ -31,20 +31,35 @@
       }
       <ol class="steps">
         @for (s of steps.value(); track s.number) {
-          <li [class.open]="s.status === 'open'">
-            <span class="num">{{ s.number }}</span>
+          <li [class.open]="s.status === 'open'" [class.done]="s.status === 'done'">
+            <span class="num">
+              @if (s.status === 'done') {
+                <app-icon name="check" [size]="16" [stroke]="3" /><span class="visually-hidden">{{ s.number }}</span>
+              } @else {
+                {{ s.number }}
+              }
+            </span>
             <div class="info">
               <b>{{ s.title_kk }}</b>
               <span class="muted">{{ s.description_kk }}</span>
-              @if (s.status === 'open') {
+              @if (s.status === 'open' || s.status === 'done') {
                 <div class="step-progress">
-                  <div class="progress-track"><span [style.width.%]="s.percent"></span></div>
-                  <small class="muted" i18n>{{ s.words_learned }} / {{ s.words_total }} сөз · {{ s.percent }}%</small>
+                  @if (s.words_total) {
+                    <div class="progress-track"><span [style.width.%]="s.percent"></span></div>
+                    <small class="muted" i18n>{{ s.words_learned }} / {{ s.words_total }} сөз · {{ s.percent }}%</small>
+                  }
+                  @if (s.quiz_best !== null) {
+                    <small class="muted" i18n>тест: {{ s.quiz_best }}%</small>
+                  }
                 </div>
               }
             </div>
             @if (s.status === 'open') {
-              <a class="btn btn-primary open-btn" routerLink="/table" i18n>Ашу</a>
+              <a class="btn btn-primary open-btn" [routerLink]="['/course', s.number]" i18n>Ашу</a>
+            } @else if (s.status === 'done') {
+              <a class="btn btn-ghost open-btn" [routerLink]="['/course', s.number]" i18n>Қайталау</a>
+            } @else if (s.status === 'locked') {
+              <span class="soon"><app-icon name="lock" [size]="14" />&ngsp;<ng-container i18n>жабық</ng-container></span>
             } @else {
               <span class="soon"><app-icon name="lock" [size]="14" />&ngsp;<ng-container i18n>жақында</ng-container></span>
             }

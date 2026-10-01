@@ -86,6 +86,12 @@ export const routes: Routes = [
         title: $localize`Курс · PoliglotAi`,
         loadComponent: () => import('./features/course/course.component').then((m) => m.CourseComponent),
       },
+      {
+        path: 'course/:number',
+        canDeactivate: [leaveGuard],
+        title: $localize`Қадам · PoliglotAi`,
+        loadComponent: () => import('./features/course/step.component').then((m) => m.StepComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

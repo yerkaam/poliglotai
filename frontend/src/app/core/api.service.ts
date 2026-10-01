@@ -15,6 +15,8 @@ import {
   Pronoun,
   Scenario,
   SendResult,
+  StepCheckResult,
+  StepDetail,
   Tense,
   Today,
   TrainerStats,
@@ -73,6 +75,12 @@ export class ApiService {
   }
   course() {
     return this.http.get<CourseStep[]>('/api/course/');
+  }
+  step(number: number) {
+    return this.http.get<StepDetail>(`/api/course/${number}/`);
+  }
+  checkStep(number: number, answers: string[]) {
+    return this.http.post<StepCheckResult>(`/api/course/${number}/check/`, { answers });
   }
 
   // spaced repetition

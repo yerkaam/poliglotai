@@ -49,6 +49,13 @@ export class HomeComponent {
 
   protected verbs = apiResource(() => this.api.verbs(), [] as Word[]);
   protected course = apiResource(() => this.api.course(), [] as CourseStep[]);
+  /** Three steps around the learner's current one: the last done, the open one, the next locked. */
+  protected nearSteps = computed(() => {
+    const steps = this.course.value();
+    const current = steps.findIndex((s) => s.status === 'open');
+    const start = Math.max(0, Math.min((current < 0 ? 0 : current) - 1, steps.length - 3));
+    return steps.slice(start, start + 3);
+  });
 
   /** Verb of the day: rotates daily through the verbs being learned (or the course verbs). */
   protected verbOfDay = computed<Word | null>(() => {

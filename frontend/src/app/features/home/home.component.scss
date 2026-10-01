@@ -248,6 +248,15 @@
       color: var(--ink);
       font-weight: 600;
     }
+    &.done {
+      color: var(--ink);
+      app-icon {
+        color: var(--green);
+      }
+    }
+  }
+  a.name {
+    color: inherit;
   }
   .num {
     width: 28px;
@@ -264,6 +273,11 @@
   .open .num {
     background: var(--red);
     border-color: var(--red);
+    color: #fff;
+  }
+  .done .num {
+    background: var(--green);
+    border-color: var(--green);
     color: #fff;
   }
   .name {

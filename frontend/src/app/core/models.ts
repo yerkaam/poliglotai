@@ -111,15 +111,54 @@ export interface CheckResult {
   stats: TrainerStats;
 }
 
+/** done: check passed and words started; open: unlocked; locked: after an unfinished step; soon: not published. */
+export type StepStatus = 'done' | 'open' | 'locked' | 'soon';
+
 export interface CourseStep {
   number: number;
   title_kk: string;
   title_en: string;
   description_kk: string;
-  status: 'open' | 'soon';
+  status: StepStatus;
   words_total: number;
+  words_started: number;
   words_learned: number;
+  words_needed: number;
   percent: number;
+  has_lesson: boolean;
+  quiz_total: number;
+  quiz_best: number | null;
+  quiz_passed: boolean;
+}
+
+export interface LessonBlock {
+  title_kk: string;
+  text_kk: string;
+  examples: { en: string; kk: string }[];
+}
+
+export interface Exercise {
+  type: 'choice' | 'input';
+  prompt: string;
+  prompt_kk: string;
+  options?: string[];
+}
+
+export interface StepDetail extends CourseStep {
+  lesson: LessonBlock[];
+  exercises: Exercise[];
+  words: Word[];
+  pass_percent: number;
+}
+
+export interface StepCheckResult {
+  items: { correct: boolean; right: string }[];
+  score: number;
+  total: number;
+  percent: number;
+  passed: boolean;
+  step: CourseStep;
+  opened_step: number | null;
 }
 
 export type ChatMode = 'dialog' | 'builder' | 'free';
