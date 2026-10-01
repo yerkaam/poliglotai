@@ -46,10 +46,13 @@ services:
       - fromGroup: poliglot-mail
 
 envVarGroups:
-  # Email for registration codes, password resets and reminders. Without SMTP they only appear in the logs,
-  # so nobody can confirm an account — fill these in (e.g. Resend, Mailgun, Gmail app password).
+  # Email for registration codes, password resets and reminders. Without it nobody can confirm an account.
+  # Render's free plan blocks outgoing SMTP: there, set BREVO_API_KEY (sent over HTTPS) and a verified sender
+  # in DEFAULT_FROM_EMAIL; the SMTP fields are then ignored. On a paid plan SMTP (e.g. a Gmail app password) works.
   - name: poliglot-mail
     envVars:
+      - key: BREVO_API_KEY
+        sync: false
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST

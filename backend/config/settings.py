@@ -171,7 +171,15 @@ if SPA_DIR:
 # The web app manifest needs its own type, or browsers may not offer to install the app.
 WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Brevo's HTTPS API when its key is set (Render's free plan blocks outgoing SMTP), otherwise EMAIL_BACKEND.
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+EMAIL_BACKEND = (
+    "users.email_backends.BrevoEmailBackend"
+    if BREVO_API_KEY
+    else os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+)
+# Seconds to wait for the mail server: a blocked or slow one must not hang the learner's request.
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "15"))
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")

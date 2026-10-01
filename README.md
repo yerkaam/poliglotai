@@ -27,6 +27,7 @@ docker compose exec backend python manage.py createsuperuser
 1. Render Dashboard → **New → Blueprint** → подключить GitHub-репозиторий `yerkaam/poliglotai`, выбрать ветку.
 2. Render создаст веб-сервис `poliglot`, базу `poliglot-db` и группу переменных `poliglot-mail`, сам сгенерирует `DJANGO_SECRET_KEY`.
 3. Ввести `ANTHROPIC_API_KEY` (без него работает офлайн-заглушка чата).
+3a. Почта: бесплатный план Render блокирует исходящий SMTP, поэтому там письма шлются через HTTPS API Brevo (бесплатно до ~300 писем в день). На brevo.com: Senders → добавить и подтвердить адрес отправителя; SMTP & API → API Keys → создать ключ. В группе `poliglot-mail` задать `BREVO_API_KEY` и `DEFAULT_FROM_EMAIL` = `PoliglotAi <подтверждённый@адрес>`. На платном плане подойдёт и обычный SMTP.
 4. Сайт откроется на `https://poliglot-<...>.onrender.com`; миграции и начальные данные применяются при старте.
 
 Админ: в Render Shell выполнить `python manage.py createsuperuser`.
