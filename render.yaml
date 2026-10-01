@@ -35,10 +35,44 @@ services:
         value: low
       - key: CHAT_DAILY_LIMIT
         value: "30"
-      # Email: registration codes and password resets. Without SMTP they only appear in the service logs,
-      # so nobody can confirm an account — fill these in (e.g. Resend, Mailgun, Gmail app password).
       - key: REQUIRE_EMAIL_VERIFICATION
         value: "1"
+      - fromGroup: poliglot-mail
+
+  # Daily reminder emails ("you have not studied today"): checks every hour who is due at their chosen hour.
+  # Render cron jobs are billed by run time (a few seconds an hour); delete this service to turn reminders off.
+  - type: cron
+    name: poliglot-reminders
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: frankfurt
+    schedule: "5 * * * *"
+    dockerCommand: python manage.py send_reminders
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: poliglot-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          type: web
+          name: poliglot
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: TIME_ZONE
+        value: Asia/Almaty
+      # The address used in the email links: the web service's public URL.
+      - key: FRONTEND_URL
+        sync: false
+      - fromGroup: poliglot-mail
+
+envVarGroups:
+  # Email for registration codes, password resets and reminders. Without SMTP they only appear in the logs,
+  # so nobody can confirm an account — fill these in (e.g. Resend, Mailgun, Gmail app password).
+  - name: poliglot-mail
+    envVars:
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST

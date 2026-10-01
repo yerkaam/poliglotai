@@ -9,6 +9,9 @@ export interface Profile {
   daily_new_limit: 5 | 10 | 15 | 20;
   daily_minutes: number;
   onboarded: boolean;
+  /** Daily email when the learner has not studied yet that day. */
+  reminder_enabled: boolean;
+  reminder_hour: number;
 }
 
 export interface User {

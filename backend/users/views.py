@@ -6,6 +6,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import IntegrityError
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -20,6 +21,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .authentication import REFRESH_COOKIE, REMEMBER_COOKIE, clear_auth_cookies, set_auth_cookies
 from .models import Profile, User
+from .reminders import user_from_token
 from .serializers import (
     EMAIL_TAKEN,
     LoginSerializer,
@@ -300,3 +302,34 @@ class PasswordResetConfirmView(APIView):
         # Whoever knew the old password is logged out everywhere.
         _end_all_sessions(user)
         return Response({"detail": "Құпиясөз жаңартылды. Енді кіре аласыз."})
+
+
+UNSUBSCRIBED_PAGE = """<!doctype html><html lang="kk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>PoliglotAi</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:480px;margin:15vh auto;padding:0 16px;line-height:1.5">
+<h1 style="font-size:22px">{title}</h1><p>{text}</p><p><a href="{url}">PoliglotAi</a></p></body></html>"""
+
+
+class UnsubscribeRemindersView(APIView):
+    """GET (the link in the email) or POST (one-click unsubscribe by the mail app): no more reminder emails."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return self._unsubscribe(request.query_params.get("token", ""))
+
+    def post(self, request):
+        return self._unsubscribe(request.query_params.get("token", ""))
+
+    def _unsubscribe(self, token):
+        user_id = user_from_token(token)
+        if user_id is None:
+            title, text, code = "Сілтеме жарамсыз", "Еске салғыштарды «Баптаулар» бетінде өшіруге болады.", 400
+        else:
+            Profile.objects.filter(user_id=user_id).update(reminder_enabled=False)
+            title = "Еске салғыштар өшірілді"
+            text = "Бұдан былай хат жібермейміз. Қайта қосу үшін «Баптаулар» бетін ашыңыз."
+            code = 200
+        page = UNSUBSCRIBED_PAGE.format(title=title, text=text, url=settings.FRONTEND_URL)
+        return HttpResponse(page, status=code, content_type="text/html; charset=utf-8")

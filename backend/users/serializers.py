@@ -3,15 +3,17 @@ from rest_framework import serializers
 
 from .models import Profile, User
 
+REMINDER_HOURS = [8, 12, 18, 19, 20, 21]
 EMAIL_TAKEN = "Бұл поштамен аккаунт бұрыннан бар. Кіріп көріңіз."
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     daily_new_limit = serializers.ChoiceField(choices=[5, 10, 15, 20])
+    reminder_hour = serializers.ChoiceField(choices=REMINDER_HOURS, required=False)
 
     class Meta:
         model = Profile
-        fields = ["level", "daily_new_limit", "daily_minutes", "onboarded"]
+        fields = ["level", "daily_new_limit", "daily_minutes", "onboarded", "reminder_enabled", "reminder_hour"]
 
 
 class UserSerializer(serializers.ModelSerializer):

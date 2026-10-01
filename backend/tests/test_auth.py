@@ -28,7 +28,14 @@ def test_register_logs_in_and_needs_onboarding(anon):
     assert anon.get("/api/auth/me/").json()["email"] == "new@mail.kz"
     anon.post("/api/auth/verify-email/", {"code": _code_from_email()}, format="json")
     r = anon.patch("/api/auth/profile/", {"level": "A1", "daily_new_limit": 15, "onboarded": True}, format="json")
-    assert r.json()["profile"] == {"level": "A1", "daily_new_limit": 15, "daily_minutes": 15, "onboarded": True}
+    assert r.json()["profile"] == {
+        "level": "A1",
+        "daily_new_limit": 15,
+        "daily_minutes": 15,
+        "onboarded": True,
+        "reminder_enabled": True,
+        "reminder_hour": 19,
+    }
 
 
 @pytest.mark.parametrize("password", ["short1", "longpassword"])

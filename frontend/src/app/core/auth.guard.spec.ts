@@ -29,13 +29,13 @@ describe('auth guards', () => {
   });
 
   it('sends a learner without a profile to onboarding', () => {
-    user.set({ id: 1, email: 'a@b.kz', name: 'A', email_verified: true, profile: { level: 'A0', daily_new_limit: 10, daily_minutes: 15, onboarded: false } });
+    user.set({ id: 1, email: 'a@b.kz', name: 'A', email_verified: true, profile: { level: 'A0', daily_new_limit: 10, daily_minutes: 15, onboarded: false, reminder_enabled: true, reminder_hour: 19 } });
     expect(run(authGuard)).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(run(onboardedGuard) as UrlTree)).toBe('/onboarding');
   });
 
   it('sends a learner with an unconfirmed email to the code screen', () => {
-    user.set({ id: 1, email: 'a@b.kz', name: 'A', email_verified: false, profile: { level: 'A0', daily_new_limit: 10, daily_minutes: 15, onboarded: true } });
+    user.set({ id: 1, email: 'a@b.kz', name: 'A', email_verified: false, profile: { level: 'A0', daily_new_limit: 10, daily_minutes: 15, onboarded: true, reminder_enabled: true, reminder_hour: 19 } });
     expect(TestBed.inject(Router).serializeUrl(run(verifiedGuard) as UrlTree)).toBe('/verify');
   });
 });

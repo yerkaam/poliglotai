@@ -27,7 +27,8 @@ CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:4200").split(",") if o
 ]
 # Render publishes the service's public hostname; trust it automatically.
-if RENDER_HOST := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
+if RENDER_HOST:
     ALLOWED_HOSTS.append(RENDER_HOST)
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
 
@@ -174,7 +175,8 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "PoliglotAi <no-reply@poliglot.ai>")
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:4200")
+# Links in emails (password reset, reminders). On Render the service's own address unless set explicitly.
+FRONTEND_URL = os.environ.get("FRONTEND_URL") or (f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:4200")
 
 # AI chat. The key never leaves the server. Without a key the chat uses an offline tutor stub.
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")

@@ -48,6 +48,26 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
         </div>
       </fieldset>
 
+      @if (editing) {
+        <fieldset>
+          <legend i18n>Еске салғыш хат</legend>
+          <label class="check">
+            <input type="checkbox" [checked]="reminders()" (change)="reminders.set($any($event.target).checked)" />
+            <span i18n>Сабақ болмаған күні поштаға еске салу</span>
+          </label>
+          @if (reminders()) {
+            <div class="options six" role="group" i18n-aria-label aria-label="Хат уақыты">
+              @for (h of hours; track h) {
+                <button type="button" [attr.aria-pressed]="hour() === h" (click)="hour.set(h)">
+                  <b>{{ h }}:00</b>
+                </button>
+              }
+            </div>
+            <small class="muted" i18n>Алматы уақыты бойынша. Сол күні сабақ болса, хат келмейді.</small>
+          }
+        </fieldset>
+      }
+
       @if (error()) { <div class="alert" role="alert">{{ error() }}</div> }
       @if (editing) {
         <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Сақтау</button>
@@ -70,6 +90,9 @@ export class OnboardingComponent {
   protected error = signal('');
   /** Opened from the menu after onboarding: the same choices, as settings. */
   protected editing = !!this.auth.user()?.profile.onboarded;
+  protected hours = [8, 12, 18, 19, 20, 21];
+  protected reminders = signal(this.auth.user()?.profile.reminder_enabled ?? true);
+  protected hour = signal(this.auth.user()?.profile.reminder_hour ?? 19);
 
   protected minutes(n: Limit) {
     return $localize`~${MINUTES[n]}:minutes: мин`;
@@ -85,6 +108,7 @@ export class OnboardingComponent {
         daily_new_limit: n,
         daily_minutes: MINUTES[n],
         onboarded: true,
+        ...(this.editing ? { reminder_enabled: this.reminders(), reminder_hour: this.hour() } : {}),
       });
       await this.router.navigate(['/']);
     } catch (e) {

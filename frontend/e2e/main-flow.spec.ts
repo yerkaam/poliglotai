@@ -175,11 +175,12 @@ test('the daily word limit can be changed in the settings', async ({ page }) => 
   await register(page);
   await page.getByRole('link', { name: 'Баптаулар' }).locator('visible=true').first().click();
   await expect(page.getByRole('heading', { name: 'Баптаулар' })).toBeVisible();
-  await page.getByRole('button', { name: /^20/ }).click();
+  const twenty = page.getByRole('button', { name: /^20 ~/ }); // 20 words a day (not the 20:00 reminder)
+  await twenty.click();
   await page.getByRole('button', { name: 'Сақтау' }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/settings');
-  await expect(page.getByRole('button', { name: /^20/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(twenty).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('the stats bar fits a phone without breaking words', async ({ page, isMobile }) => {
@@ -345,4 +346,19 @@ test('the tutor reply streams in, and a failed send gives the line back', async 
   await expect(page.locator('.alert')).toContainText('қолжетімсіз');
   await expect(page.getByLabel('Сіздің жауабыңыз')).toHaveValue('Do you like coffee?');
   await expect(page.locator('.msg.ai')).toHaveCount(2);
+});
+
+test('reminder emails can be moved to another hour or turned off', async ({ page }) => {
+  await register(page);
+  await page.goto('/settings');
+  await page.getByRole('button', { name: '21:00' }).click();
+  await page.getByRole('button', { name: 'Сақтау' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/settings');
+  await expect(page.getByRole('button', { name: '21:00' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('Сабақ болмаған күні поштаға еске салу').uncheck();
+  await expect(page.getByRole('button', { name: '21:00' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Сақтау' }).click();
+  await page.goto('/settings');
+  await expect(page.getByLabel('Сабақ болмаған күні поштаға еске салу')).not.toBeChecked();
 });

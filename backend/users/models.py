@@ -52,6 +52,10 @@ class Profile(models.Model):
     daily_new_limit = models.PositiveSmallIntegerField(default=10)  # 5, 10, 15 or 20 (SRS-07)
     daily_minutes = models.PositiveSmallIntegerField(default=15)
     onboarded = models.BooleanField(default=False)
+    # Daily email when the learner has not studied yet today (local time, settings.TIME_ZONE).
+    reminder_enabled = models.BooleanField(default=True)
+    reminder_hour = models.PositiveSmallIntegerField(default=19)
+    reminder_sent_on = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = "profiles"

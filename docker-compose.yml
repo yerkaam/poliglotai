@@ -34,6 +34,19 @@ services:
       interval: 5s
       retries: 20
 
+  # Daily reminder emails: every hour, sends the ones that are due (see users/reminders.py).
+  reminders:
+    build: ./backend
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
+    command: sh -c "while true; do python manage.py send_reminders; sleep 3600; done"
+    depends_on:
+      backend:
+        condition: service_healthy
+
   frontend:
     build: ./frontend
     ports:
