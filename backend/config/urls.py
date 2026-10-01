@@ -24,6 +24,7 @@ api = [
     path("srs/today/", srs.TodayView.as_view()),
     path("srs/add/", srs.AddWordView.as_view()),
     path("srs/<int:word_id>/answer/", srs.AnswerView.as_view()),
+    path("srs/<int:word_id>/check/", srs.CheckView.as_view()),
     path("trainer/task/", trainer.TaskView.as_view()),
     path("trainer/check/", trainer.CheckView.as_view()),
     path("progress/", progress.ProgressView.as_view()),

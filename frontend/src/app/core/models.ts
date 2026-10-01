@@ -34,6 +34,14 @@ export interface Word {
   source: 'course' | 'chat' | 'wiktionary';
   status: WordStatus;
   stage: number;
+  /** Only on cards due for review: the exercise that checks the word at its stage. */
+  quiz?: ReviewQuiz;
+}
+
+/** choice: pick the Kazakh translation; listen: hear the word, pick its spelling; type: write the English word. */
+export interface ReviewQuiz {
+  mode: 'choice' | 'listen' | 'type';
+  options?: string[];
 }
 
 export interface Part {
@@ -68,6 +76,13 @@ export interface AnswerResult {
   stage: number;
   next_review_date: string | null;
   again_today: boolean;
+}
+
+export interface ReviewCheck extends AnswerResult {
+  correct: boolean;
+  /** Accepted with one typo: the right spelling is shown. */
+  almost: boolean;
+  right: string;
 }
 
 export interface GoalTask {

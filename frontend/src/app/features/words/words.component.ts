@@ -1,10 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { INTERVAL_LABELS } from '../../core/labels';
-import { Word } from '../../core/models';
+import { ReviewCheck, Word } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
@@ -33,7 +44,13 @@ export class WordsComponent implements OnInit {
   protected loadFailed = signal(false);
   protected queue = signal<QueueItem[]>([]);
   protected done = signal(0);
-  protected revealed = signal(false);
+  /** The verdict on the review card on screen; the card waits for "next" after a mistake. */
+  protected verdict = signal<ReviewCheck | null>(null);
+  /** The option the learner picked (choice / listen) or the word typed. */
+  protected given = signal('');
+  private typeInput = viewChild<ElementRef<HTMLInputElement>>('typeInput');
+  private nextButton = viewChild<ElementRef<HTMLButtonElement>>('nextButton');
+  private advanceTimer: ReturnType<typeof setTimeout> | undefined;
   protected busy = signal(false);
   protected note = signal('');
   protected error = signal('');
@@ -48,6 +65,26 @@ export class WordsComponent implements OnInit {
   protected total = computed(() => this.done() + this.queue().length);
   protected percent = computed(() => (this.total() ? Math.round((100 * this.done()) / this.total()) : 0));
   protected stageMax = computed(() => Math.max(1, ...(this.store.progress()?.stages.map((s) => s.count) ?? [1])));
+  protected quiz = computed(() => {
+    const item = this.current();
+    return item?.mode === 'review' ? (item.word.quiz ?? { mode: 'choice' as const }) : null;
+  });
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.advanceTimer));
+    // A new review card: listening plays the word, typing puts the cursor in the field.
+    effect(() => {
+      const quiz = this.quiz();
+      const item = this.current();
+      if (!quiz || !item || this.verdict()) return;
+      if (quiz.mode === 'listen') setTimeout(() => this.speech.speak(item.word.word, 0.85), 250);
+      // After rendering: the new card is in view and, for typing, the cursor is in the field.
+      setTimeout(() => {
+        document.querySelector('.word-card')?.scrollIntoView({ block: 'nearest' });
+        if (quiz.mode === 'type') this.typeInput()?.nativeElement.focus({ preventScroll: true });
+      });
+    });
+  }
 
   async ngOnInit() {
     await this.load();
@@ -68,7 +105,7 @@ export class WordsComponent implements OnInit {
       this.newLimit.set(today.new_limit);
       this.newLeft.set(today.new_left);
       this.done.set(0);
-      this.revealed.set(false);
+      this.verdict.set(null);
     } catch {
       this.loadFailed.set(true);
     } finally {
@@ -81,25 +118,73 @@ export class WordsComponent implements OnInit {
     if (item) this.speech.speak(item.word.word, 0.85);
   }
 
-  protected async answer(answer: 'start' | 'known' | 'remember' | 'forget') {
+  /** Review card: the server checks the pick (or typed word); an empty answer is "I don't know". */
+  protected async check(answer: string) {
+    const item = this.current();
+    const quiz = this.quiz();
+    if (!item || !quiz || this.busy() || this.verdict()) return;
+    this.busy.set(true);
+    this.error.set('');
+    this.given.set(answer);
+    try {
+      const res = await firstValueFrom(this.api.checkReview(item.word.id, quiz.mode, answer));
+      this.verdict.set(res);
+      this.store.refresh();
+      if (res.correct) {
+        this.speech.speak(item.word.word, 0.9);
+        this.note.set(this.noteFor('remember', res.status, res.next_review_date));
+        if (!res.almost) this.advanceTimer = setTimeout(() => this.next(), 1100);
+      } else {
+        this.note.set($localize`Сөз ${res.stage}:stage:-кезеңге оралды, соңында тағы көрсетеміз.`);
+      }
+      queueMicrotask(() => this.nextButton()?.nativeElement.focus());
+    } catch (e) {
+      this.error.set(apiErrors(e).general);
+      this.given.set('');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** After the verdict: a right word leaves the queue, a forgotten one comes back at the end of the session. */
+  protected next() {
+    clearTimeout(this.advanceTimer);
+    const item = this.current();
+    const res = this.verdict();
+    if (!item || !res) return;
+    const rest = this.queue().slice(1);
+    if (res.correct) {
+      this.queue.set(rest);
+      this.done.update((d) => d + 1);
+    } else {
+      this.queue.set([...rest, { word: { ...item.word, stage: res.stage }, mode: 'review' }]);
+    }
+    this.verdict.set(null);
+    this.given.set('');
+    if (!res.correct) this.note.set(''); // the "comes back later" hint belonged to the previous card
+  }
+
+  protected submitTyped(event: Event) {
+    event.preventDefault();
+    if (this.verdict()) {
+      this.next();
+      return;
+    }
+    const value = this.typeInput()?.nativeElement.value.trim() ?? '';
+    if (value) this.check(value);
+  }
+
+  protected async answer(answer: 'start' | 'known') {
     const item = this.current();
     if (!item || this.busy()) return;
     this.busy.set(true);
     this.error.set('');
     try {
       const res = await firstValueFrom(this.api.answer(item.word.id, answer));
-      const rest = this.queue().slice(1);
-      if (answer === 'forget') {
-        // SRS-05: one stage down and shown again later in this session.
-        this.queue.set([...rest, { word: { ...item.word, stage: res.stage }, mode: 'review' }]);
-        this.note.set($localize`Сөз ${res.stage}:stage:-кезеңге оралды, соңында тағы көрсетеміз.`);
-      } else {
-        this.queue.set(rest);
-        this.done.update((d) => d + 1);
-        this.note.set(this.noteFor(answer, res.status, res.next_review_date));
-      }
+      this.queue.set(this.queue().slice(1));
+      this.done.update((d) => d + 1);
+      this.note.set(this.noteFor(answer, res.status, res.next_review_date));
       if (answer === 'start') this.newLeft.update((n) => Math.max(0, n - 1));
-      this.revealed.set(false);
       this.store.refresh();
     } catch (e) {
       this.error.set(apiErrors(e).general);

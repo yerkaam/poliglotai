@@ -29,6 +29,7 @@
 }
 
 .word-card {
+  scroll-margin-top: calc(var(--topbar-h, 70px) + 12px);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
@@ -149,14 +150,88 @@
   min-height: 44px;
   font-size: 15px;
 }
-.reveal {
-  margin-top: auto;
+.listen.big {
+  width: 96px;
+  height: 96px;
+  border-radius: 48px;
+}
+.kk-prompt {
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* review exercises */
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.option {
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  &:not(:disabled):hover {
+    border-color: var(--ink);
+  }
+  &:disabled {
+    cursor: default;
+  }
+  &.right {
+    border-color: var(--green);
+    background: var(--green-tint);
+  }
+  &.wrong {
+    border-color: var(--red);
+    background: var(--tint);
+    text-decoration: line-through;
+  }
+}
+.type-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  .input.big {
+    height: 56px;
+    font-size: 22px;
+    text-align: center;
+  }
+  .input.right {
+    border-color: var(--green);
+    background: var(--green-tint);
+  }
+  .input.wrong {
+    border-color: var(--red);
+    background: var(--tint);
+  }
+}
+.verdict {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--tint);
+  color: var(--red-strong);
+  &.ok {
+    background: var(--green-tint);
+    color: var(--green);
+  }
 }
 
 .actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  .wide {
+    grid-column: 1 / -1;
+  }
 }
 
 .note {

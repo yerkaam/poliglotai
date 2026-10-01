@@ -91,3 +91,55 @@ test('cards that failed to load offer a retry instead of "all done"', async ({ p
   await block.getByRole('button', { name: 'Қайталау' }).click();
   await expect(page.getByRole('button', { name: 'Үйренуді бастау' })).toBeVisible();
 });
+
+test('reviews check the word: pick the translation, pick what you hear, type it', async ({ page }) => {
+  await signUp(page);
+  const card = (id: number, word: string, kk: string, stage: number, quiz: object) => ({
+    id, word, translation_kk: kk, ipa: '', is_verb: false, past: '', is_irregular: false, example_en: '',
+    example_kk: '', topic: '', course_step: 1, source: 'course', status: 'learning', stage, quiz,
+  });
+  await page.route('**/api/srs/today/', (route) =>
+    route.fulfill({
+      json: {
+        review: [
+          card(1, 'buy', 'сатып алу', 1, { mode: 'choice', options: ['ішу', 'сатып алу', 'бару', 'көру'] }),
+          card(2, 'speak', 'сөйлеу', 3, { mode: 'listen', options: ['speak', 'sleep', 'spend', 'stand'] }),
+          card(3, 'study', 'оқу', 5, { mode: 'type' }),
+        ],
+        new: [], new_limit: 10, new_left: 0, intervals: [1, 2, 4, 7, 14, 30],
+      },
+    }),
+  );
+  const verdicts: Record<string, object> = {
+    1: { correct: true, almost: false, right: 'сатып алу', stage: 2 },
+    2: { correct: false, almost: false, right: 'speak', stage: 2 },
+    3: { correct: true, almost: true, right: 'study', stage: 6 },
+  };
+  await page.route('**/api/srs/*/check/', (route) => {
+    const id = route.request().url().match(/srs\/(\d+)\/check/)![1];
+    route.fulfill({ json: { word_id: Number(id), status: 'learning', next_review_date: null, again_today: false, ...verdicts[id] } });
+  });
+
+  await page.goto('/words');
+  // 1. choice: the English word, four translations
+  await expect(page.getByText('Аудармасын таңдаңыз')).toBeVisible();
+  await page.getByRole('button', { name: 'сатып алу' }).click();
+  await expect(page.locator('.verdict')).toContainText('Дұрыс!');
+
+  // 2. listening: no written word, a wrong pick shows the right one and waits for "next"
+  await expect(page.getByText('Тыңдап, сөзді таңдаңыз')).toBeVisible();
+  await expect(page.locator('.en')).toHaveCount(0);
+  await page.getByRole('button', { name: 'sleep' }).click();
+  await expect(page.locator('.verdict')).toContainText('Қате. Дұрысы: speak');
+  await page.getByRole('button', { name: 'Келесі' }).click();
+
+  // 3. typing: the Kazakh word, one typo is accepted with the right spelling shown
+  await expect(page.getByText('Ағылшынша жазыңыз')).toBeVisible();
+  await page.getByLabel('Ағылшынша сөз').fill('studdy');
+  await page.getByLabel('Ағылшынша сөз').press('Enter');
+  await expect(page.locator('.verdict')).toContainText('Жазылуы: study');
+  await page.getByRole('button', { name: 'Келесі' }).click();
+
+  // The forgotten word comes back at the end of the session.
+  await expect(page.getByText('Тыңдап, сөзді таңдаңыз')).toBeVisible();
+});

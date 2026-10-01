@@ -12,6 +12,8 @@ import {
   Form,
   Profile,
   Progress,
+  ReviewCheck,
+  ReviewQuiz,
   Pronoun,
   Scenario,
   SendResult,
@@ -94,6 +96,10 @@ export class ApiService {
     return this.http.post<AnswerResult>(`/api/srs/${wordId}/answer/`, { answer });
   }
   /** The server takes the translation the tutor gave in the chat, never one sent from here. */
+  /** Checks a review exercise on the server; an empty answer means "I don't know". */
+  checkReview(wordId: number, mode: ReviewQuiz['mode'], answer: string) {
+    return this.http.post<ReviewCheck>(`/api/srs/${wordId}/check/`, { mode, answer });
+  }
   addWord(word: string) {
     return this.http.post<{ word_id: number; word: string; added: boolean }>('/api/srs/add/', { word });
   }

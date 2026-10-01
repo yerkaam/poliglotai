@@ -21,7 +21,7 @@
       } @else if (loadFailed()) {
         <div class="card"><app-load-error (retry)="load()" /></div>
       } @else if (current(); as item) {
-        <article class="word-card" [attr.aria-label]="item.word.word">
+        <article class="word-card" [attr.aria-label]="item.mode === 'new' || verdict() ? item.word.word : null">
           <div class="card-top">
             @if (item.mode === 'review') {
               <div class="stage-dots" aria-hidden="true">
@@ -29,25 +29,100 @@
                   <span [class.on]="s <= item.word.stage"></span>
                 }
               </div>
-              <span class="eyebrow" i18n>{{ item.word.stage }}-кезең / 6</span>
+              <span class="eyebrow">
+                @switch (quiz()?.mode) {
+                  @case ('choice') { <ng-container i18n>Аудармасын таңдаңыз</ng-container> }
+                  @case ('listen') { <ng-container i18n>Тыңдап, сөзді таңдаңыз</ng-container> }
+                  @case ('type') { <ng-container i18n>Ағылшынша жазыңыз</ng-container> }
+                }
+              </span>
             } @else {
               <span class="new-tag" i18n>Жаңа сөз</span>
               <span class="eyebrow" i18n>қалды: {{ newLeft() }} / {{ newLimit() }}</span>
             }
           </div>
 
+          <!-- What the learner sees before answering -->
           <div class="face">
-            <span class="en">{{ item.word.word }}</span>
-            @if (item.word.ipa) {
-              <span class="ipa mono">{{ item.word.ipa }}</span>
+            @if (item.mode === 'new' || verdict() || quiz()?.mode === 'choice') {
+              <span class="en">{{ item.word.word }}</span>
+              @if (item.word.ipa) {
+                <span class="ipa mono">{{ item.word.ipa }}</span>
+              }
+              <button type="button" class="listen" (click)="listen()" i18n-aria-label aria-label="Тыңдау">
+                <app-icon name="speaker" [size]="28" />
+              </button>
+            } @else if (quiz()?.mode === 'listen') {
+              <button type="button" class="listen big" (click)="listen()" i18n-aria-label aria-label="Сөзді тағы тыңдау">
+                <app-icon name="speaker" [size]="40" />
+              </button>
+              @if (!speech.supported) {
+                <span class="kk-prompt">{{ item.word.translation_kk }}</span>
+                <small class="muted" i18n>Бұл браузерде дыбыс жоқ — аударма бойынша таңдаңыз.</small>
+              }
+            } @else {
+              <span class="kk-prompt">{{ item.word.translation_kk }}</span>
+              <small class="muted" i18n>{{ item.word.word.length }} әріп</small>
             }
-            <button type="button" class="listen" (click)="listen()" i18n-aria-label aria-label="Тыңдау">
-              <app-icon name="speaker" [size]="28" />
-            </button>
           </div>
 
-          @if (item.mode === 'new' || revealed()) {
+          <!-- The exercise -->
+          @if (item.mode === 'review' && quiz(); as q) {
+            @if (q.mode === 'type') {
+              <form class="type-form" (submit)="submitTyped($event)">
+                <label class="visually-hidden" for="typeInput" i18n>Ағылшынша сөз</label>
+                <input
+                  #typeInput
+                  id="typeInput"
+                  class="input big"
+                  type="text"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  [readOnly]="!!verdict()"
+                  [class.right]="verdict()?.correct"
+                  [class.wrong]="verdict() && !verdict()!.correct"
+                  i18n-placeholder
+                  placeholder="Сөзді жазыңыз…"
+                />
+                @if (!verdict()) {
+                  <button type="submit" class="btn btn-primary btn-lg" [disabled]="busy()" i18n>Тексеру</button>
+                }
+              </form>
+            } @else {
+              <div class="options" role="group" [attr.aria-label]="q.mode === 'choice' ? 'Аударма' : 'Сөз'">
+                @for (o of q.options; track o) {
+                  <button
+                    type="button"
+                    class="option"
+                    [class.right]="verdict() && o === verdict()!.right"
+                    [class.wrong]="verdict() && o === given() && o !== verdict()!.right"
+                    [disabled]="busy() || !!verdict()"
+                    (click)="check(o)"
+                  >
+                    {{ o }}
+                  </button>
+                }
+              </div>
+            }
+          }
+
+          <!-- The answer and the word's details: for a new word, or after the check -->
+          @if (item.mode === 'new' || verdict()) {
             <div class="back" aria-live="polite">
+              @if (verdict(); as v) {
+                <p class="verdict" [class.ok]="v.correct">
+                  @if (v.correct && v.almost) {
+                    <b i18n>Дұрыс! Жазылуы: {{ v.right }}</b>
+                  } @else if (v.correct) {
+                    <b i18n>Дұрыс!</b>
+                  } @else if (given()) {
+                    <b i18n>Қате. Дұрысы: {{ v.right }}</b>
+                  } @else {
+                    <b i18n>Дұрысы: {{ v.right }}</b>
+                  }
+                </p>
+              }
               <span class="kk">{{ item.word.translation_kk }}</span>
               @if (item.word.is_verb) {
                 <div class="forms">
@@ -77,10 +152,6 @@
                 </a>
               }
             </div>
-          } @else {
-            <button type="button" class="btn btn-ghost btn-block reveal" (click)="revealed.set(true)" i18n>
-              Аударманы көрсету
-            </button>
           }
         </article>
 
@@ -92,12 +163,11 @@
             <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="answer('start')" i18n>
               Үйренуді бастау
             </button>
+          } @else if (verdict()) {
+            <button #nextButton type="button" class="btn btn-primary btn-lg wide" (click)="next()" i18n>Келесі</button>
           } @else {
-            <button type="button" class="btn btn-outline btn-lg" [disabled]="busy() || !revealed()" (click)="answer('forget')" i18n>
-              Ұмыттым
-            </button>
-            <button type="button" class="btn btn-primary btn-lg" [disabled]="busy() || !revealed()" (click)="answer('remember')" i18n>
-              Есімде
+            <button type="button" class="btn btn-ghost btn-lg wide" [disabled]="busy()" (click)="check('')" i18n>
+              Білмеймін
             </button>
           }
         </div>
