@@ -5,8 +5,11 @@ corrections of the learner's last sentence (each tied to a cell of the verb tabl
 Without ANTHROPIC_API_KEY an offline tutor answers instead, so the app works in development.
 """
 
+import json
 import logging
 import re
+import time
+from collections.abc import Iterator
 from typing import Literal
 
 import anthropic
@@ -97,6 +100,9 @@ KICKOFF = "(The lesson starts. Write your first line.)"
 BLOCKLIST = re.compile(r"\b(fuck|shit|bitch|porn|sex|kill|drugs?)\b", re.IGNORECASE)
 
 
+UNAVAILABLE_TEXT = "AI-әңгімелесуші қазір қолжетімсіз. Бір минуттан кейін қайталаңыз."
+
+
 class TutorUnavailable(Exception):
     pass
 
@@ -131,48 +137,123 @@ def build_system_prompt(
     )
 
 
+def _request(system: str, history: list[dict]) -> dict:
+    # The API needs a user turn first; the stored dialog starts with the tutor's opening line.
+    return {
+        "model": settings.CHAT_MODEL,
+        "max_tokens": 16000,
+        "system": system,
+        "messages": [{"role": "user", "content": KICKOFF}, *history],
+        "output_format": TutorReply,
+        "output_config": {"effort": settings.CHAT_EFFORT},
+        # If the main model declines, the API re-runs the request on a fallback model.
+        "betas": ["server-side-fallback-2026-07-01"],
+        "fallbacks": "default",
+    }
+
+
+def _client():
+    return anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY, max_retries=2, timeout=60)
+
+
+def _unavailable(exc: Exception) -> TutorUnavailable:
+    if isinstance(exc, anthropic.RateLimitError):
+        logger.warning("LLM rate limited: %s", exc)
+        return TutorUnavailable("rate_limited")
+    if isinstance(exc, anthropic.APIStatusError):
+        logger.error("LLM API error %s: %s", exc.status_code, exc)
+        return TutorUnavailable("api_error")
+    logger.error("LLM connection error: %s", exc)
+    return TutorUnavailable("connection")
+
+
+DECLINED = TutorReply(
+    reply="Let's talk about something else. What did you do today?",
+    reply_kk="Басқа тақырып туралы сөйлесейік. Бүгін не істедіңіз?",
+    answer_template="Today I …",
+    learner_correct=None,
+    corrections=[],
+    new_words=[],
+    finished=False,
+    off_topic=True,
+)
+
+
 def ask_tutor(*, system: str, history: list[dict]) -> TutorReply:
     """history: [{"role": "user"|"assistant", "content": str}, …] ending with the learner's line."""
     if not settings.ANTHROPIC_API_KEY:
         return offline_reply(history)
-
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY, max_retries=2, timeout=60)
-    # The API needs a user turn first; the stored dialog starts with the tutor's opening line.
-    messages = [{"role": "user", "content": KICKOFF}, *history]
     try:
-        response = client.beta.messages.parse(
-            model=settings.CHAT_MODEL,
-            max_tokens=16000,
-            system=system,
-            messages=messages,
-            output_format=TutorReply,
-            output_config={"effort": settings.CHAT_EFFORT},
-            # If the main model declines, the API re-runs the request on a fallback model.
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-        )
-    except anthropic.RateLimitError as exc:
-        logger.warning("LLM rate limited: %s", exc)
-        raise TutorUnavailable("rate_limited") from exc
-    except anthropic.APIStatusError as exc:
-        logger.error("LLM API error %s: %s", exc.status_code, exc)
-        raise TutorUnavailable("api_error") from exc
-    except anthropic.APIConnectionError as exc:
-        logger.error("LLM connection error: %s", exc)
-        raise TutorUnavailable("connection") from exc
-
+        response = _client().beta.messages.parse(**_request(system, history))
+    except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+        raise _unavailable(exc) from exc
     if response.stop_reason == "refusal" or response.parsed_output is None:
-        return TutorReply(
-            reply="Let's talk about something else. What did you do today?",
-            reply_kk="Басқа тақырып туралы сөйлесейік. Бүгін не істедіңіз?",
-            answer_template="Today I …",
-            learner_correct=None,
-            corrections=[],
-            new_words=[],
-            finished=False,
-            off_topic=True,
-        )
+        return DECLINED
     return response.parsed_output
+
+
+def stream_tutor(*, system: str, history: list[dict]) -> Iterator[tuple[str, object]]:
+    """Like ask_tutor, but yields ("reply", text so far) while the model writes, then ("final", TutorReply).
+
+    The model writes the TutorReply JSON with `reply` first, so the learner sees the tutor's line appear
+    long before the translation, corrections and new words are ready.
+    """
+    if not settings.ANTHROPIC_API_KEY:
+        reply = offline_reply(history)
+        words = reply.reply.split(" ")
+        for i in range(1, len(words) + 1):
+            time.sleep(0.04)  # the offline tutor "types" too, so the screen behaves as in production
+            yield "reply", " ".join(words[:i])
+        yield "final", reply
+        return
+    try:
+        with _client().beta.messages.stream(**_request(system, history)) as stream:
+            text, shown = "", ""
+            for event in stream:
+                if event.type == "content_block_start" and event.content_block.type == "text":
+                    text = ""  # a fallback model starts its own JSON from scratch
+                elif event.type == "content_block_delta" and event.delta.type == "text_delta":
+                    text += event.delta.text
+                    current = partial_string(text, "reply")
+                    if current and current != shown:
+                        shown = current
+                        yield "reply", current
+            response = stream.get_final_message()
+    except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+        raise _unavailable(exc) from exc
+    if response.stop_reason == "refusal" or response.parsed_output is None:
+        yield "final", DECLINED
+    else:
+        yield "final", response.parsed_output
+
+
+_FIELD = re.compile(r'"(?P<name>[a-z_]+)"\s*:\s*"')
+
+
+def partial_string(text: str, field: str) -> str:
+    """The value of a top-level string field in JSON that may still be incomplete ("" if not started)."""
+    for match in _FIELD.finditer(text):
+        if match.group("name") != field:
+            continue
+        raw = text[match.end() :]
+        end, escaped = None, False
+        for i, ch in enumerate(raw):
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                end = i
+                break
+        body = raw if end is None else raw[:end]
+        if end is None:
+            # Cut a half-received escape (\ or \u12) so the decoder never sees it.
+            body = re.sub(r"\\(u[0-9a-fA-F]{0,3})?$", "", body)
+        try:
+            return json.loads(f'"{body}"')
+        except json.JSONDecodeError:
+            return body
+    return ""
 
 
 # ---- offline tutor (no API key) ----------------------------------------------------

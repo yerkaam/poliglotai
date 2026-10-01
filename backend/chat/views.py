@@ -1,6 +1,9 @@
+import json
 from collections import Counter
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers, status
@@ -14,7 +17,7 @@ from users.models import Profile
 from vocabulary.course import course_state
 from vocabulary.forms import FORM_LABELS_KK, TENSE_LABELS_KK
 
-from .llm import BLOCKLIST, TutorUnavailable, ask_tutor, build_system_prompt
+from .llm import BLOCKLIST, UNAVAILABLE_TEXT, TutorUnavailable, ask_tutor, build_system_prompt, stream_tutor
 from .models import Conversation, Message, Scenario
 
 
@@ -106,10 +109,11 @@ def _save_assistant(conversation: Conversation, reply) -> Message:
     )
 
 
-UNAVAILABLE = Response(
-    {"detail": "AI-әңгімелесуші қазір қолжетімсіз. Бір минуттан кейін қайталаңыз."},
-    status=status.HTTP_503_SERVICE_UNAVAILABLE,
-)
+UNAVAILABLE_BODY = {"detail": UNAVAILABLE_TEXT}
+
+
+def unavailable() -> Response:
+    return Response(UNAVAILABLE_BODY, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class ScenarioListView(APIView):
@@ -143,7 +147,7 @@ class ConversationListView(APIView):
             reply = ask_tutor(system=_system_prompt(conversation), history=[])
         except TutorUnavailable:
             conversation.delete()
-            return UNAVAILABLE
+            return unavailable()
         _save_assistant(conversation, reply)
         log_activity(request.user, chat_requests=1)
         return Response(ConversationSerializer(conversation).data, status=status.HTTP_201_CREATED)
@@ -159,51 +163,98 @@ class SendSerializer(serializers.Serializer):
     text = serializers.CharField(max_length=500)
 
 
+def _check_send(request, pk):
+    """(conversation, text, None) when the message may go to the tutor, else (…, error Response)."""
+    conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
+    serializer = SendSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    text = serializer.validated_data["text"].strip()
+    if not text:
+        return conversation, text, Response({"detail": "Бос хабарлама."}, status=status.HTTP_400_BAD_REQUEST)
+    if conversation.finished:
+        error = Response({"detail": "Диалог аяқталды. Жаңасын бастаңыз."}, status=status.HTTP_409_CONFLICT)
+        return conversation, text, error
+    if BLOCKLIST.search(text):
+        # Inappropriate content never reaches the model.
+        error = Response(
+            {"detail": "Бұл тақырыпты талқыламаймыз. Оқуға қатысты жазыңыз.", "code": "filtered"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+        return conversation, text, error
+    if limit_reached(request.user):
+        return conversation, text, Response(LIMIT_REACHED, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    return conversation, text, None
+
+
+def _save_turn(user, conversation, text, reply) -> dict:
+    """Stores the learner's line with its corrections and the tutor's reply; counts the AI call."""
+    user_message = Message.objects.create(
+        conversation=conversation,
+        role=Message.Role.USER,
+        text=text,
+        correct=reply.learner_correct if reply.learner_correct is not None else not reply.corrections,
+        corrections=[c.model_dump() for c in reply.corrections],
+    )
+    assistant_message = _save_assistant(conversation, reply)
+    log_activity(user, chat_messages=1, chat_requests=1)
+    return {
+        "user_message": MessageSerializer(user_message).data,
+        "assistant_message": MessageSerializer(assistant_message).data,
+        "finished": conversation.finished,
+        "off_topic": reply.off_topic,
+        "usage": usage(user),
+    }
+
+
 class SendMessageView(APIView):
     def post(self, request, pk):
-        conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
-        serializer = SendSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        text = serializer.validated_data["text"].strip()
-        if not text:
-            return Response({"detail": "Бос хабарлама."}, status=status.HTTP_400_BAD_REQUEST)
-        if conversation.finished:
-            return Response({"detail": "Диалог аяқталды. Жаңасын бастаңыз."}, status=status.HTTP_409_CONFLICT)
-
-        if BLOCKLIST.search(text):
-            # Inappropriate content never reaches the model.
-            return Response(
-                {"detail": "Бұл тақырыпты талқыламаймыз. Оқуға қатысты жазыңыз.", "code": "filtered"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if limit_reached(request.user):
-            return Response(LIMIT_REACHED, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
+        conversation, text, error = _check_send(request, pk)
+        if error:
+            return error
         history = _history(conversation) + [{"role": "user", "content": text}]
         try:
             reply = ask_tutor(system=_system_prompt(conversation), history=history)
         except TutorUnavailable:
-            return UNAVAILABLE
+            return unavailable()
+        return Response(_save_turn(request.user, conversation, text, reply), status=status.HTTP_201_CREATED)
 
-        user_message = Message.objects.create(
-            conversation=conversation,
-            role=Message.Role.USER,
-            text=text,
-            correct=reply.learner_correct if reply.learner_correct is not None else not reply.corrections,
-            corrections=[c.model_dump() for c in reply.corrections],
-        )
-        assistant_message = _save_assistant(conversation, reply)
-        log_activity(request.user, chat_messages=1, chat_requests=1)
-        return Response(
-            {
-                "user_message": MessageSerializer(user_message).data,
-                "assistant_message": MessageSerializer(assistant_message).data,
-                "finished": conversation.finished,
-                "off_topic": reply.off_topic,
-                "usage": usage(request.user),
-            },
-            status=status.HTTP_201_CREATED,
-        )
+
+def _sse(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, cls=DjangoJSONEncoder)}\n\n"
+
+
+class SendMessageStreamView(APIView):
+    """POST …/messages/stream/ — the same as …/messages/, but the tutor's line arrives while it is written.
+
+    Server-sent events: `reply` {text} as the line grows, then `done` with the same body as the plain endpoint,
+    or `error` {detail, code, status}. Problems found before the model is asked come back as ordinary JSON errors.
+    """
+
+    def post(self, request, pk):
+        conversation, text, error = _check_send(request, pk)
+        if error:
+            return error
+        history = _history(conversation) + [{"role": "user", "content": text}]
+        system = _system_prompt(conversation)
+        user = request.user
+
+        def events():
+            reply = None
+            try:
+                for kind, value in stream_tutor(system=system, history=history):
+                    if kind == "reply":
+                        yield _sse("reply", {"text": value})
+                    else:
+                        reply = value
+            except TutorUnavailable:
+                yield _sse("error", {**UNAVAILABLE_BODY, "code": "unavailable", "status": 503})
+                return
+            yield _sse("done", _save_turn(user, conversation, text, reply))
+
+        response = StreamingHttpResponse(events(), content_type="text/event-stream; charset=utf-8")
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"  # nginx: pass every event on at once
+        return response
 
 
 class SummaryView(APIView):

@@ -33,6 +33,7 @@ api = [
     path("chat/conversations/", chat.ConversationListView.as_view()),
     path("chat/conversations/<int:pk>/", chat.ConversationDetailView.as_view()),
     path("chat/conversations/<int:pk>/messages/", chat.SendMessageView.as_view()),
+    path("chat/conversations/<int:pk>/messages/stream/", chat.SendMessageStreamView.as_view()),
     path("chat/conversations/<int:pk>/summary/", chat.SummaryView.as_view()),
 ]
 

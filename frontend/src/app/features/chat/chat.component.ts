@@ -12,6 +12,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { ChatStreamService } from '../../core/chat-stream.service';
 import { FORM_KK, TENSE_KK } from '../../core/labels';
 import { ChatMessage, ChatMode, ChatSummary, ChatUsage, Conversation, Correction, NewWord, Scenario } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
@@ -34,6 +35,7 @@ const ACTIVE_KEY = 'poliglot-chat';
 })
 export class ChatComponent extends GuardedPage implements OnInit {
   private api = inject(ApiService);
+  private chatStream = inject(ChatStreamService);
   protected speech = inject(SpeechService);
   private store = inject(ProgressStore);
   private toasts = inject(ToastService);
@@ -49,6 +51,10 @@ export class ChatComponent extends GuardedPage implements OnInit {
   protected summary = signal<ChatSummary | null>(null);
   protected text = signal('');
   protected sending = signal(false);
+  /** The learner's line while it is on its way (shown at once, before the server answers). */
+  protected pendingText = signal('');
+  /** The tutor's line as it is being written. */
+  protected streamingReply = signal('');
   protected starting = signal(false);
   protected error = signal('');
   protected showKk = signal(true);
@@ -165,7 +171,7 @@ export class ChatComponent extends GuardedPage implements OnInit {
   private async confirmDropDialog(): Promise<boolean> {
     const c = this.conversation();
     const inDialog = !!c && !c.finished && c.messages.some((m) => m.role === 'user');
-    if (!inDialog && !this.text().trim()) return true;
+    if (!inDialog && !this.sending() && !this.text().trim()) return true;
     return this.confirm.ask({
       title: $localize`Жаңа диалог бастайсыз ба?`,
       message: $localize`Қазіргі диалог аяқталмады. Ол жабылады.`,
@@ -181,22 +187,32 @@ export class ChatComponent extends GuardedPage implements OnInit {
     if (!conversation || !text || this.sending()) return;
     this.sending.set(true);
     this.error.set('');
+    this.pendingText.set(text);
+    this.text.set('');
+    this.streamingReply.set('');
+    this.scrollDown();
     try {
-      const res = await firstValueFrom(this.api.send(conversation.id, text));
+      const res = await this.chatStream.send(conversation.id, text, (reply) => {
+        this.streamingReply.set(reply);
+        this.scrollDown();
+      });
       this.conversation.set({
         ...conversation,
         finished: res.finished,
         messages: [...conversation.messages, res.user_message, res.assistant_message],
       });
       this.usage.set(res.usage);
-      this.text.set('');
       this.speakMessage(res.assistant_message);
       this.scrollDown();
       this.loadSummary();
       this.store.refresh();
     } catch (e) {
+      // Nothing was saved: the learner's line goes back into the field to send again.
+      if (!this.text()) this.text.set(text);
       this.showError(e);
     } finally {
+      this.pendingText.set('');
+      this.streamingReply.set('');
       this.sending.set(false);
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     }

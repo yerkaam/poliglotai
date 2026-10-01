@@ -41,7 +41,8 @@ test('private pages redirect to login', async ({ page }) => {
 
 test('wrong password shows one general error', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Электрондық пошта').fill('nobody@mail.kz');
+  // A fresh address each run: the lockout after 5 failures must not leak between runs on one server.
+  await page.getByLabel('Электрондық пошта').fill(`nobody-${Date.now()}@mail.kz`);
   await page.locator('#loginPassword').fill('wrongpass1');
   await page.getByRole('button', { name: 'Кіру', exact: true }).last().click();
   await expect(page.getByRole('alert')).toContainText('Пошта немесе құпиясөз қате');
@@ -157,7 +158,7 @@ test('switching the scenario in the middle of a dialog asks first', async ({ pag
   await page.getByRole('button', { name: 'Бастау' }).click();
   await page.getByLabel('Сіздің жауабыңыз').fill('I like tea.');
   await page.getByLabel('Сіздің жауабыңыз').press('Enter');
-  await expect(page.locator('.msg.me')).toHaveCount(1);
+  await expect(page.locator('.msg.me:not(.pending)')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Әуежайда' }).click();
   const dialog = page.getByRole('dialog', { name: 'Жаңа диалог бастайсыз ба?' });
@@ -312,4 +313,36 @@ test('saying a new word gives pronunciation feedback', async ({ page }) => {
   await expect(page.locator('.en')).toHaveText('have');
   await page.getByRole('button', { name: 'Сөзді айтып көру' }).click();
   await expect(page.locator('.said')).toContainText('Жақсы айттыңыз!');
+});
+
+test('the tutor reply streams in, and a failed send gives the line back', async ({ page }) => {
+  await register(page);
+  await page.goto('/chat');
+  await page.getByRole('button', { name: 'Бастау' }).click();
+  await expect(page.locator('.msg.ai')).toHaveCount(1);
+
+  // Real stream from the offline tutor: the learner's line and the reply both land in the feed.
+  await page.getByLabel('Сіздің жауабыңыз').fill('I like tea.');
+  await page.getByLabel('Сіздің жауабыңыз').press('Enter');
+  await expect(page.locator('.msg.me').first()).toContainText('I like tea.');
+  await expect(page.locator('.msg.me:not(.pending)')).toHaveCount(1); // saved once the reply is complete
+  await expect(page.locator('.bubble.streaming, .bubble.typing')).toHaveCount(0);
+  await expect(page.locator('.msg.ai')).toHaveCount(2);
+  await expect(page.getByLabel('Сіздің жауабыңыз')).toHaveValue('');
+
+  // The tutor is unavailable halfway: an error event, and the text comes back to send again.
+  await page.route('**/messages/stream/', (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+      body:
+        'event: reply\ndata: {"text": "Half"}\n\n' +
+        'event: error\ndata: {"detail": "AI-әңгімелесуші қазір қолжетімсіз.", "code": "unavailable", "status": 503}\n\n',
+    }),
+  );
+  await page.getByLabel('Сіздің жауабыңыз').fill('Do you like coffee?');
+  await page.getByLabel('Сіздің жауабыңыз').press('Enter');
+  await expect(page.locator('.alert')).toContainText('қолжетімсіз');
+  await expect(page.getByLabel('Сіздің жауабыңыз')).toHaveValue('Do you like coffee?');
+  await expect(page.locator('.msg.ai')).toHaveCount(2);
 });

@@ -473,3 +473,27 @@
   justify-content: space-between;
   font-size: 14px;
 }
+
+/* the learner's line on its way, and the tutor's line while it is written */
+.msg.pending .bubble {
+  opacity: 0.75;
+}
+.bubble.streaming .caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble.streaming .caret {
+    animation: none;
+  }
+}

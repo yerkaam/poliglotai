@@ -107,7 +107,12 @@
       }
 
       @if (sending()) {
-        <div class="msg ai"><div class="bubble typing" i18n-aria-label aria-label="AI жазып жатыр"><i></i><i></i><i></i></div></div>
+        <div class="msg me pending"><div class="bubble">{{ pendingText() }}</div></div>
+        @if (streamingReply(); as reply) {
+          <div class="msg ai"><div class="bubble streaming"><span>{{ reply }}</span><i class="caret" aria-hidden="true"></i></div></div>
+        } @else {
+          <div class="msg ai"><div class="bubble typing" i18n-aria-label aria-label="AI жазып жатыр"><i></i><i></i><i></i></div></div>
+        }
       }
       @if (conversation()?.finished) {
         <div class="finished">
