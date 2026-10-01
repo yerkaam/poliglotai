@@ -15,6 +15,8 @@ export interface Profile {
 }
 
 export interface User {
+  /** Given in the admin: opens the teacher's cabinet. */
+  is_teacher: boolean;
   id: number;
   email: string;
   name: string;
@@ -304,4 +306,46 @@ export interface PlacementResult {
   total: number;
   steps_credited: number[];
   level: Level;
+}
+
+export interface TeacherGroup {
+  id: number;
+  name: string;
+  code: string;
+  created_at: string;
+  students: number;
+}
+
+export interface StudentRow {
+  id: number;
+  name: string;
+  email: string;
+  last_active: string | null;
+  streak: number;
+  active_days_week: number;
+  words_learning: number;
+  words_learned: number;
+  steps_done: number;
+  current_step: number | null;
+  current_step_title: string;
+  accuracy_30d: number | null;
+}
+
+export interface GroupMistake {
+  tense: Tense;
+  form: Form;
+  label_kk: string;
+  mistakes: number;
+  learners: number;
+}
+
+export interface TeacherGroupDetail extends TeacherGroup {
+  rows: StudentRow[];
+  mistakes: GroupMistake[];
+}
+
+export interface MyGroup {
+  id: number;
+  name: string;
+  teacher: string;
 }

@@ -57,6 +57,12 @@ export class ShellComponent {
     { path: '/progress', label: $localize`Прогресс`, short: $localize`Прогресс`, icon: 'trophy', sidebarOnly: true },
   ];
   protected bottomNav = this.nav.filter((item) => !item.sidebarOnly);
+  /** The sidebar adds the teacher's cabinet for teachers. */
+  protected sideNav = computed(() =>
+    this.auth.user()?.is_teacher
+      ? [...this.nav, { path: '/teacher', label: $localize`Мұғалім кабинеті`, short: '', icon: 'user' as IconName }]
+      : this.nav,
+  );
 
   protected stats = computed(() => this.store.progress()?.stats ?? null);
   protected learnedOf = computed(() => this.store.progress()?.learned_of ?? null);

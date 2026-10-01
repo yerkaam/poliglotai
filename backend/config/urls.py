@@ -6,6 +6,7 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.urls import include, path, re_path
 
 from chat import views as chat
+from classroom import views as classroom
 from progress import views as progress
 from srs import views as srs
 from trainer import views as trainer
@@ -33,6 +34,13 @@ api = [
     path("progress/week/", progress.WeekView.as_view()),
     path("achievements/", progress.AchievementsView.as_view()),
     path("achievements/seen/", progress.AchievementsSeenView.as_view()),
+    path("teacher/groups/", classroom.TeacherGroupsView.as_view()),
+    path("teacher/groups/<int:pk>/", classroom.TeacherGroupView.as_view()),
+    path("teacher/groups/<int:pk>/code/", classroom.TeacherGroupCodeView.as_view()),
+    path("teacher/groups/<int:pk>/students/<int:student_id>/", classroom.TeacherStudentView.as_view()),
+    path("groups/", classroom.MyGroupsView.as_view()),
+    path("groups/join/", classroom.JoinGroupView.as_view()),
+    path("groups/<int:pk>/", classroom.LeaveGroupView.as_view()),
     path("chat/scenarios/", chat.ScenarioListView.as_view()),
     path("chat/conversations/", chat.ConversationListView.as_view()),
     path("chat/conversations/<int:pk>/", chat.ConversationDetailView.as_view()),

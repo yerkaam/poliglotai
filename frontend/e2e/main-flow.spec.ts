@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { Page, expect, test } from '@playwright/test';
 
 const password = 'englishday1';
@@ -406,7 +407,7 @@ test('the placement test credits known steps and sets the level', async ({ page 
   for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Білмеймін' }).click();
 
   await expect(page.getByRole('heading', { name: 'Сіздің деңгейіңіз: A1' })).toBeVisible();
-  await expect(page.getByRole('status')).toContainText('1–3-қадамдары есептелді');
+  await expect(page.locator('.alert-ok')).toContainText('1–3-қадамдары есептелді');
   await page.getByRole('button', { name: 'Жалғастыру' }).click();
   await expect(page).toHaveURL(/\/onboarding/);
   await expect(page.getByRole('button', { name: /^A1/ })).toHaveAttribute('aria-pressed', 'true');
@@ -418,4 +419,34 @@ test('the placement test credits known steps and sets the level', async ({ page 
   const steps = page.locator('.steps li');
   await expect(steps.nth(2).getByRole('link', { name: 'Қайталау' })).toBeVisible(); // step 3 done
   await expect(steps.nth(3).getByRole('link', { name: 'Ашу' })).toBeVisible(); // step 4 open
+});
+
+/** Runs a Django management command (E2E_MANAGE is e.g. "docker compose exec -T backend python manage.py"). */
+function manage(args: string) {
+  execSync(`${process.env['E2E_MANAGE']} ${args}`, { stdio: 'pipe', shell: '/bin/sh' });
+}
+
+test('a teacher creates a group, a learner joins with the code, the teacher sees them', async ({ browser }) => {
+  test.skip(!process.env['E2E_MANAGE'], 'needs E2E_MANAGE to give the teacher role');
+  const teacherPage = await (await browser.newContext({ serviceWorkers: 'block' })).newPage();
+  const teacherEmail = await register(teacherPage);
+  manage(`grant_teacher ${teacherEmail}`);
+  await teacherPage.goto('/settings');
+  await teacherPage.getByRole('link', { name: 'Мұғалім кабинетін ашу' }).click();
+  await teacherPage.getByPlaceholder('Мысалы: 7А сынып').fill('7А сынып');
+  await teacherPage.getByRole('button', { name: 'Топ құру' }).click();
+  const code = (await teacherPage.locator('.code').textContent())!.trim();
+  expect(code).toMatch(/^[A-Z2-9]{6}$/);
+
+  const learnerPage = await (await browser.newContext({ serviceWorkers: 'block' })).newPage();
+  await register(learnerPage);
+  await learnerPage.goto('/settings');
+  await expect(learnerPage.getByText('AI-чаттағы хабарламаларыңызды көрмейді')).toBeVisible();
+  await learnerPage.getByPlaceholder('Мұғалім берген код').fill(code.toLowerCase());
+  await learnerPage.getByRole('button', { name: 'Қосылу' }).click();
+  await expect(learnerPage.locator('.group-row')).toContainText('7А сынып');
+
+  await teacherPage.reload();
+  await expect(teacherPage.locator('tbody tr')).toHaveCount(1);
+  await expect(teacherPage.locator('tbody tr')).toContainText('Айгерім');
 });

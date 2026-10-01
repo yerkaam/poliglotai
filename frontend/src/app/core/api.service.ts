@@ -10,6 +10,9 @@ import {
   CheckResult,
   Conversation,
   CourseStep,
+  MyGroup,
+  TeacherGroup,
+  TeacherGroupDetail,
   Form,
   PlacementQuestion,
   PlacementResult,
@@ -126,6 +129,37 @@ export class ApiService {
   submitPlacement(answers: string[]) {
     return this.http.post<PlacementResult>('/api/placement/', { answers });
   }
+  // teacher's cabinet
+  teacherGroups() {
+    return this.http.get<TeacherGroup[]>('/api/teacher/groups/');
+  }
+  createGroup(name: string) {
+    return this.http.post<TeacherGroup>('/api/teacher/groups/', { name });
+  }
+  teacherGroup(id: number) {
+    return this.http.get<TeacherGroupDetail>(`/api/teacher/groups/${id}/`);
+  }
+  deleteGroup(id: number) {
+    return this.http.delete<void>(`/api/teacher/groups/${id}/`);
+  }
+  newGroupCode(id: number) {
+    return this.http.post<TeacherGroup>(`/api/teacher/groups/${id}/code/`, {});
+  }
+  removeStudent(groupId: number, studentId: number) {
+    return this.http.delete<void>(`/api/teacher/groups/${groupId}/students/${studentId}/`);
+  }
+
+  // the learner's groups
+  myGroups() {
+    return this.http.get<MyGroup[]>('/api/groups/');
+  }
+  joinGroup(code: string) {
+    return this.http.post<MyGroup>('/api/groups/join/', { code }, handles(429));
+  }
+  leaveGroup(id: number) {
+    return this.http.delete<void>(`/api/groups/${id}/`);
+  }
+
   week() {
     return this.http.get<WeekSummary>('/api/progress/week/');
   }

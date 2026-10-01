@@ -28,6 +28,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)
+    # Given in the admin: the teacher's cabinet (groups and their learners' progress).
+    is_teacher = models.BooleanField("teacher", default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()

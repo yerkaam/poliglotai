@@ -9,7 +9,7 @@
     </div>
 
     <nav class="side-nav" i18n-aria-label aria-label="Негізгі мәзір">
-      @for (item of nav; track item.path) {
+      @for (item of sideNav(); track item.path) {
         <a
           [routerLink]="item.path"
           routerLinkActive="active"

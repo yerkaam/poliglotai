@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { PwaService } from '../../core/pwa.service';
+import { ApiService } from '../../core/api.service';
+import { ToastService } from '../../core/toast.service';
+import { firstValueFrom } from 'rxjs';
+import { MyGroup } from '../../core/models';
 import { Level } from '../../core/models';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
@@ -73,6 +77,35 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
         </fieldset>
       }
 
+      @if (editing) {
+        <fieldset>
+          <legend i18n>Мұғалім тобы</legend>
+          @if (auth.user()?.is_teacher) {
+            <a class="btn btn-outline" routerLink="/teacher" i18n>Мұғалім кабинетін ашу</a>
+          }
+          @for (g of myGroups(); track g.id) {
+            <div class="group-row">
+              <span><b>{{ g.name }}</b> <small class="muted">· {{ g.teacher }}</small></span>
+              <button type="button" class="btn btn-ghost" (click)="leave(g)" i18n>Шығу</button>
+            </div>
+          }
+          <form class="join" (submit)="join($event)">
+            <label for="groupCode" class="visually-hidden" i18n>Мұғалім берген код</label>
+            <input id="groupCode" class="input mono" maxlength="8" autocapitalize="characters" autocomplete="off"
+                   i18n-placeholder placeholder="Мұғалім берген код"
+                   [value]="code()" (input)="code.set($any($event.target).value)" />
+            <button type="submit" class="btn btn-outline" [disabled]="code().trim().length < 6 || joining()" i18n>Қосылу</button>
+          </form>
+          @if (joinError()) {
+            <div class="alert" role="alert">{{ joinError() }}</div>
+          }
+          <small class="muted" i18n>
+            Мұғалім сіздің прогресіңізді көреді: соңғы сабақ, сөздер саны, курс қадамы, жаттықтырғыштағы дәлдік және
+            жиі кездесетін қателер. AI-чаттағы хабарламаларыңызды көрмейді. Топтан кез келген уақытта шыға аласыз.
+          </small>
+        </fieldset>
+      }
+
       @if (editing && (pwa.canInstall() || pwa.iosHint() || pwa.installed())) {
         <fieldset>
           <legend i18n>Телефондағы қосымша</legend>
@@ -102,6 +135,10 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
       border: 1.5px dashed var(--line); color: var(--ink); text-decoration: none; }
     .placement-link:hover { border-color: var(--ink); }
     .placement-link small { color: var(--muted); font-size: 13px; }
+    .group-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0;
+      border-bottom: 1px solid var(--line); }
+    .join { display: flex; gap: 8px; }
+    .join .input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.1em; }
   `,
 })
 export class OnboardingComponent {
@@ -115,10 +152,43 @@ export class OnboardingComponent {
   protected error = signal('');
   /** Opened from the menu after onboarding: the same choices, as settings. */
   protected pwa = inject(PwaService);
+  private api = inject(ApiService);
+  private toasts = inject(ToastService);
+  protected myGroups = signal<MyGroup[]>([]);
+  protected code = signal('');
+  protected joining = signal(false);
+  protected joinError = signal('');
   protected editing = !!this.auth.user()?.profile.onboarded;
   protected hours = [8, 12, 18, 19, 20, 21];
   protected reminders = signal(this.auth.user()?.profile.reminder_enabled ?? true);
   protected hour = signal(this.auth.user()?.profile.reminder_hour ?? 19);
+
+  constructor() {
+    if (this.editing) this.api.myGroups().subscribe({ next: (g) => this.myGroups.set(g), error: () => undefined });
+  }
+
+  protected async join(event: Event) {
+    event.preventDefault();
+    this.joining.set(true);
+    this.joinError.set('');
+    try {
+      const group = await firstValueFrom(this.api.joinGroup(this.code()));
+      this.myGroups.update((list) => (list.some((g) => g.id === group.id) ? list : [...list, group]));
+      this.code.set('');
+      this.toasts.success($localize`«${group.name}:name:» тобына қосылдыңыз.`);
+    } catch (e) {
+      const errors = apiErrors(e);
+      this.joinError.set(errors.fields['code'] || errors.general);
+    } finally {
+      this.joining.set(false);
+    }
+  }
+
+  protected async leave(group: MyGroup) {
+    await firstValueFrom(this.api.leaveGroup(group.id));
+    this.myGroups.update((list) => list.filter((g) => g.id !== group.id));
+    this.toasts.success($localize`«${group.name}:name:» тобынан шықтыңыз.`);
+  }
 
   protected minutes(n: Limit) {
     return $localize`~${MINUTES[n]}:minutes: мин`;

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, onboardedGuard, unverifiedGuard, verifiedGuard } from './core/auth.guard';
+import { authGuard, guestGuard, onboardedGuard, teacherGuard, unverifiedGuard, verifiedGuard } from './core/auth.guard';
 import { leaveGuard } from './core/leave.guard';
 import { ShellComponent } from './layout/shell.component';
 
@@ -92,6 +92,12 @@ export const routes: Routes = [
         path: 'course',
         title: $localize`Курс · PoliglotAi`,
         loadComponent: () => import('./features/course/course.component').then((m) => m.CourseComponent),
+      },
+      {
+        path: 'teacher',
+        canActivate: [teacherGuard],
+        title: $localize`Мұғалім кабинеті · PoliglotAi`,
+        loadComponent: () => import('./features/teacher/teacher.component').then((m) => m.TeacherComponent),
       },
       {
         path: 'progress',

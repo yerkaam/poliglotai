@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "trainer",
     "chat",
     "progress",
+    "classroom",
 ]
 
 MIDDLEWARE = [
