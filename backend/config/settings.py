@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,8 +14,14 @@ def env_bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
 
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-key-change-me-in-production-0123456789")
-DEBUG = env_bool("DJANGO_DEBUG", True)
+# Safe by default: debug mode must be switched on explicitly (DJANGO_DEBUG=1 for local development),
+# and without debug the app refuses to start on the public development key.
+DEBUG = env_bool("DJANGO_DEBUG", False)
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Set DJANGO_SECRET_KEY (or DJANGO_DEBUG=1 for local development).")
+    SECRET_KEY = "dev-insecure-key-change-me-in-production-0123456789"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:4200").split(",") if o
@@ -113,7 +120,6 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
-        "chat": os.environ.get("CHAT_DAILY_LIMIT", "30") + "/day",
         "reset_email": "1/min",
     },
 }
@@ -141,6 +147,9 @@ EMAIL_CODE_OVERRIDE = os.environ.get("EMAIL_CODE_OVERRIDE", "") if DEBUG else ""
 
 # Login brute-force protection (AUTH-09).
 LOGIN_MAX_FAILURES = 5
+LOGIN_MAX_FAILURES_PER_IP = 30
+# How many of our own proxies add an X-Forwarded-For entry (Render: 1). 0 trusts only REMOTE_ADDR.
+TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
 LOGIN_LOCKOUT_SECONDS = 15 * 60
 
 # Login lockout and chat limits need a cache shared by all gunicorn workers:
@@ -171,6 +180,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:4200")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "claude-opus-5")
 CHAT_EFFORT = os.environ.get("CHAT_EFFORT", "low")
+CHAT_DAILY_LIMIT = int(os.environ.get("CHAT_DAILY_LIMIT", "30"))
 
 LOGGING = {
     "version": 1,

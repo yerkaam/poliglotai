@@ -1,8 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -12,11 +15,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .authentication import REFRESH_COOKIE, REMEMBER_COOKIE, clear_auth_cookies, set_auth_cookies
 from .models import Profile, User
 from .serializers import (
+    EMAIL_TAKEN,
     LoginSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
@@ -26,6 +31,8 @@ from .serializers import (
     VerifyEmailSerializer,
 )
 from .verification import RESEND_SECONDS, check_code, send_code
+
+logger = logging.getLogger(__name__)
 
 LOGIN_ERROR = "Пошта немесе құпиясөз қате"
 RESET_SENT = "Егер бұл пошта тіркелген болса, 5 минут ішінде сілтеме келеді."
@@ -39,7 +46,32 @@ def _login_response(user, remember: bool, status_code=status.HTTP_200_OK):
 
 
 def _client_ip(request):
-    return request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR", "")).split(",")[0].strip()
+    """The address of the client as seen by our own proxies.
+
+    The first X-Forwarded-For entry is whatever the client sent, so it cannot be trusted. Each trusted proxy
+    appends the address it saw: with N proxies the client is the N-th entry from the right.
+    """
+    hops = settings.TRUSTED_PROXY_COUNT
+    forwarded = [ip.strip() for ip in request.META.get("HTTP_X_FORWARDED_FOR", "").split(",") if ip.strip()]
+    if hops and len(forwarded) >= hops:
+        return forwarded[-hops]
+    return request.META.get("REMOTE_ADDR", "")
+
+
+def _send_code_safely(user) -> bool:
+    """A mail server failure must not lose the account: the learner can ask for a new code later."""
+    try:
+        send_code(user)
+    except Exception:
+        logger.exception("Could not send the confirmation code to user %s", user.pk)
+        return False
+    return True
+
+
+def _end_all_sessions(user):
+    """Blacklists every refresh token of the user, so other devices are logged out."""
+    for token in OutstandingToken.objects.filter(user=user):
+        BlacklistedToken.objects.get_or_create(token=token)
 
 
 @method_decorator(ensure_csrf_cookie, name="get")
@@ -60,10 +92,14 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except IntegrityError:
+            # Two registrations with the same email at the same moment.
+            return Response({"email": [EMAIL_TAKEN]}, status=status.HTTP_400_BAD_REQUEST)
         if settings.REQUIRE_EMAIL_VERIFICATION:
-            send_code(user)
-            cache.set(f"email-code-sent:{user.pk}", 1, RESEND_SECONDS)
+            if _send_code_safely(user):
+                cache.set(f"email-code-sent:{user.pk}", 1, RESEND_SECONDS)
         else:
             user.email_verified = True
             user.save(update_fields=["email_verified"])
@@ -80,9 +116,14 @@ class LoginView(APIView):
             return Response({"detail": LOGIN_ERROR}, status=status.HTTP_400_BAD_REQUEST)
         email = serializer.validated_data["email"].lower().strip()
 
-        # AUTH-09: 5 failed logins within 15 minutes lock the email (and IP) for 15 minutes.
-        keys = [f"login-fail:email:{email}", f"login-fail:ip:{_client_ip(request)}"]
-        if any((cache.get(k) or 0) >= settings.LOGIN_MAX_FAILURES for k in keys):
+        # AUTH-09: 5 failed logins within 15 minutes lock the email for 15 minutes. One address gets more
+        # tries, because many learners can share it (a school, a mobile operator).
+        limits = {
+            f"login-fail:email:{email}": settings.LOGIN_MAX_FAILURES,
+            f"login-fail:ip:{_client_ip(request)}": settings.LOGIN_MAX_FAILURES_PER_IP,
+        }
+        keys = list(limits)
+        if any((cache.get(k) or 0) >= limit for k, limit in limits.items()):
             return Response(
                 {"detail": "Тым көп сәтсіз әрекет. 15 минуттан кейін қайталаңыз.", "code": "locked"},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -174,12 +215,18 @@ class ResendCodeView(APIView):
     def post(self, request):
         if request.user.email_verified:
             return Response({"detail": "Пошта расталған."})
-        if not cache.add(f"email-code-sent:{request.user.pk}", 1, RESEND_SECONDS):
+        key = f"email-code-sent:{request.user.pk}"
+        if not cache.add(key, 1, RESEND_SECONDS):
             return Response(
                 {"detail": "Жаңа кодты 60 секундтан кейін сұрауға болады.", "retry_after": RESEND_SECONDS},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
-        send_code(request.user)
+        if not _send_code_safely(request.user):
+            cache.delete(key)  # nothing was sent, so the learner may try again at once
+            return Response(
+                {"detail": "Хатты жіберу мүмкін болмады. Бірнеше минуттан кейін қайталаңыз.", "code": "mail_failed"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response({"detail": "Жаңа код жіберілді.", "retry_after": RESEND_SECONDS})
 
 
@@ -215,13 +262,17 @@ class PasswordResetView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             link = f"{settings.FRONTEND_URL}/reset/confirm?uid={uid}&token={token}"
-            send_mail(
-                "PoliglotAi — құпиясөзді қалпына келтіру",
-                f"Сәлем, {user.name}!\n\nЖаңа құпиясөз орнату үшін сілтемені ашыңыз (1 сағат жарамды):\n{link}\n\n"
-                "Егер сіз сұрамасаңыз, бұл хатты елемеңіз.",
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-            )
+            try:
+                send_mail(
+                    "PoliglotAi — құпиясөзді қалпына келтіру",
+                    f"Сәлем, {user.name}!\n\nЖаңа құпиясөз орнату үшін сілтемені ашыңыз (1 сағат жарамды):\n{link}\n\n"
+                    "Егер сіз сұрамасаңыз, бұл хатты елемеңіз.",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                )
+            except Exception:
+                # Same answer as for an unknown email, so a failure does not reveal that the account exists.
+                logger.exception("Could not send the password reset email to user %s", user.pk)
         # AUTH-11: identical answer for registered and unknown emails.
         return Response({"detail": RESET_SENT, "retry_after": RESEND_SECONDS})
 
@@ -246,4 +297,6 @@ class PasswordResetConfirmView(APIView):
             )
         user.set_password(data["password"])
         user.save(update_fields=["password"])
+        # Whoever knew the old password is logged out everywhere.
+        _end_all_sessions(user)
         return Response({"detail": "Құпиясөз жаңартылды. Енді кіре аласыз."})

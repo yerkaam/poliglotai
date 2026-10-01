@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from progress.models import ProgressLog
@@ -19,19 +18,21 @@ from .llm import BLOCKLIST, TutorUnavailable, ask_tutor, build_system_prompt
 from .models import Conversation, Message, Scenario
 
 
-class ChatThrottle(UserRateThrottle):
-    """Daily message limit per learner, to keep API costs under control."""
-
-    scope = "chat"
-
-
-def daily_limit() -> int:
-    return int(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["chat"].split("/")[0])
-
-
 def usage(user) -> dict:
+    """Calls to the AI today (opening lines and replies), against the daily limit that keeps API costs down.
+
+    Counted per calendar day, like the counter on the screen; rejected and failed requests do not count.
+    """
     log = ProgressLog.objects.filter(user=user, date=timezone.localdate()).first()
-    return {"used": log.chat_messages if log else 0, "limit": daily_limit()}
+    return {"used": log.chat_requests if log else 0, "limit": settings.CHAT_DAILY_LIMIT}
+
+
+def limit_reached(user) -> bool:
+    current = usage(user)
+    return current["used"] >= current["limit"]
+
+
+LIMIT_REACHED = {"detail": "Бүгінгі хабарламалар лимиті бітті. Ертең жалғастырамыз!", "code": "chat_limit"}
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -127,6 +128,8 @@ class ConversationListView(APIView):
         if mode == Conversation.Mode.DIALOG:
             slug = serializer.validated_data.get("scenario") or "cafe"
             scenario = get_object_or_404(Scenario, slug=slug, is_active=True)
+        if limit_reached(request.user):
+            return Response(LIMIT_REACHED, status=status.HTTP_429_TOO_MANY_REQUESTS)
         conversation = Conversation.objects.create(user=request.user, mode=mode, scenario=scenario)
         try:
             reply = ask_tutor(system=_system_prompt(conversation), history=[])
@@ -134,6 +137,7 @@ class ConversationListView(APIView):
             conversation.delete()
             return UNAVAILABLE
         _save_assistant(conversation, reply)
+        log_activity(request.user, chat_requests=1)
         return Response(ConversationSerializer(conversation).data, status=status.HTTP_201_CREATED)
 
 
@@ -148,8 +152,6 @@ class SendSerializer(serializers.Serializer):
 
 
 class SendMessageView(APIView):
-    throttle_classes = [ChatThrottle]
-
     def post(self, request, pk):
         conversation = get_object_or_404(Conversation, pk=pk, user=request.user)
         serializer = SendSerializer(data=request.data)
@@ -166,6 +168,8 @@ class SendMessageView(APIView):
                 {"detail": "Бұл тақырыпты талқыламаймыз. Оқуға қатысты жазыңыз.", "code": "filtered"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if limit_reached(request.user):
+            return Response(LIMIT_REACHED, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         history = _history(conversation) + [{"role": "user", "content": text}]
         try:
@@ -181,7 +185,7 @@ class SendMessageView(APIView):
             corrections=[c.model_dump() for c in reply.corrections],
         )
         assistant_message = _save_assistant(conversation, reply)
-        log_activity(request.user, chat_messages=1)
+        log_activity(request.user, chat_messages=1, chat_requests=1)
         return Response(
             {
                 "user_message": MessageSerializer(user_message).data,

@@ -13,6 +13,8 @@ class ProgressLog(models.Model):
     trainer_total = models.PositiveIntegerField(default=0)
     trainer_correct = models.PositiveIntegerField(default=0)
     chat_messages = models.PositiveIntegerField(default=0)
+    # Every AI call (a dialog's opening line or a reply) counts against the daily chat limit.
+    chat_requests = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = "progress_log"

@@ -43,7 +43,7 @@ docker compose up -d db                      # Postgres на localhost:5454
 cd backend
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
-export POSTGRES_PORT=5454
+export POSTGRES_PORT=5454 DJANGO_DEBUG=1            # без DJANGO_DEBUG=1 нужен свой DJANGO_SECRET_KEY
 python manage.py migrate                     # создаёт схему и загружает 40 глаголов, 16 шагов, 5 сценариев
 python manage.py runserver 8000
 
@@ -107,4 +107,4 @@ frontend/src/app/
 
 ## Переменные окружения
 
-См. `.env.example`. В продакшене обязательно: свой `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `AUTH_COOKIE_SECURE=1` за HTTPS, реальный SMTP.
+См. `.env.example`. Без `DJANGO_DEBUG=1` приложение не стартует без своего `DJANGO_SECRET_KEY`. В продакшене обязательно: свой `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `TRUSTED_PROXY_COUNT` по числу своих прокси (Render: 1), `AUTH_COOKIE_SECURE=1` за HTTPS, реальный SMTP.

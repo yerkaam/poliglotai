@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 from .models import Profile, User
 
+EMAIL_TAKEN = "Бұл поштамен аккаунт бұрыннан бар. Кіріп көріңіз."
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     daily_new_limit = serializers.ChoiceField(choices=[5, 10, 15, 20])
@@ -31,7 +33,7 @@ class RegisterSerializer(serializers.Serializer):
         value = value.lower().strip()
         if User.objects.filter(email=value).exists():
             # AUTH-03: a clear error for an email that is already taken.
-            raise serializers.ValidationError("Бұл поштамен аккаунт бұрыннан бар. Кіріп көріңіз.")
+            raise serializers.ValidationError(EMAIL_TAKEN)
         return value
 
     def validate_accept_terms(self, value):

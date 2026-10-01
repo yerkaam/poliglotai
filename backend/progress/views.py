@@ -18,7 +18,10 @@ def _daily_goal(user, today, due_count: int) -> DailyGoal:
     goal = DailyGoal.objects.filter(user=user, date=today).first()
     if goal is None:
         left, _ = new_words_left(user, today)
-        goal = DailyGoal.objects.create(user=user, date=today, reviews_target=due_count, new_target=min(5, left))
+        # get_or_create: the stats bar and a screen may both ask for the first time today at once.
+        goal, _ = DailyGoal.objects.get_or_create(
+            user=user, date=today, defaults={"reviews_target": due_count, "new_target": min(5, left)}
+        )
     return goal
 
 

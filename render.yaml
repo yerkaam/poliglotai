@@ -19,6 +19,9 @@ services:
         value: "0"
       - key: AUTH_COOKIE_SECURE
         value: "1"
+      # Render's proxy adds one X-Forwarded-For entry: the learner's address for the login lockout.
+      - key: TRUSTED_PROXY_COUNT
+        value: "1"
       - key: WEB_CONCURRENCY
         value: "2"
       - key: TIME_ZONE
