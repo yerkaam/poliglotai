@@ -81,3 +81,24 @@ def test_only_words_in_review_can_be_checked(client):
     buy = Vocabulary.objects.get(word="buy")
     r = client.post(f"/api/srs/{buy.id}/check/", {"mode": "choice", "answer": "x"}, format="json")
     assert r.status_code == 409
+
+
+def test_a_card_cannot_be_answered_in_an_easier_mode(client, user):
+    from srs.models import UserVocabulary
+    from vocabulary.models import Vocabulary
+
+    vocab = Vocabulary.objects.filter(is_verb=True).first()
+    UserVocabulary.objects.create(user=user, vocabulary=vocab, stage=5, next_review_date="2000-01-01")
+    r = client.post(f"/api/srs/{vocab.id}/check/", {"mode": "choice", "answer": vocab.translation_kk}, format="json")
+    assert r.status_code == 409 and r.json()["code"] == "stale"
+    assert UserVocabulary.objects.get(user=user, vocabulary=vocab).stage == 5
+
+
+def test_a_word_that_slipped_back_is_still_asked_the_old_way(client, user):
+    from srs.models import UserVocabulary
+    from vocabulary.models import Vocabulary
+
+    vocab = Vocabulary.objects.filter(is_verb=True).first()
+    UserVocabulary.objects.create(user=user, vocabulary=vocab, stage=2, next_review_date="2000-01-01")
+    r = client.post(f"/api/srs/{vocab.id}/check/", {"mode": "listen", "answer": vocab.word}, format="json")
+    assert r.status_code == 200 and r.json()["correct"] is True

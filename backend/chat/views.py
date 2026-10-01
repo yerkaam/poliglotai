@@ -251,16 +251,24 @@ class SendMessageStreamView(APIView):
 
         def events():
             reply = None
+            saved = failed = False
             try:
                 for kind, value in stream_tutor(system=system, history=history):
                     if kind == "reply":
                         yield _sse("reply", {"text": value})
                     else:
                         reply = value
+                payload = _save_turn(user, conversation, text, reply)
+                saved = True
+                yield _sse("done", payload)
             except TutorUnavailable:
+                failed = True
                 yield _sse("error", {**UNAVAILABLE_BODY, "code": "unavailable", "status": 503})
-                return
-            yield _sse("done", _save_turn(user, conversation, text, reply))
+            finally:
+                # The learner closed the page while the tutor was writing: the model was still asked, so the
+                # call counts toward the daily limit (otherwise aborting each reply would make it unlimited).
+                if not saved and not failed:
+                    log_activity(user, chat_requests=1)
 
         response = StreamingHttpResponse(events(), content_type="text/event-stream; charset=utf-8")
         response["Cache-Control"] = "no-cache"

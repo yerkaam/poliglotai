@@ -93,3 +93,16 @@ def test_the_reply_is_read_from_the_streamed_json_and_restarts_on_a_fallback(set
     out = list(llm.stream_tutor(system="s", history=[]))
     assert [v for k, v in out if k == "reply"] == ["Wh", "Hello", 'Hello there! "Hi"']
     assert out[-1] == ("final", final)
+
+
+def test_closing_the_page_mid_reply_still_counts_the_ai_call(client, settings, monkeypatch):
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+    cid = _start(client, settings)
+    r = client.post(f"/api/chat/conversations/{cid}/messages/stream/", {"text": "I like tea."}, format="json")
+    events = r._iterator  # the view's own generator, without the test client's end-of-request handling
+    next(events)  # the first piece of the reply arrived, then the learner left
+    events.close()
+    from progress.models import ProgressLog
+
+    assert ProgressLog.objects.get().chat_requests == 2  # the opening line and the aborted reply
+    assert not Message.objects.filter(conversation_id=cid, role="user").exists()

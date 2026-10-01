@@ -167,6 +167,12 @@ export class WordsComponent implements OnInit {
       if (savedOffline) this.note.set($localize`Интернет жоқ: жауап сақталды, байланыс болғанда жіберіледі.`);
       queueMicrotask(() => this.nextButton()?.nativeElement.focus());
     } catch (e) {
+      if (e instanceof HttpErrorResponse && e.error?.code === 'stale') {
+        // The word moved on elsewhere (another device): fetch today's cards again.
+        this.note.set(apiErrors(e).general);
+        await this.load();
+        return;
+      }
       this.error.set(apiErrors(e).general);
       this.given.set('');
     } finally {

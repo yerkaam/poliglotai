@@ -138,7 +138,10 @@ class JoinGroupView(APIView):
         group = Group.objects.filter(code=code).select_related("teacher").first() if len(code) == CODE_LENGTH else None
         if group is None:
             if not cache.add(key, 1, 3600):
-                cache.incr(key)
+                try:
+                    cache.incr(key)
+                except ValueError:  # expired between add and incr
+                    cache.set(key, 1, 3600)
             return Response({"code": ["Мұндай код жоқ. Мұғалімнен қайта сұраңыз."]}, status=status.HTTP_400_BAD_REQUEST)
         if group.teacher_id == request.user.id:
             return Response({"code": ["Бұл — өз тобыңыз."]}, status=status.HTTP_400_BAD_REQUEST)

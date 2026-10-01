@@ -167,8 +167,15 @@ class CheckView(APIView):
         item = UserVocabulary.objects.select_for_update().filter(user=request.user, vocabulary=vocab).first()
         if item is None or item.status != UserVocabulary.Status.LEARNING:
             return Response(NOT_IN_REVIEW, status=status.HTTP_409_CONFLICT)
+        mode = serializer.validated_data["mode"]
+        if not quiz.allowed(mode, item.stage):
+            # The stage moved on (e.g. on another device): the card on screen is out of date.
+            return Response(
+                {"detail": "Бұл карточка жаңарды, тізімді қайта жүктейміз.", "code": "stale"},
+                status=status.HTTP_409_CONFLICT,
+            )
         today = timezone.localdate()
-        verdict = quiz.check(vocab, serializer.validated_data["mode"], serializer.validated_data["answer"])
+        verdict = quiz.check(vocab, mode, serializer.validated_data["answer"])
         review_word(request.user, item, verdict["correct"], today)
         return Response({**verdict, **review_result(vocab, item, today)})
 

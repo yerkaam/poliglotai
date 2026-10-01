@@ -85,3 +85,14 @@ def test_the_weekly_summary_goes_out_on_sunday(user):
     assert send_weekly(at) == 0  # once
     body = mail.outbox[0].body
     assert "Апта қорытындысы" in body and "/progress" in body and "Белсенді күндер" in body
+
+
+def test_a_reset_restarts_the_course_but_keeps_todays_ai_limit(client, user):
+    from vocabulary.models import CourseStep, StepResult
+
+    StepResult.objects.create(user=user, step=CourseStep.objects.get(number=1), passed=True, best_percent=100)
+    ProgressLog.objects.create(user=user, date=_days_ago(0), chat_requests=7, reviews=3)
+    client.post("/api/progress/reset/", {"confirm": True}, format="json")
+    assert not StepResult.objects.filter(user=user).exists()
+    log = ProgressLog.objects.get(user=user)
+    assert log.chat_requests == 7 and log.reviews == 0

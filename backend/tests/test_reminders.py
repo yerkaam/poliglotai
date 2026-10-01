@@ -58,9 +58,16 @@ def test_the_command_sends_the_due_reminders(capsys):
 
 def test_one_click_unsubscribe(anon):
     user = _learner()
-    r = anon.get(f"/api/auth/reminders/unsubscribe/?token={unsubscribe_token(user)}")
+    url = f"/api/auth/reminders/unsubscribe/?token={unsubscribe_token(user)}"
+    # Opening the link (as mail scanners do) only shows the button.
+    page = anon.get(url)
+    assert page.status_code == 200 and 'method="post"' in page.content.decode()
+    assert Profile.objects.get(user=user).reminder_enabled
+    # The button, or the mail app's one-click POST, turns the emails off.
+    r = anon.post(url)
     assert r.status_code == 200 and "өшірілді" in r.content.decode()
     assert not Profile.objects.get(user=user).reminder_enabled
+    assert anon.get("/api/auth/reminders/unsubscribe/?token=forged").status_code == 400
     assert anon.post("/api/auth/reminders/unsubscribe/?token=forged").status_code == 400
 
 

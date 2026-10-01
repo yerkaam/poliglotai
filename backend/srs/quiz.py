@@ -23,6 +23,15 @@ def mode_for(stage: int) -> str:
     return "type"
 
 
+DIFFICULTY = {"choice": 0, "listen": 1, "type": 2}
+
+
+def allowed(mode: str, stage: int) -> bool:
+    """The card may be answered in its stage's mode or a harder one (a word that just slipped back a stage
+    is still asked the old way until the screen reloads), never in an easier one."""
+    return DIFFICULTY[mode] >= DIFFICULTY[mode_for(stage)]
+
+
 def _distractors(vocab: Vocabulary, field: str, count: int) -> list[str]:
     """Other words of the same kind (verbs with verbs), course words first: their translations are curated."""
     taken = {getattr(vocab, field).strip().lower()}

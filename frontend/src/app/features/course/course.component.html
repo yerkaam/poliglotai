@@ -96,7 +96,7 @@
 
       <section class="card panel">
         <h2 class="section-title" i18n>Прогресті тазарту</h2>
-        <p class="muted" i18n>Барлық сөздер, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
+        <p class="muted" i18n>Барлық сөздер, курс қадамдары, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
         <button type="button" class="btn btn-ghost" (click)="openReset()" i18n>Тазарту…</button>
       </section>
     </aside>
@@ -109,7 +109,7 @@
 
 <dialog #resetDialog class="dialog" aria-labelledby="resetTitle" (cancel)="closeReset()">
   <h2 id="resetTitle" i18n>Прогресті тазарту керек пе?</h2>
-  <p class="muted" i18n>Бұл әрекетті қайтару мүмкін емес. Сөздер, кезеңдер, жаттықтырғыш пен AI-чат тарихы өшеді.</p>
+  <p class="muted" i18n>Бұл әрекетті қайтару мүмкін емес. Сөздер, кезеңдер, курс қадамдары, жаттықтырғыш пен AI-чат тарихы өшеді. Жетістік белгілері сақталады.</p>
   <div class="dialog-actions">
     <button type="button" class="btn btn-ghost" (click)="closeReset()" i18n>Болдырмау</button>
     <button type="button" class="btn btn-primary" [disabled]="resetting()" (click)="confirmReset()" i18n>Иә, тазарту</button>

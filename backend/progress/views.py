@@ -9,7 +9,7 @@ from srs.models import MAX_STAGE, UserVocabulary
 from srs.views import new_words_left
 from trainer.models import TrainerAttempt, trainer_stats
 from vocabulary.course import unlocked_steps
-from vocabulary.models import Vocabulary
+from vocabulary.models import StepResult, Vocabulary
 
 from . import achievements
 from .models import Achievement, DailyGoal, ProgressLog
@@ -88,7 +88,10 @@ class ResetSerializer(serializers.Serializer):
 
 
 class ResetView(APIView):
-    """POST /api/progress/reset/ {confirm: true} — wipes words, trainer history, chats and logs."""
+    """POST /api/progress/reset/ {confirm: true} — wipes words, course results, trainer history, chats and logs.
+
+    Badges stay: they were earned.
+    """
 
     @transaction.atomic
     def post(self, request):
@@ -97,11 +100,16 @@ class ResetView(APIView):
         if not serializer.validated_data["confirm"]:
             return Response({"detail": "Растау керек."}, status=status.HTTP_400_BAD_REQUEST)
         user = request.user
+        # Today's AI calls stay counted: a reset must not reopen the daily chat limit.
+        today = ProgressLog.objects.filter(user=user, date=timezone.localdate()).first()
         UserVocabulary.objects.filter(user=user).delete()
         TrainerAttempt.objects.filter(user=user).delete()
         Conversation.objects.filter(user=user).delete()
         ProgressLog.objects.filter(user=user).delete()
         DailyGoal.objects.filter(user=user).delete()
+        StepResult.objects.filter(user=user).delete()
+        if today and today.chat_requests:
+            ProgressLog.objects.create(user=user, date=today.date, chat_requests=today.chat_requests)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
