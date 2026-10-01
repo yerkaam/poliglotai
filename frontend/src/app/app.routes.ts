@@ -87,6 +87,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/course/course.component').then((m) => m.CourseComponent),
       },
       {
+        path: 'progress',
+        title: $localize`Прогресс · PoliglotAi`,
+        loadComponent: () => import('./features/progress/progress.component').then((m) => m.ProgressComponent),
+      },
+      {
         path: 'course/:number',
         canDeactivate: [leaveGuard],
         title: $localize`Қадам · PoliglotAi`,

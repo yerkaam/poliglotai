@@ -3,6 +3,7 @@ import { HANDLED_STATUSES } from './error.interceptor';
 import { Injectable, inject } from '@angular/core';
 import {
   AnswerResult,
+  Badge,
   ChatMode,
   ChatSummary,
   ChatUsage,
@@ -25,6 +26,7 @@ import {
   TrainerTask,
   User,
   VerbForms,
+  WeekSummary,
   Word,
 } from './models';
 
@@ -115,6 +117,15 @@ export class ApiService {
   // progress
   progress() {
     return this.http.get<Progress>('/api/progress/');
+  }
+  week() {
+    return this.http.get<WeekSummary>('/api/progress/week/');
+  }
+  achievements() {
+    return this.http.get<Badge[]>('/api/achievements/');
+  }
+  achievementsSeen() {
+    return this.http.post<void>('/api/achievements/seen/', {});
   }
   resetProgress() {
     return this.http.post<void>('/api/progress/reset/', { confirm: true });

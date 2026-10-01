@@ -56,6 +56,8 @@ class Profile(models.Model):
     reminder_enabled = models.BooleanField(default=True)
     reminder_hour = models.PositiveSmallIntegerField(default=19)
     reminder_sent_on = models.DateField(null=True, blank=True)
+    # The week's summary, on Sundays at the same hour.
+    weekly_sent_on = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = "profiles"

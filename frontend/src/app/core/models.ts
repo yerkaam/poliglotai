@@ -97,6 +97,8 @@ export interface GoalTask {
 }
 
 export interface Progress {
+  /** Badges earned since the learner last looked. */
+  new_achievements: AchievementNews[];
   stats: { learning: number; learned: number; due: number; accuracy: number | null; streak: number };
   stages: { stage: number; count: number }[];
   not_started: number;
@@ -252,4 +254,42 @@ export interface ChatSummary {
   top_errors: (Correction & { count: number; cell_label_kk: string })[];
   new_words: (NewWord & { added: boolean })[];
   usage: ChatUsage;
+}
+
+export interface AchievementNews {
+  key: string;
+  title_kk: string;
+  description_kk: string;
+  icon: string;
+}
+
+export interface Badge extends AchievementNews {
+  target: number;
+  current: number;
+  unlocked_at: string | null;
+}
+
+export interface WeekDay {
+  date: string;
+  weekday_kk: string;
+  reviews: number;
+  new_words: number;
+  trainer: number;
+  chat: number;
+  total: number;
+}
+
+export interface WeekSummary {
+  days: WeekDay[];
+  total: number;
+  previous_total: number;
+  active_days: number;
+  reviews: number;
+  new_words: number;
+  sentences: number;
+  chat_messages: number;
+  accuracy: number | null;
+  learned: number;
+  streak: number;
+  achievements: string[];
 }

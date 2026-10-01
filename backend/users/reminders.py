@@ -105,6 +105,90 @@ def build_email(user) -> EmailMessage:
     )
 
 
+SUNDAY = 6
+
+
+def weekly_due_profiles(now=None):
+    """On Sundays at the learner's hour: everyone with reminders on who studied at least once this week."""
+    now = timezone.localtime(now)
+    today = now.date()
+    if today.weekday() != SUNDAY:
+        return []
+    this_week = ProgressLog.objects.filter(date__gt=today - timedelta(days=7), date__lte=today)
+    active = {log.user_id for log in this_week if _studied(log)}
+    candidates = (
+        Profile.objects.filter(reminder_enabled=True, onboarded=True, reminder_hour__lte=now.hour, user__is_active=True)
+        .exclude(weekly_sent_on=today)
+        .select_related("user")
+    )
+    if settings.REQUIRE_EMAIL_VERIFICATION:
+        candidates = candidates.filter(user__email_verified=True)
+    return [p for p in candidates if p.user_id in active]
+
+
+def build_weekly_email(user) -> EmailMessage:
+    from progress.achievements import RULES_BY_KEY
+    from progress.week import week_summary
+
+    week = week_summary(user)
+    change = week["total"] - week["previous_total"]
+    trend = (
+        f"Өткен аптадан {change} жаттығуға көп. Керемет!"
+        if change > 0
+        else "Өткен аптамен шамалас."
+        if change == 0
+        else f"Өткен аптадан {-change} жаттығуға аз — келесі апта қуып жетейік!"
+    )
+    lines = [
+        f"Сәлем, {user.name}!",
+        "",
+        "Апта қорытындысы:",
+        f"• Белсенді күндер: {week['active_days']} / 7",
+        f"• Барлық жаттығу: {week['total']}. {trend}",
+        f"• Жаңа сөздер: {week['new_words']}, қайталау: {week['reviews']}",
+        f"• Жаттықтырғыш: {week['sentences']} сөйлем"
+        + (f", дәлдік {week['accuracy']}%" if week["accuracy"] is not None else ""),
+        f"• AI-чат: {week['chat_messages']} хабарлама",
+    ]
+    if week["streak"]:
+        lines.append(f"• Серия: {week['streak']} күн қатарынан")
+    if week["achievements"]:
+        titles = ", ".join(RULES_BY_KEY[k].title_kk for k in week["achievements"] if k in RULES_BY_KEY)
+        lines.append(f"• Жаңа жетістіктер: {titles}")
+    lines += [
+        "",
+        f"Толық есеп: {settings.FRONTEND_URL}/progress",
+        "",
+        "—",
+        f"Бұдан былай хат алмау: {unsubscribe_url(user)}",
+    ]
+    return EmailMessage(
+        "PoliglotAi — апта қорытындысы",
+        "\n".join(lines),
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        headers={
+            "List-Unsubscribe": f"<{unsubscribe_url(user)}>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+def send_weekly(now=None) -> int:
+    today = timezone.localdate(now)
+    sent = 0
+    for profile in weekly_due_profiles(now):
+        try:
+            build_weekly_email(profile.user).send()
+        except Exception:
+            logger.exception("Could not send the weekly summary to user %s", profile.user_id)
+            continue
+        profile.weekly_sent_on = today
+        profile.save(update_fields=["weekly_sent_on"])
+        sent += 1
+    return sent
+
+
 def send_due(now=None) -> int:
     """Sends today's reminders that are due; returns how many went out. A failed email is retried next hour."""
     today = timezone.localdate(now)

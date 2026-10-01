@@ -36,3 +36,18 @@ class DailyGoal(models.Model):
     class Meta:
         db_table = "daily_goals"
         unique_together = [("user", "date")]
+
+
+class Achievement(models.Model):
+    """A badge the learner earned (the rules live in progress/achievements.py). Kept, even after a reset."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="achievements")
+    key = models.CharField(max_length=40)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+    # The learner has seen the congratulation pop-up.
+    seen = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "achievements"
+        unique_together = [("user", "key")]
+        ordering = ["unlocked_at"]

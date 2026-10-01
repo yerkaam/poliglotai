@@ -11,8 +11,10 @@ from trainer.models import TrainerAttempt, trainer_stats
 from vocabulary.course import unlocked_steps
 from vocabulary.models import Vocabulary
 
-from .models import DailyGoal, ProgressLog
+from . import achievements
+from .models import Achievement, DailyGoal, ProgressLog
 from .services import streak_days
+from .week import week_summary
 
 
 def _daily_goal(user, today, due_count: int) -> DailyGoal:
@@ -56,8 +58,12 @@ class ProgressView(APIView):
         for t in tasks:
             t["complete"] = t["done"] >= t["target"]
 
+        achievements.unlock_new(user)
+        fresh = Achievement.objects.filter(user=user, seen=False)
         return Response(
             {
+                # Badges earned since the learner last looked: the app congratulates, then marks them seen.
+                "new_achievements": [achievements.describe(a) for a in fresh],
                 "stats": {
                     "learning": learning.count(),
                     "learned": learned,
@@ -96,4 +102,26 @@ class ResetView(APIView):
         Conversation.objects.filter(user=user).delete()
         ProgressLog.objects.filter(user=user).delete()
         DailyGoal.objects.filter(user=user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WeekView(APIView):
+    """GET /api/progress/week/ — the last 7 days, day by day, and the totals against the week before."""
+
+    def get(self, request):
+        return Response(week_summary(request.user))
+
+
+class AchievementsView(APIView):
+    """GET /api/achievements/ — every badge with the progress toward it."""
+
+    def get(self, request):
+        return Response(achievements.overview(request.user))
+
+
+class AchievementsSeenView(APIView):
+    """POST /api/achievements/seen/ — the congratulations were shown."""
+
+    def post(self, request):
+        Achievement.objects.filter(user=request.user, seen=False).update(seen=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

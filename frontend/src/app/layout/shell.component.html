@@ -63,6 +63,7 @@
       <a routerLink="/" class="brand mobile-only" i18n-aria-label aria-label="PoliglotAi, басты бет"><app-logo /></a>
 
       <!-- Stats bar on every screen (3.5): learning, learned, due, trainer accuracy -->
+      <a class="stats-link" routerLink="/progress" i18n-title title="Прогресс және жетістіктер">
       <dl class="stats" i18n-aria-label aria-label="Статистика">
         <div class="stat streak">
           <dt><app-icon name="flame" [size]="18" /><span class="visually-hidden" i18n>Қатарынан күн</span></dt>
@@ -85,6 +86,7 @@
           <dd>{{ stats()?.accuracy != null ? stats()!.accuracy + '%' : '–' }}</dd>
         </div>
       </dl>
+      </a>
 
       <div class="top-actions mobile-only">
         <a class="icon-btn" routerLink="/settings" i18n-aria-label aria-label="Баптаулар">
@@ -106,7 +108,7 @@
 </div>
 
 <nav class="bottom-nav" i18n-aria-label aria-label="Негізгі мәзір">
-  @for (item of nav; track item.path) {
+  @for (item of bottomNav; track item.path) {
     <a
       [routerLink]="item.path"
       routerLinkActive="active"

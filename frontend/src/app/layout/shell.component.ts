@@ -24,6 +24,8 @@ interface NavItem {
   label: string;
   short: string;
   icon: IconName;
+  /** Sidebar only: the phone's bottom bar has room for six items (the stats bar links there instead). */
+  sidebarOnly?: boolean;
 }
 
 const SIDEBAR_KEY = 'poliglot-sidebar';
@@ -52,7 +54,9 @@ export class ShellComponent {
     { path: '/trainer', label: $localize`Жаттықтырғыш`, short: $localize`Жаттығу`, icon: 'target' },
     { path: '/chat', label: $localize`AI-чат`, short: $localize`AI-чат`, icon: 'chat' },
     { path: '/course', label: $localize`Курс · 16 қадам`, short: $localize`Курс`, icon: 'book' },
+    { path: '/progress', label: $localize`Прогресс`, short: $localize`Прогресс`, icon: 'trophy', sidebarOnly: true },
   ];
+  protected bottomNav = this.nav.filter((item) => !item.sidebarOnly);
 
   protected stats = computed(() => this.store.progress()?.stats ?? null);
   protected learnedOf = computed(() => this.store.progress()?.learned_of ?? null);

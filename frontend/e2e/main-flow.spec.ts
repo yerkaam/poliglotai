@@ -362,3 +362,24 @@ test('reminder emails can be moved to another hour or turned off', async ({ page
   await page.goto('/settings');
   await expect(page.getByLabel('Сабақ болмаған күні поштаға еске салу')).not.toBeChecked();
 });
+
+test('a first word earns a badge; the progress page shows the week and the badges', async ({ page }) => {
+  await register(page);
+  await page.goto('/words');
+  await page.getByRole('button', { name: 'Үйренуді бастау' }).click();
+  await expect(page.locator('app-toasts')).toContainText('🏆 Алғашқы сөз');
+
+  // The stats bar opens the progress page.
+  await page.locator('a.stats-link').click();
+  await expect(page).toHaveURL(/\/progress$/);
+  await expect(page.getByRole('heading', { name: 'Прогресс' })).toBeVisible();
+  await expect(page.locator('app-week-chart .col')).toHaveCount(7);
+  await expect(page.locator('app-week-chart .value')).toHaveText('1'); // only the busiest day is labelled
+  await page.locator('app-week-chart .col').last().hover();
+  await expect(page.getByRole('tooltip')).toContainText('Жаңа сөздер');
+  await page.getByText('Кесте түрінде').click();
+  await expect(page.locator('app-week-chart tbody tr')).toHaveCount(7);
+  await expect(page.locator('.badges li.earned')).toContainText('Алғашқы сөз');
+  await expect(page.locator('.badges li:not(.earned)').first().locator('.meter')).toBeVisible();
+  await noHorizontalScroll(page);
+});

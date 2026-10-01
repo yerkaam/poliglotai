@@ -255,12 +255,24 @@
   z-index: 10;
 }
 
-/* phone: one compact row of pills that scrolls sideways, so labels never break inside a word
-   and the sticky bar leaves room for the lesson */
-.stats {
+/* the stats bar opens the Progress page */
+.stats-link {
   order: 3;
   width: calc(100% + 32px);
   margin: 0 -16px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 999px;
+  &:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+}
+
+/* phone: one compact row of pills that scrolls sideways, so labels never break inside a word
+   and the sticky bar leaves room for the lesson */
+.stats {
+  margin: 0;
   padding: 0 16px;
   display: flex;
   gap: 6px;
@@ -370,10 +382,12 @@ main {
     justify-content: flex-end;
     padding: 16px 32px;
   }
-  .stats {
+  .stats-link {
     order: 0;
     width: auto;
     margin: 0;
+  }
+  .stats {
     padding: 0;
     gap: 8px;
   }
