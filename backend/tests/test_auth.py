@@ -208,3 +208,15 @@ def test_verification_can_be_switched_off(anon, settings):
     settings.REQUIRE_EMAIL_VERIFICATION = False
     r = anon.post("/api/auth/register/", REGISTER, format="json")
     assert r.json()["email_verified"] is True and not mail.outbox
+
+
+def test_with_confirmation_off_an_unconfirmed_account_gets_in(settings):
+    from users.models import User as UserModel
+
+    unconfirmed = UserModel.objects.create_user(email="late@mail.kz", password="englishday1", name="Late")
+    api = APIClient()
+    api.post("/api/auth/login/", {"email": unconfirmed.email, "password": "englishday1"}, format="json")
+    assert api.get("/api/auth/me/").json()["email_verified"] is False
+    settings.REQUIRE_EMAIL_VERIFICATION = False
+    assert api.get("/api/auth/me/").json()["email_verified"] is True
+    assert api.get("/api/progress/").status_code == 200

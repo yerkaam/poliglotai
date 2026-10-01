@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
@@ -19,11 +20,16 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
+    # With email confirmation switched off, accounts that registered while it was on are let in too.
+    email_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "email", "name", "email_verified", "is_teacher", "profile"]
         read_only_fields = ["is_teacher"]
+
+    def get_email_verified(self, user) -> bool:
+        return user.email_verified or not settings.REQUIRE_EMAIL_VERIFICATION
 
 
 class RegisterSerializer(serializers.Serializer):

@@ -35,8 +35,9 @@ services:
         value: low
       - key: CHAT_DAILY_LIMIT
         value: "30"
+      # Email confirmation code after registration. Off for now ("0"); set to "1" once email sending works.
       - key: REQUIRE_EMAIL_VERIFICATION
-        value: "1"
+        value: "0"
       # Optional ready-made accounts for trying the site: set both passwords (8+ characters with a digit)
       # and redeploy; student@poliglot.test and teacher@poliglot.test then log in with them.
       - key: DEMO_STUDENT_PASSWORD
