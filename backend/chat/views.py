@@ -70,11 +70,22 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 
 def _system_prompt(conversation: Conversation) -> str:
+    """The learner block for this chat: built once, then reused unchanged so the prompt cache keeps hitting."""
+    if not conversation.system_prompt:
+        conversation.system_prompt = _build_system_prompt(conversation)
+        if conversation.pk:
+            conversation.save(update_fields=["system_prompt"])
+    return conversation.system_prompt
+
+
+def _build_system_prompt(conversation: Conversation) -> str:
     user = conversation.user
     profile, _ = Profile.objects.get_or_create(user=user)
-    verbs = list(
+    # The 60 most recently started verbs, alphabetically: a stable order, so the same words give the same text.
+    verbs = sorted(
         UserVocabulary.objects.filter(user=user, vocabulary__is_verb=True)
         .exclude(status=UserVocabulary.Status.KNOWN)
+        .order_by("-started_on", "-id")
         .values_list("vocabulary__word", flat=True)[:60]
     )
     states = course_state(user)

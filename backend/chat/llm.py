@@ -51,19 +51,19 @@ class TutorReply(BaseModel):
     off_topic: bool = Field(description="True if the learner asked for something outside study and daily life")
 
 
-SYSTEM_PROMPT = """You are PoliglotAi, a friendly English conversation partner for adult Kazakh-speaking \
-beginners (level {level}). All explanations, translations and hints are in Kazakh (Cyrillic).
+# Prompt caching: the API caches the request prefix (system blocks, then the messages), so the order below runs
+# from the most stable to the most variable part.
+#   1. CORE_PROMPT: the same bytes for every learner, mode and turn; one cache entry shared by all chats.
+#   2. The learner block (level, steps, verbs, mode): fixed for the whole conversation (stored on it).
+#   3. The dialog: only grows, earlier turns are never rewritten; the automatic breakpoint follows its end.
+# Nothing per-request (dates, ids, unordered sets) may enter 1 or 2, or every request pays full price again.
+CORE_PROMPT = """You are PoliglotAi, a friendly English conversation partner for adult Kazakh-speaking \
+beginners. All explanations, translations and hints are in Kazakh (Cyrillic).
 
-The learner knows only these structures: the basic verb table — Future Simple, Present Simple and \
-Past Simple, each as question, affirmative and negative (will/won't, do/does/don't/doesn't, did/didn't). \
-Course steps opened so far: {steps}.
-Also completed: {grammar}.
-Verbs they are learning now: {verbs}.
-
-Speak only at this level: short sentences, the structures above, mostly the verbs above and very common \
-everyday words.{forbidden}
-
-{mode_rules}
+The next section describes this learner: their level, the course steps they have opened, the grammar and \
+verbs they know, and the mode of this lesson. Speak only at that level: short sentences, the structures they \
+know, mostly the verbs they are learning and very common everyday words. Never use a structure the next \
+section forbids.
 
 How to correct:
 - First answer the meaning of what the learner wrote so the conversation keeps going. Put corrections \
@@ -78,6 +78,16 @@ tense "past", form "affirmative".
 Stay on study and everyday situations (introductions, café, travel, shopping, work). If the learner \
 goes elsewhere or writes something inappropriate, set off_topic=true and gently bring them back in \
 one simple English sentence."""
+
+LEARNER_PROMPT = """This learner and this lesson
+Level: {level}.
+The learner knows only these structures: the basic verb table — Future Simple, Present Simple and \
+Past Simple, each as question, affirmative and negative (will/won't, do/does/don't/doesn't, did/didn't). \
+Course steps opened so far: {steps}.
+Also completed: {grammar}.
+Verbs they are learning now: {verbs}.{forbidden}
+
+{mode_rules}"""
 
 MODE_RULES = {
     "dialog": (
@@ -127,29 +137,52 @@ def build_system_prompt(
     )
     done = done_numbers or set()
     forbidden = [name for number, name in LATER_STRUCTURES.items() if number not in done]
-    return SYSTEM_PROMPT.format(
+    return LEARNER_PROMPT.format(
         level=level,
         steps=", ".join(steps) or "none yet",
         grammar="; ".join(grammar or []) or "nothing beyond the verb table yet",
         verbs=", ".join(verbs) or "the 40 most common verbs",
-        forbidden=f" Never use {', '.join(forbidden)}." if forbidden else "",
+        forbidden=f"\nNever use {', '.join(forbidden)}." if forbidden else "",
         mode_rules=rules,
     )
 
 
+CACHE = {"type": "ephemeral"}  # 5 minutes, renewed by every read: learners answer well within that
+
+
 def _request(system: str, history: list[dict]) -> dict:
+    """system: the learner block of this conversation (build_system_prompt), placed after the shared core."""
     # The API needs a user turn first; the stored dialog starts with the tutor's opening line.
     return {
         "model": settings.CHAT_MODEL,
         "max_tokens": 16000,
-        "system": system,
+        "system": [
+            {"type": "text", "text": CORE_PROMPT, "cache_control": CACHE},
+            {"type": "text", "text": system},
+        ],
         "messages": [{"role": "user", "content": KICKOFF}, *history],
+        # Automatic breakpoint at the end of the dialog: the next turn reads all of it from the cache.
+        "cache_control": CACHE,
         "output_format": TutorReply,
         "output_config": {"effort": settings.CHAT_EFFORT},
         # If the main model declines, the API re-runs the request on a fallback model.
         "betas": ["server-side-fallback-2026-07-01"],
         "fallbacks": "default",
     }
+
+
+def _log_usage(response) -> None:
+    """Cache hits show here; if cache_read stays 0 across turns of one chat, something rewrote the prefix."""
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        return
+    logger.info(
+        "LLM usage: input %s, cache read %s, cache write %s, output %s",
+        usage.input_tokens,
+        usage.cache_read_input_tokens or 0,
+        usage.cache_creation_input_tokens or 0,
+        usage.output_tokens,
+    )
 
 
 def _client():
@@ -187,6 +220,7 @@ def ask_tutor(*, system: str, history: list[dict]) -> TutorReply:
         response = _client().beta.messages.parse(**_request(system, history))
     except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
         raise _unavailable(exc) from exc
+    _log_usage(response)
     if response.stop_reason == "refusal" or response.parsed_output is None:
         return DECLINED
     return response.parsed_output
@@ -221,6 +255,7 @@ def stream_tutor(*, system: str, history: list[dict]) -> Iterator[tuple[str, obj
             response = stream.get_final_message()
     except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
         raise _unavailable(exc) from exc
+    _log_usage(response)
     if response.stop_reason == "refusal" or response.parsed_output is None:
         yield "final", DECLINED
     else:

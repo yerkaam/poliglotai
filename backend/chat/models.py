@@ -31,6 +31,9 @@ class Conversation(models.Model):
     scenario = models.ForeignKey(Scenario, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     finished = models.BooleanField(default=False)
+    # The learner block of the tutor's instructions, fixed when the chat starts: the same bytes on every turn
+    # keep the prompt cache valid (words learned meanwhile count from the next chat).
+    system_prompt = models.TextField(blank=True, default="")
 
     class Meta:
         db_table = "conversations"
