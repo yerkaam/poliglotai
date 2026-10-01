@@ -1,4 +1,5 @@
 from django.contrib.auth import password_validation
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import Profile, User
@@ -78,3 +79,24 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class VerifyEmailSerializer(serializers.Serializer):
     code = serializers.RegexField(r"^\s*\d{6}\s*$", error_messages={"invalid": "Код 6 саннан тұрады."})
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    password = serializers.CharField()
+    password2 = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Құпиясөздер сәйкес емес."})
+        if attrs["password"] == attrs["old_password"]:
+            raise serializers.ValidationError({"password": "Жаңа құпиясөз ескісінен өзгеше болуы керек."})
+        try:
+            password_validation.validate_password(attrs["password"], self.context["user"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
+        return attrs
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    password = serializers.CharField()

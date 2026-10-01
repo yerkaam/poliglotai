@@ -7,6 +7,7 @@ import { ToastService } from '../../core/toast.service';
 import { firstValueFrom } from 'rxjs';
 import { MyGroup } from '../../core/models';
 import { Level } from '../../core/models';
+import { AccountSectionComponent } from './account-section.component';
 import { AuthLayoutComponent } from './auth-layout.component';
 import { apiErrors } from './errors';
 
@@ -17,7 +18,7 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
 @Component({
   selector: 'app-onboarding',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AuthLayoutComponent, RouterLink],
+  imports: [AuthLayoutComponent, AccountSectionComponent, RouterLink],
   template: `
     <app-auth-layout>
       <div class="intro">
@@ -124,6 +125,7 @@ const MINUTES: Record<Limit, number> = { 5: 10, 10: 15, 15: 20, 20: 25 };
       @if (editing) {
         <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Сақтау</button>
         <a class="btn btn-ghost btn-lg" routerLink="/" i18n>Артқа</a>
+        <app-account-section />
       } @else {
         <button type="button" class="btn btn-primary btn-lg" [disabled]="busy()" (click)="save()" i18n>Бастау</button>
       }

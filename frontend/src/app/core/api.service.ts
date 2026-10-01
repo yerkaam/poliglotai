@@ -71,6 +71,19 @@ export class ApiService {
   requestReset(email: string) {
     return this.http.post<{ detail: string; retry_after: number }>('/api/auth/password-reset/', { email }, handles(429));
   }
+  changePassword(old_password: string, password: string, password2: string) {
+    return this.http.post<{ detail: string }>('/api/auth/password/', { old_password, password, password2 }, handles(429));
+  }
+
+  /** Everything stored about the learner, as a JSON file. */
+  exportData() {
+    return this.http.get('/api/auth/export/', { responseType: 'blob' });
+  }
+
+  deleteAccount(password: string) {
+    return this.http.post<void>('/api/auth/delete/', { password }, handles(429));
+  }
+
   confirmReset(uid: string, token: string, password: string) {
     return this.http.post<{ detail: string }>('/api/auth/password-reset/confirm/', { uid, token, password });
   }

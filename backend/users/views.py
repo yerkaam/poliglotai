@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.conf import settings
@@ -5,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
@@ -19,12 +20,15 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from . import account
 from .authentication import REFRESH_COOKIE, REMEMBER_COOKIE, clear_auth_cookies, set_auth_cookies
 from .models import Profile, User
 from .reminders import user_from_token
 from .serializers import (
     EMAIL_TAKEN,
+    DeleteAccountSerializer,
     LoginSerializer,
+    PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
     ProfileSerializer,
@@ -302,6 +306,75 @@ class PasswordResetConfirmView(APIView):
         # Whoever knew the old password is logged out everywhere.
         _end_all_sessions(user)
         return Response({"detail": "Құпиясөз жаңартылды. Енді кіре аласыз."})
+
+
+def _password_checked(request, password, field):
+    """None when the current password is right, otherwise the error response (wrong, or too many tries)."""
+    if account.password_locked(request.user):
+        return Response(
+            {"detail": account.TOO_MANY_TRIES, "code": "throttled"}, status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+    if not account.confirm_password(request.user, password):
+        return Response(
+            {"detail": account.WRONG_PASSWORD, "code": "wrong_password", field: [account.WRONG_PASSWORD]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return None
+
+
+class PasswordChangeView(APIView):
+    """POST /api/auth/password/ {old_password, password, password2}: other devices are logged out, this one stays."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={"user": request.user})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        error = _password_checked(request, data["old_password"], "old_password")
+        if error:
+            return error
+        user = request.user
+        user.set_password(data["password"])
+        user.save(update_fields=["password"])
+        _end_all_sessions(user)
+        response = _login_response(user, remember=request.COOKIES.get(REMEMBER_COOKIE) == "1")
+        response.data = {"detail": "Құпиясөз өзгертілді. Басқа құрылғылардан шығып кеттіңіз."}
+        return response
+
+
+class ExportDataView(APIView):
+    """GET /api/auth/export/: everything stored about the learner, as a JSON file to download."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        body = json.dumps(account.export_data(request.user), ensure_ascii=False, indent=2)
+        response = HttpResponse(body, content_type="application/json; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="poliglotai-data.json"'
+        response["Cache-Control"] = "no-store"
+        return response
+
+
+class DeleteAccountView(APIView):
+    """POST /api/auth/delete/ {password}: the account and all its data are gone; there is no undo."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DeleteAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        error = _password_checked(request, serializer.validated_data["password"], "password")
+        if error:
+            return error
+        user = request.user
+        with transaction.atomic():
+            _end_all_sessions(user)
+            logger.info("Account %s deleted by its owner", user.pk)
+            user.delete()  # words, chats, progress, groups taught and memberships go with it (CASCADE)
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        clear_auth_cookies(response)
+        return response
 
 
 UNSUBSCRIBED_PAGE = """<!doctype html><html lang="kk"><head><meta charset="utf-8">
