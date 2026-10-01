@@ -193,3 +193,12 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Error monitoring: Sentry, only when a DSN is configured. The frontend gets its own (public) DSN from /api/config/.
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+SENTRY_FRONTEND_DSN = os.environ.get("SENTRY_FRONTEND_DSN", "")
+SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "production" if not DEBUG else "development")
+if SENTRY_DSN:
+    from config import monitoring
+
+    monitoring.init(SENTRY_DSN, SENTRY_ENVIRONMENT)

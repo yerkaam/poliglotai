@@ -18,6 +18,7 @@ import { authInterceptor } from './core/auth.interceptor';
 import { errorInterceptor } from './core/error.interceptor';
 import { GlobalErrorHandler } from './core/global-error-handler';
 import { AuthService } from './core/auth.service';
+import { MonitoringService } from './core/monitoring.service';
 import { OfflineQueueService } from './core/offline-queue.service';
 import { PwaService } from './core/pwa.service';
 
@@ -43,6 +44,8 @@ export const appConfig: ApplicationConfig = {
       registrationStrategy: 'registerWhenStable:30000',
     }),
     provideAppInitializer(() => {
+      // Not awaited: error reporting must never delay the first screen.
+      void inject(MonitoringService).init();
       inject(PwaService).init();
       inject(OfflineQueueService).init();
     }),

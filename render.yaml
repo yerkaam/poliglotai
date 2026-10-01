@@ -37,6 +37,12 @@ services:
         value: "30"
       - key: REQUIRE_EMAIL_VERIFICATION
         value: "1"
+      # Error monitoring (sentry.io, free plan is enough): the DSNs of a Django and a browser project.
+      # Empty = off. The browser DSN is public by design; the server one stays here.
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_FRONTEND_DSN
+        sync: false
       - fromGroup: poliglot-mail
 
   # Daily reminder emails ("you have not studied today"): checks every hour who is due at their chosen hour.
@@ -66,6 +72,12 @@ services:
       # The address used in the email links: the web service's public URL.
       - key: FRONTEND_URL
         sync: false
+      # Failed reminder emails are reported to the same Sentry project as the web service.
+      - key: SENTRY_DSN
+        fromService:
+          type: web
+          name: poliglot
+          envVarKey: SENTRY_DSN
       - fromGroup: poliglot-mail
 
 envVarGroups:

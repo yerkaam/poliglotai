@@ -143,3 +143,29 @@ test('reviews check the word: pick the translation, pick what you hear, type it'
   // The forgotten word comes back at the end of the session.
   await expect(page.getByText('Тыңдап, сөзді таңдаңыз')).toBeVisible();
 });
+
+test('a page error reaches monitoring without personal data', async ({ page }) => {
+  await signUp(page);
+  // Monitoring is on when the server gives a DSN; the reports go to Sentry's ingest address, caught here.
+  await page.route('**/api/config/', (route) =>
+    route.fulfill({ json: { sentry_dsn: 'https://public@o1.ingest.sentry.io/1', environment: 'e2e', release: 'test' } }),
+  );
+  const envelopes: string[] = [];
+  await page.route('https://o1.ingest.sentry.io/**', (route) => {
+    envelopes.push(route.request().postData() ?? '');
+    return route.fulfill({ status: 200, json: {} });
+  });
+  await page.goto('/course?token=secret-token');
+  await expect(page.getByText('Негізгі кесте').first()).toBeVisible();
+
+  await page.evaluate(() => setTimeout(() => { throw new Error('e2e page bug'); }));
+  await expect(toasts(page).getByRole('alert')).toContainText('Бірдеңе дұрыс болмады');
+  await expect.poll(() => envelopes.filter((e) => e.includes('e2e page bug')).length).toBe(1);
+
+  const event = JSON.parse(envelopes.find((e) => e.includes('e2e page bug'))!.split('\n')[2]);
+  expect(event.environment).toBe('e2e');
+  expect(event.user?.id).toMatch(/^\d+$/);
+  expect(event.user?.email).toBeUndefined();
+  expect(JSON.stringify(event)).not.toContain('secret-token');
+  expect(JSON.stringify(event)).not.toContain('@mail.kz');
+});

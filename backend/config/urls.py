@@ -7,6 +7,7 @@ from django.urls import include, path, re_path
 
 from chat import views as chat
 from classroom import views as classroom
+from config import monitoring
 from progress import views as progress
 from srs import views as srs
 from trainer import views as trainer
@@ -14,7 +15,20 @@ from vocabulary import views as vocabulary
 
 admin.site.site_header = "PoliglotAi — әдіскер панелі"
 
+
+def client_config(request):
+    """Settings the browser app needs at start: the public Sentry DSN (empty turns reporting off)."""
+    return JsonResponse(
+        {
+            "sentry_dsn": settings.SENTRY_FRONTEND_DSN,
+            "environment": settings.SENTRY_ENVIRONMENT,
+            "release": monitoring.release(),
+        }
+    )
+
+
 api = [
+    path("config/", client_config),
     path("auth/", include("users.urls")),
     path("verbs/", vocabulary.VerbListView.as_view()),
     path("verbs/<int:pk>/forms/", vocabulary.VerbFormsView.as_view()),
