@@ -123,18 +123,27 @@ export interface CourseStep {
   words_total: number;
   words_started: number;
   words_learned: number;
-  words_needed: number;
   percent: number;
-  has_lesson: boolean;
+  lessons_total: number;
+  lessons_done: number;
   quiz_total: number;
   quiz_best: number | null;
   quiz_passed: boolean;
+}
+
+export interface PracticeQuestion {
+  prompt: string;
+  prompt_kk: string;
+  options: string[];
+  answer: string;
+  why_kk: string;
 }
 
 export interface LessonBlock {
   title_kk: string;
   text_kk: string;
   examples: { en: string; kk: string }[];
+  practice: PracticeQuestion[];
 }
 
 export interface Exercise {
@@ -145,6 +154,7 @@ export interface Exercise {
 }
 
 export interface StepDetail extends CourseStep {
+  intro_kk: string;
   lesson: LessonBlock[];
   exercises: Exercise[];
   words: Word[];

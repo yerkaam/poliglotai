@@ -79,6 +79,9 @@ export class ApiService {
   step(number: number) {
     return this.http.get<StepDetail>(`/api/course/${number}/`);
   }
+  saveLessons(number: number, done: number) {
+    return this.http.post<{ lessons_done: number }>(`/api/course/${number}/lessons/`, { done });
+  }
   checkStep(number: number, answers: string[]) {
     return this.http.post<StepCheckResult>(`/api/course/${number}/check/`, { answers });
   }

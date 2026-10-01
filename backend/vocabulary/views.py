@@ -102,11 +102,28 @@ class StepView(APIView):
         return Response(
             {
                 **state.as_dict(),
+                "intro_kk": step.intro_kk,
                 "lesson": step.lesson,
                 "exercises": course.public_exercises(step),
                 "words": VocabularySerializer(words, many=True, context={"progress": progress_map(request.user)}).data,
                 "pass_percent": course.PASS_PERCENT,
             }
+        )
+
+
+class LessonsDoneSerializer(serializers.Serializer):
+    done = serializers.IntegerField(min_value=0, max_value=100)
+
+
+class StepLessonsView(APIView):
+    """POST /api/course/{n}/lessons/ {done} — the learner finished a lesson; resume there next time."""
+
+    def post(self, request, number):
+        state = _unlocked_state(request.user, number)
+        serializer = LessonsDoneSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(
+            {"lessons_done": course.save_lessons_done(request.user, state.step, serializer.validated_data["done"])}
         )
 
 

@@ -43,44 +43,71 @@
   }
 }
 
-.goals .btn {
-  margin-top: 12px;
+.intro {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
 }
-.checks {
+.how {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* the path of lessons */
+/* one dot per lesson; wraps on a narrow phone instead of widening the page */
+.path {
+  min-width: 0;
+}
+.path ol {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 0;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   li {
-    display: grid;
-    grid-template-columns: 22px 1fr;
-    column-gap: 10px;
+    flex: none;
+    display: flex;
+  }
+  button {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    border: 2px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
     align-items: center;
-    small {
-      grid-column: 2;
+    justify-content: center;
+    &.passed {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    &.current {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--tint);
+    }
+    &:disabled {
+      color: var(--muted);
+      opacity: 0.6;
     }
   }
 }
-.tick {
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  border: 2px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  .ok & {
-    background: var(--green);
-    border-color: var(--green);
-    color: #fff;
-  }
+#stage {
+  scroll-margin-top: calc(var(--topbar-h, 70px) + 12px);
 }
 
-.lesson p {
-  margin: 0 0 12px;
-  line-height: 1.5;
+.lesson-title {
+  font-size: 20px;
+  margin: 4px 0 10px;
+}
+.rule {
+  margin: 0 0 14px;
+  font-size: 16px;
+  line-height: 1.55;
 }
 .examples {
   list-style: none;
@@ -111,6 +138,78 @@
   justify-content: center;
 }
 
+.practice {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+}
+.pq .prompt {
+  margin: 0 0 8px;
+}
+.chip.right {
+  background: var(--green-tint);
+  border-color: var(--green);
+  color: var(--ink);
+}
+.chip.wrong {
+  background: var(--tint);
+  border-color: var(--red);
+  color: var(--ink);
+  text-decoration: line-through;
+}
+.chip:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.why {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--tint);
+  font-size: 15px;
+  &.ok {
+    background: var(--green-tint);
+  }
+}
+.link {
+  border: 0;
+  background: none;
+  padding: 0 0 0 6px;
+  color: var(--red);
+  font-weight: 600;
+}
+.nav-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  .grow {
+    flex: 1;
+  }
+}
+.center {
+  text-align: center;
+  margin: 8px 0 0;
+}
+
+.words-card summary {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 700;
+  min-height: 44px;
+  justify-content: center;
+}
+.words-card[open] summary {
+  margin-bottom: 12px;
+}
 .words {
   list-style: none;
   margin: 0 0 10px;

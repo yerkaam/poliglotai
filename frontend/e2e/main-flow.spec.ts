@@ -193,40 +193,52 @@ test('the stats bar fits a phone without breaking words', async ({ page, isMobil
   await noHorizontalScroll(page);
 });
 
-test('a course step: lesson, a failed check with the right answers, then a pass', async ({ page }) => {
+test('a course step: short lessons with practice, then the check opens the next step', async ({ page }) => {
   await register(page);
   await page.goto('/course');
   await expect(page.locator('.steps li').nth(1)).toContainText('жабық');
   await page.locator('.steps li').first().getByRole('link', { name: 'Ашу' }).click();
   await expect(page).toHaveURL(/\/course\/1$/);
   await expect(page.getByRole('heading', { name: 'Негізгі кесте' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Бір етістік — тоғыз форма' })).toBeVisible();
+  await expect(page.getByText('Қалай өтеміз')).toBeVisible();
 
+  // Lesson 1: the next button waits for the practice; a wrong pick explains the rule.
+  await expect(page.getByText('Сабақ 1 / 8')).toBeVisible();
+  const next = page.getByRole('button', { name: /Келесі сабақ|Тестке өту/ });
+  await expect(next).toBeDisabled();
+  await page.locator('.pq').first().getByRole('button', { name: 'speaks' }).click();
+  await expect(page.locator('.why').first()).toContainText('Дұрысы: speak');
+
+  const finishLesson = async () => {
+    for (const q of await page.locator('.pq').all()) {
+      const first = q.locator('.chip').first();
+      if (await first.isEnabled()) await first.click();
+    }
+    await next.click();
+  };
+  await finishLesson();
+  await expect(page.getByText('Сабақ 2 / 8')).toBeVisible();
+
+  // The learner resumes where they stopped.
+  await page.reload();
+  await expect(page.getByText('Сабақ 2 / 8')).toBeVisible();
+  for (let i = 2; i <= 8; i++) await finishLesson();
+
+  await expect(page.getByRole('heading', { name: /Тест · 7 сұрақ/ })).toBeVisible();
   const choices = ['Does', 'went', 'will', 'does'];
   const typedAnswers = ["I didn't buy a car", 'She watches TV', 'Will you help me'];
   const questions = page.locator('.questions > li');
-  const answerAll = async (right: boolean) => {
-    for (const [i, option] of choices.entries()) {
-      await questions.nth(i).getByRole('radio', { name: right ? option : undefined }).first().click();
-    }
-    for (const [i, text] of typedAnswers.entries()) {
-      await questions.nth(choices.length + i).getByRole('textbox').fill(right ? text : 'no idea');
-    }
-  };
-
-  await answerAll(false);
+  for (const [i, option] of choices.entries()) {
+    await questions.nth(i).getByRole('radio', { name: option }).click();
+  }
+  for (const [i, text] of typedAnswers.entries()) {
+    await questions.nth(choices.length + i).getByRole('textbox').fill(i === 2 ? 'no idea' : text);
+  }
   await page.getByRole('button', { name: 'Тексеру' }).click();
-  await expect(page.locator('#checkResult')).toContainText('кемінде 80%');
-  await expect(questions.last()).toContainText('Дұрысы: Will you help me');
-
-  await page.getByRole('button', { name: 'Қайта тапсыру' }).click();
-  await answerAll(true);
-  await page.getByRole('button', { name: 'Тексеру' }).click();
-  await expect(page.locator('#checkResult')).toContainText('Тест тапсырылды!');
-  // The words are not started yet, so step 2 stays closed and the screen says why.
-  await expect(page.locator('#checkResult')).toContainText('сөздерін үйрене бастаңыз');
+  await expect(page.locator('#checkResult')).toContainText('86%');
+  await expect(page.locator('#checkResult')).toContainText('2-қадам ашылды');
   await noHorizontalScroll(page);
 
-  await page.goto('/course/2');
-  await expect(page.getByRole('heading', { name: 'Бұл қадам әлі жабық' })).toBeVisible();
+  await page.getByRole('button', { name: '2-қадамға өту' }).click();
+  await expect(page.getByRole('heading', { name: 'Сұраулы сөздер' })).toBeVisible();
 });

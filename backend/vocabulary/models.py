@@ -12,7 +12,10 @@ class CourseStep(models.Model):
         default=False,
         help_text="The step's content is ready. Learners still unlock published steps one by one.",
     )
-    # [{"title_kk": str, "text_kk": str, "examples": [{"en": str, "kk": str}]}]
+    intro_kk = models.TextField(blank=True, help_text="What the learner will be able to do after this step.")
+    # Short lessons, one idea each, taken one after another:
+    # [{"title_kk": str, "text_kk": str, "examples": [{"en": str, "kk": str}],
+    #   "practice": [{"prompt": str, "prompt_kk": str, "options": [str], "answer": str, "why_kk": str}]}]
     lesson = models.JSONField(default=list, blank=True)
     # [{"type": "choice", "prompt": str, "prompt_kk": str, "options": [str], "answer": str}
     #  | {"type": "input", "prompt": str, "prompt_kk": str, "answers": [str]}]
@@ -67,10 +70,11 @@ class Vocabulary(models.Model):
 
 
 class StepResult(models.Model):
-    """The learner's best score on a step's check. A pass (with enough words started) opens the next step."""
+    """How far the learner got in a step: lessons taken and the best check score. A pass opens the next step."""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="step_results")
     step = models.ForeignKey(CourseStep, on_delete=models.CASCADE)
+    lessons_done = models.PositiveSmallIntegerField(default=0)
     best_percent = models.PositiveSmallIntegerField(default=0)
     passed = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)

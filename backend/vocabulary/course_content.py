@@ -13,8 +13,15 @@ def ex(en, kk):
     return {"en": en, "kk": kk}
 
 
-def block(title_kk, text_kk, *examples):
-    return {"title_kk": title_kk, "text_kk": text_kk, "examples": list(examples)}
+def block(title_kk, text_kk, *examples, practice=()):
+    """One short lesson: a rule in plain words, examples, and a few practice questions with instant feedback."""
+    return {"title_kk": title_kk, "text_kk": text_kk, "examples": list(examples), "practice": list(practice)}
+
+
+def quick(prompt, prompt_kk, options, answer, why_kk):
+    """A practice question inside a lesson: answered on the spot, with the reason shown, never graded."""
+    assert answer in options, (prompt, answer)
+    return {"prompt": prompt, "prompt_kk": prompt_kk, "options": options, "answer": answer, "why_kk": why_kk}
 
 
 def choice(prompt, prompt_kk, options, answer):
@@ -33,28 +40,183 @@ def word(w, kk, example_en="", example_kk="", past="", verb=False):
 STEPS = {
     1: {
         "grammar_en": "",
+        "intro_kk": "Бұл қадамда кез келген етістікпен үш шақта сөйлеуді үйренесіз: «істеймін», «істедім», "
+        "«істеймін (ертең)» — және әрқайсысының сұрағы мен болымсызы.",
         "lesson": [
             block(
-                "Бір етістік — тоғыз форма",
-                "Кесте үш шақтан (келер, осы, өткен) және үш формадан (сұрақ, болымды, болымсыз) тұрады. "
-                "Көмекші сөздер: келер шақта will / won't, осы шақта do / does / don't / doesn't, "
-                "өткен шақта did / didn't.",
-                ex("Will you work? — I will work. — I won't work.", "Жұмыс істейсің бе? — Істеймін. — Істемеймін."),
-                ex("Do you work? — I work. — I don't work.", "Жұмыс істейсің бе? — Істеймін. — Істемеймін."),
-                ex("Did you work? — I worked. — I didn't work.", "Жұмыс істедің бе? — Істедім. — Істемедім."),
+                "Осы шақ: «Мен жұмыс істеймін»",
+                "Күнде, әдетте не істейтініңізді айту үшін етістікті сол күйінде қоямыз. Қазақшадағыдай "
+                "жалғау қажет емес: I work — мен жұмыс істеймін, we work — біз жұмыс істейміз.",
+                ex("I work in a bank.", "Мен банкте жұмыс істеймін."),
+                ex("We live in Almaty.", "Біз Алматыда тұрамыз."),
+                ex("They drink tea every day.", "Олар күнде шай ішеді."),
+                practice=[
+                    quick(
+                        "I ___ English.",
+                        "Мен ағылшынша сөйлеймін.",
+                        ["speak", "speaks", "speaking"],
+                        "speak",
+                        "I-мен етістік өзгермейді: I speak.",
+                    ),
+                    quick(
+                        "They ___ in Shymkent.",
+                        "Олар Шымкентте тұрады.",
+                        ["live", "lives", "living"],
+                        "live",
+                        "they-мен де етістік өзгермейді.",
+                    ),
+                ],
             ),
             block(
-                "he / she: -s жалғауы",
-                "Осы шақтың болымды формасында he, she үшін етістікке -s (-es) жалғанады. "
-                "Сұрақ пен болымсызда жалғаудың орнына does / doesn't тұрады, етістік бастапқы формада қалады.",
-                ex("She works in a bank.", "Ол банкте жұмыс істейді."),
-                ex("Does she work? — She doesn't work.", "Ол жұмыс істей ме? — Ол жұмыс істемейді."),
+                "«Жоқ» және «ма?» — don't, do",
+                "«Істемеймін» деу үшін етістіктің алдына don't қоямыз. Сұрақ қою үшін сөйлемнің басына Do қоямыз. "
+                "Етістіктің өзі өзгермейді.",
+                ex("I don't work on Sunday.", "Мен жексенбіде жұмыс істемеймін."),
+                ex("Do you like coffee?", "Сізге кофе ұнай ма?"),
+                ex("Yes, I do. / No, I don't.", "Иә. / Жоқ."),
+                practice=[
+                    quick(
+                        "I ___ eat meat.",
+                        "Мен ет жемеймін.",
+                        ["don't", "doesn't", "not"],
+                        "don't",
+                        "«Жоқ» деу үшін етістіктің алдына don't қоямыз.",
+                    ),
+                    quick(
+                        "___ you speak Kazakh?",
+                        "Қазақша сөйлейсіз бе?",
+                        ["Do", "Are", "Does"],
+                        "Do",
+                        "Сұрақ Do сөзінен басталады: Do you…?",
+                    ),
+                ],
             ),
             block(
-                "did-тен кейін — бастапқы форма",
-                "Өткен шақтың болымды формасында етістік өзгереді: дұрыс етістікке -ed, бұрыс етістіктің өз формасы "
-                "бар (go → went). Ал did / didn't тұрса, етістік бастапқы формада қалады.",
-                ex("I went home. — Did you go home? — I didn't go home.", "Үйге бардым. — Үйге бардың ба? — Бармадым."),
+                "Ол (he / she): -s және does",
+                "Тек «ол» туралы айтқанда (he, she) етістікке -s жалғанады: she works. Ал «жоқ» пен сұрақта "
+                "doesn't / does қойылады — сонда -s етістіктен кетеді.",
+                ex("She works in a school.", "Ол мектепте жұмыс істейді."),
+                ex("He doesn't drink coffee.", "Ол кофе ішпейді."),
+                ex("Does she speak English?", "Ол ағылшынша сөйлей ме?"),
+                practice=[
+                    quick(
+                        "My sister ___ in a hospital.",
+                        "Әпкем ауруханада жұмыс істейді.",
+                        ["work", "works", "working"],
+                        "works",
+                        "Әпкем = she, сондықтан -s: works.",
+                    ),
+                    quick(
+                        "He ___ like fish.",
+                        "Ол балық ұнатпайды.",
+                        ["don't", "doesn't", "isn't"],
+                        "doesn't",
+                        "he / she-мен «жоқ» — doesn't.",
+                    ),
+                    quick(
+                        "___ she live here?",
+                        "Ол осында тұра ма?",
+                        ["Do", "Does", "Is"],
+                        "Does",
+                        "he / she туралы сұрақ Does сөзінен басталады.",
+                    ),
+                ],
+            ),
+            block(
+                "Өткен шақ: -ed",
+                "Кеше, өткен аптада болған істі айту үшін көп етістікке -ed жалғаймыз. Бұл барлық адамға бірдей: "
+                "I worked, she worked, they worked.",
+                ex("I worked yesterday.", "Мен кеше жұмыс істедім."),
+                ex("She watched a film.", "Ол фильм көрді."),
+                ex("We played football.", "Біз футбол ойнадық."),
+                practice=[
+                    quick(
+                        "Yesterday I ___ my mother.",
+                        "Кеше анама қоңырау шалдым.",
+                        ["call", "called", "calls"],
+                        "called",
+                        "Кеше болған іс: -ed жалғанады.",
+                    ),
+                ],
+            ),
+            block(
+                "Ерекше етістіктер: went, bought",
+                "Кейбір жиі етістіктер өткен шақта -ed алмайды, өз формасы бар. Оларды жай жаттап аламыз. "
+                "Етістіктің өткен шақ формасын «Кесте» бөлімінен әрқашан көре аласыз.",
+                ex("go → went: I went home.", "бару → бардым: Мен үйге бардым."),
+                ex("buy → bought: She bought bread.", "сатып алу → алды: Ол нан сатып алды."),
+                ex("see → saw, eat → ate, have → had", "көрдім, жедім, болды"),
+                practice=[
+                    quick(
+                        "We ___ to the park yesterday.",
+                        "Кеше саябаққа бардық.",
+                        ["goed", "went", "go"],
+                        "went",
+                        "go — ерекше етістік: went.",
+                    ),
+                    quick(
+                        "I ___ a new phone.",
+                        "Мен жаңа телефон сатып алдым.",
+                        ["buyed", "bought", "buy"],
+                        "bought",
+                        "buy — ерекше етістік: bought.",
+                    ),
+                ],
+            ),
+            block(
+                "Өткен шақ: «жоқ» және «ма?» — didn't, did",
+                "Өткен шақта «жоқ» үшін didn't, сұрақ үшін Did қоямыз. Маңызды ереже: did-тен кейін етістік "
+                "қайтадан қарапайым формаға оралады — went емес, go.",
+                ex("I didn't go to work.", "Мен жұмысқа бармадым."),
+                ex("Did you see the film?", "Фильмді көрдің бе?"),
+                practice=[
+                    quick(
+                        "___ you call him?",
+                        "Оған қоңырау шалдың ба?",
+                        ["Do", "Did", "Was"],
+                        "Did",
+                        "Өткен шақтағы сұрақ Did сөзінен басталады.",
+                    ),
+                    quick(
+                        "She didn't ___ the news.",
+                        "Ол жаңалықты көрмеді.",
+                        ["saw", "see", "seen"],
+                        "see",
+                        "didn't-тен кейін етістік қарапайым формада: see.",
+                    ),
+                ],
+            ),
+            block(
+                "Келер шақ: will",
+                "Ертеңгі, болашақтағы істі айту үшін етістіктің алдына will қоямыз. «Жоқ» — won't, "
+                "сұрақ — Will. Бұл барлық адамға бірдей, -s жалғанбайды.",
+                ex("I will call you tomorrow.", "Ертең саған қоңырау шаламын."),
+                ex("She won't come.", "Ол келмейді."),
+                ex("Will you help me?", "Маған көмектесесің бе?"),
+                practice=[
+                    quick(
+                        "I ___ visit my parents tomorrow.",
+                        "Ертең ата-анама барамын.",
+                        ["will", "did", "do"],
+                        "will",
+                        "Ертеңгі іс: will.",
+                    ),
+                    quick(
+                        "He will ___ tomorrow.",
+                        "Ол ертең келеді.",
+                        ["comes", "come", "came"],
+                        "come",
+                        "will-ден кейін етістік қарапайым формада: come.",
+                    ),
+                ],
+            ),
+            block(
+                "Бәрі бір кестеде",
+                "Енді сіз 9 форманың бәрін білесіз: үш шақ × «ма?», «иә», «жоқ». «Кесте» бөлімінде кез келген "
+                "етістікті таңдап, 9 форманы көре аласыз. Сосын қорытынды тестті тапсырыңыз.",
+                ex("Will you work? — I will work. — I won't work.", "Істейсің бе? — Істеймін. — Істемеймін. (ертең)"),
+                ex("Do you work? — I work. — I don't work.", "Істейсің бе? — Істеймін. — Істемеймін. (әдетте)"),
+                ex("Did you work? — I worked. — I didn't work.", "Істедің бе? — Істедім. — Істемедім. (кеше)"),
             ),
         ],
         "exercises": [
@@ -62,11 +224,9 @@ STEPS = {
             choice("They ___ to the cinema yesterday.", "Олар кеше киноға барды.", ["go", "went", "goes"], "went"),
             choice("I ___ call you tomorrow.", "Ертең саған қоңырау шаламын.", ["will", "do", "did"], "will"),
             choice("He ___ not speak French.", "Ол французша сөйлемейді.", ["do", "does", "did"], "does"),
-            typed(
-                "Past, negative: I / buy / a car", "Өткен шақ, болымсыз: Мен көлік сатып алмадым.", "I didn't buy a car"
-            ),
-            typed("Present, affirmative: she / watch / TV", "Осы шақ, болымды: Ол теледидар көреді.", "She watches TV"),
-            typed("Future, question: you / help / me", "Келер шақ, сұрақ: Маған көмектесесің бе?", "Will you help me"),
+            typed("I / buy / a car", "Ағылшынша жазыңыз: Мен көлік сатып алмадым.", "I didn't buy a car"),
+            typed("she / watch / TV", "Ағылшынша жазыңыз: Ол теледидар көреді.", "She watches TV"),
+            typed("you / help / me", "Ағылшынша жазыңыз: Маған көмектесесің бе? (ертең)", "Will you help me"),
         ],
         "words": [],
     },
@@ -953,6 +1113,7 @@ def apply(CourseStep, Vocabulary):
         step.lesson = content["lesson"]
         step.exercises = content["exercises"]
         step.grammar_en = content["grammar_en"]
+        step.intro_kk = content.get("intro_kk", "")
         if content.get("description_kk"):
             step.description_kk = content["description_kk"]
         step.is_open = True
@@ -973,3 +1134,393 @@ def apply(CourseStep, Vocabulary):
                     "source": "course",
                 },
             )
+
+
+# Practice for the lessons of steps 2-16, in the order of each step's lesson blocks.
+PRACTICE = {
+    2: [
+        [
+            quick(
+                "___ do you work? — In a bank.",
+                "Қайда жұмыс істейсің?",
+                ["Where", "When", "Who"],
+                "Where",
+                "Орын туралы сұрақ — where (қайда).",
+            ),
+            quick(
+                "What ___ you buy yesterday?",
+                "Кеше не сатып алдың?",
+                ["do", "did", "will"],
+                "did",
+                "Кеше — өткен шақ: what + did.",
+            ),
+        ],
+        [
+            quick(
+                "___ called you? — My brother.",
+                "Саған кім қоңырау шалды?",
+                ["Who", "What", "Whose"],
+                "Who",
+                "Адам туралы сұрақ — who (кім).",
+            ),
+        ],
+        [
+            quick(
+                "How ___ apples do you want?",
+                "Неше алма керек?",
+                ["much", "many"],
+                "many",
+                "Алманы санауға болады — how many.",
+            ),
+            quick(
+                "How ___ is this coat?", "Бұл пальто қанша тұрады?", ["much", "many"], "much", "Баға туралы — how much."
+            ),
+        ],
+    ],
+    3: [
+        [
+            quick("I ___ a student.", "Мен студентпін.", ["am", "is", "are"], "am", "I-мен — am."),
+            quick("They ___ at work.", "Олар жұмыста.", ["am", "is", "are"], "are", "they-мен — are."),
+        ],
+        [
+            quick(
+                "___ she your sister?",
+                "Ол сенің әпкең бе?",
+                ["Does", "Is", "Are"],
+                "Is",
+                "to be-мен сұрақта do керек емес: Is she…?",
+            ),
+        ],
+        [
+            quick(
+                "We ___ in Turkey last summer.",
+                "Өткен жазда Түркияда болдық.",
+                ["was", "were", "are"],
+                "were",
+                "we-мен өткен шақта — were.",
+            ),
+        ],
+    ],
+    4: [
+        [
+            quick(
+                "My keys are ___ my pocket.",
+                "Кілттерім қалтамда.",
+                ["in", "on", "at"],
+                "in",
+                "Бір нәрсенің ішінде — in.",
+            ),
+            quick(
+                "She is ___ work now.",
+                "Ол қазір жұмыста.",
+                ["in", "on", "at"],
+                "at",
+                "at work, at home, at school — тұрақты тіркестер.",
+            ),
+        ],
+        [
+            quick(
+                "The lesson starts ___ 9 o'clock.",
+                "Сабақ сағат тоғызда басталады.",
+                ["in", "on", "at"],
+                "at",
+                "Сағатпен — at.",
+            ),
+            quick("I was born ___ 2001.", "Мен 2001 жылы туғанмын.", ["in", "on", "at"], "in", "Жылмен — in."),
+        ],
+        [
+            quick(
+                "We flew ___ Astana to Dubai.",
+                "Біз Астанадан Дубайға ұштық.",
+                ["from", "to", "at"],
+                "from",
+                "Қайдан? — from.",
+            ),
+        ],
+    ],
+    5: [
+        [
+            quick(
+                "They love ___ children.",
+                "Олар балаларын жақсы көреді.",
+                ["their", "our", "his"],
+                "their",
+                "they → their.",
+            ),
+        ],
+        [
+            quick(
+                "Aliya and ___ husband live in Taraz.",
+                "Әлия мен күйеуі Таразда тұрады.",
+                ["his", "her"],
+                "her",
+                "Әлия — әйел, сондықтан her.",
+            ),
+        ],
+        [
+            quick(
+                "This pen isn't ___ . It's yours.",
+                "Бұл қалам менікі емес. Сенікі.",
+                ["my", "mine"],
+                "mine",
+                "Зат есімсіз — mine.",
+            ),
+        ],
+    ],
+    6: [
+        [
+            quick(
+                "I ___ my friend yesterday.",
+                "Кеше досымды кездестірдім.",
+                ["meeted", "met", "meet"],
+                "met",
+                "meet — бұрыс етістік: met.",
+            ),
+        ],
+        [
+            quick(
+                "She ___ me a gift.",
+                "Ол маған сыйлық әкелді.",
+                ["bringed", "brought", "brang"],
+                "brought",
+                "bring → brought (buy → bought сияқты).",
+            ),
+            quick(
+                "He ___ the cake into four pieces.",
+                "Ол тортты төртке бөлді.",
+                ["cutted", "cut", "cuts"],
+                "cut",
+                "cut өткен шақта өзгермейді.",
+            ),
+        ],
+        [
+            quick(
+                "Did you ___ well?",
+                "Жақсы ұйықтадың ба?",
+                ["slept", "sleep"],
+                "sleep",
+                "did-тен кейін — бастапқы форма.",
+            ),
+        ],
+    ],
+    7: [
+        [
+            quick(
+                "She can ___ well.",
+                "Ол жақсы ән айта алады.",
+                ["sing", "sings", "to sing"],
+                "sing",
+                "can-нан кейін — бастапқы форма, -s жоқ.",
+            ),
+        ],
+        [
+            quick(
+                "___ you swim?", "Жүзе аласың ба?", ["Do", "Can", "Are"], "Can", "Модаль етістік сұрақта алға шығады."
+            ),
+        ],
+        [
+            quick(
+                "___ I open the window?", "Терезені ашуға бола ма?", ["May", "Must"], "May", "Рұқсат сұрау — May I…?"
+            ),
+        ],
+    ],
+    8: [
+        [
+            quick(
+                "Be quiet! The baby ___ .",
+                "Тыныш! Сәби ұйықтап жатыр.",
+                ["sleeps", "is sleeping"],
+                "is sleeping",
+                "Дәл қазір болып жатқан іс — is + -ing.",
+            ),
+        ],
+        [
+            quick(
+                "At 8 p.m. we ___ dinner.",
+                "Сағат 8-де кешкі ас ішіп отыр едік.",
+                ["were having", "are having", "had having"],
+                "were having",
+                "Өткендегі сол сәт — were + -ing.",
+            ),
+        ],
+        [
+            quick(
+                "He is ___ in the lake.",
+                "Ол көлде жүзіп жүр.",
+                ["swiming", "swimming", "swimeing"],
+                "swimming",
+                "swim → swimming (m екі рет).",
+            ),
+        ],
+    ],
+    9: [
+        [
+            quick(
+                "I ___ my phone. I can't call you.",
+                "Телефонымды жоғалтып алдым.",
+                ["have lost", "lose"],
+                "have lost",
+                "Нәтиже қазір маңызды — have + үшінші форма.",
+            ),
+        ],
+        [
+            quick(
+                "Have you ever ___ to Paris?",
+                "Парижде болып көрдің бе?",
+                ["been", "was", "be"],
+                "been",
+                "be → been (үшінші форма).",
+            ),
+        ],
+        [
+            quick(
+                "I ___ this film last week.",
+                "Бұл фильмді өткен аптада көрдім.",
+                ["saw", "have seen"],
+                "saw",
+                "last week — нақты уақыт, сондықтан өткен шақ.",
+            ),
+        ],
+    ],
+    10: [
+        [
+            quick(
+                "My brother is ___ than me.",
+                "Ағам менен ұзын.",
+                ["taller", "tallest", "more tall"],
+                "taller",
+                "Екі адамды салыстыру — -er + than.",
+            ),
+        ],
+        [
+            quick(
+                "This is the ___ book in the library.",
+                "Бұл кітапханадағы ең қызықты кітап.",
+                ["most interesting", "interestingest"],
+                "most interesting",
+                "Ұзын сын есім — the most.",
+            ),
+        ],
+        [
+            quick(
+                "Today the weather is ___ than yesterday.",
+                "Бүгін ауа райы кешегіден жақсы.",
+                ["gooder", "better"],
+                "better",
+                "good → better → the best.",
+            ),
+        ],
+    ],
+    11: [
+        [
+            quick("10 + 10 = ?", "Он қосу он", ["twelve", "twenty"], "twenty", "20 — twenty."),
+        ],
+        [
+            quick("I'll see you ___ Saturday.", "Сенбіде көріскенше.", ["in", "on"], "on", "Апта күнімен — on."),
+        ],
+        [
+            quick(
+                "7:30 — It's ___ seven.", "Жеті жарым", ["half past", "a quarter to"], "half past", "Жарым — half past."
+            ),
+        ],
+    ],
+    12: [
+        [
+            quick(
+                "This bridge ___ in 1990.",
+                "Бұл көпір 1990 жылы салынды.",
+                ["built", "was built"],
+                "was built",
+                "Ырықсыз етіс — was + үшінші форма.",
+            ),
+        ],
+        [
+            quick("The song was sung ___ my sister.", "Әнді әпкем айтты.", ["by", "from"], "by", "Кім арқылы — by."),
+        ],
+    ],
+    13: [
+        [
+            quick(
+                "If it ___ , I will take an umbrella.",
+                "Жаңбыр жауса, қолшатыр аламын.",
+                ["rains", "will rain"],
+                "rains",
+                "If бөлігінде will қолданылмайды.",
+            ),
+        ],
+        [
+            quick(
+                "I will help you if I ___ free.",
+                "Бос болсам, саған көмектесемін.",
+                ["am", "will be"],
+                "am",
+                "If бөлігі соңында болса да, will жоқ.",
+            ),
+        ],
+        [
+            quick(
+                "___ you study, you won't pass.",
+                "Оқымасаң, өтпейсің.",
+                ["Unless", "If"],
+                "Unless",
+                "unless = if … not.",
+            ),
+        ],
+    ],
+    14: [
+        [
+            quick(
+                "Can you ___ my cat while I'm away?",
+                "Мен жоқта мысығыма қарап тұрасың ба?",
+                ["look for", "look after"],
+                "look after",
+                "Қамқорлық жасау — look after.",
+            ),
+        ],
+        [
+            quick(
+                "Yesterday I ___ at 6.",
+                "Кеше алтыда тұрдым.",
+                ["got up", "get upped", "getted up"],
+                "got up",
+                "Етістік өзгереді (get → got), шылау сол күйінде.",
+            ),
+        ],
+    ],
+    15: [
+        [
+            quick(
+                '"I am hungry." → He said that he ___ hungry.',
+                "Ол қарны ашқанын айтты.",
+                ["is", "was"],
+                "was",
+                "said that… — шақ бір саты артқа: is → was.",
+            ),
+        ],
+        [
+            quick(
+                '"I love my job." → She said that she loved ___ job.',
+                "Ол жұмысын жақсы көретінін айтты.",
+                ["my", "her"],
+                "her",
+                "my → her (әйел адам айтып тұр).",
+            ),
+        ],
+    ],
+    16: [
+        [
+            quick(
+                "Look! The children ___ in the garden.",
+                "Қара! Балалар бақта ойнап жүр.",
+                ["are playing", "play", "played"],
+                "are playing",
+                "Дәл қазір болып жатыр — are + -ing.",
+            ),
+        ],
+    ],
+}
+
+for _number, _blocks in PRACTICE.items():
+    _lesson = STEPS[_number]["lesson"]
+    for _block, _questions in zip(_lesson, _blocks, strict=True):
+        _block["practice"] = _questions

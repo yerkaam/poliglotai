@@ -1,7 +1,8 @@
 """The course map for one learner: which steps are open, done or still locked.
 
-Step 1 is always open. A step is done when the learner passed its check (80%) and started at least 70% of its
-words (steps without a check or without words skip that part). The next published step then opens.
+Step 1 is always open. A step is done when the learner passed its check (80%); the next published step then
+opens. One rule the learner can see and understand. The step's words come to the cards meanwhile, at the
+learner's own daily pace, and do not hold the course back.
 """
 
 from dataclasses import dataclass
@@ -14,7 +15,6 @@ from . import forms
 from .models import CourseStep, StepResult, Vocabulary
 
 PASS_PERCENT = 80
-WORDS_STARTED_PERCENT = 70
 
 
 @dataclass
@@ -26,6 +26,7 @@ class StepState:
     words_learned: int
     quiz_best: int | None
     quiz_passed: bool
+    lessons_done: int
 
     @property
     def unlocked(self) -> bool:
@@ -49,17 +50,13 @@ class StepState:
             "words_total": self.words_total,
             "words_started": self.words_started,
             "words_learned": self.words_learned,
-            "words_needed": words_needed(self.words_total),
             "percent": self.percent,
-            "has_lesson": bool(s.lesson),
+            "lessons_total": len(s.lesson),
+            "lessons_done": min(self.lessons_done, len(s.lesson)),
             "quiz_total": len(s.exercises),
             "quiz_best": self.quiz_best,
             "quiz_passed": self.quiz_passed,
         }
-
-
-def words_needed(total: int) -> int:
-    return -(-total * WORDS_STARTED_PERCENT // 100)  # ceiling
 
 
 def _per_step(queryset, field: str) -> dict[int, int]:
@@ -80,14 +77,13 @@ def course_state(user) -> list[StepState]:
     for step in CourseStep.objects.all():
         result = results.get(step.id)
         total = totals.get(step.id, 0)
-        quiz_ok = not step.exercises or bool(result and result.passed)
-        words_ok = started.get(step.id, 0) >= words_needed(total)
+        quiz_ok = bool(result and result.passed) if step.exercises else bool(result and result.lessons_done)
         if not step.is_open:
             status = "soon"
         elif not previous_done:
             status = "locked"
         else:
-            status = "done" if quiz_ok and words_ok else "open"
+            status = "done" if quiz_ok else "open"
         previous_done = status == "done"
         states.append(
             StepState(
@@ -98,6 +94,7 @@ def course_state(user) -> list[StepState]:
                 words_learned=learned.get(step.id, 0),
                 quiz_best=result.best_percent if result else None,
                 quiz_passed=bool(result and result.passed),
+                lessons_done=result.lessons_done if result else 0,
             )
         )
     return states
@@ -139,6 +136,8 @@ def check(user, step: CourseStep, answers: list[str]) -> dict:
 
     before = {s.step.number for s in course_state(user) if s.unlocked}
     result, _ = StepResult.objects.get_or_create(user=user, step=step)
+    # Passing the check also counts as having gone through the lessons.
+    result.lessons_done = max(result.lessons_done, len(step.lesson)) if passed else result.lessons_done
     result.best_percent = max(result.best_percent, percent)
     result.passed = result.passed or passed
     result.save()
@@ -154,3 +153,11 @@ def check(user, step: CourseStep, answers: list[str]) -> dict:
         "step": state.as_dict(),
         "opened_step": opened[0] if opened else None,
     }
+
+
+def save_lessons_done(user, step: CourseStep, done: int) -> int:
+    """Remembers how many lessons of the step the learner has taken (it never goes back)."""
+    result, _ = StepResult.objects.get_or_create(user=user, step=step)
+    result.lessons_done = max(result.lessons_done, min(done, len(step.lesson)))
+    result.save(update_fields=["lessons_done", "updated_at"])
+    return result.lessons_done

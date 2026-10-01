@@ -16,10 +16,9 @@ def _right_answers(number):
     return [course.right_answer(e) for e in CourseStep.objects.get(number=number).exercises]
 
 
-def _start_words(user, number, share=1.0):
-    words = list(Vocabulary.objects.filter(course_step__number=number))
+def _start_words(user, number):
     yesterday = timezone.localdate() - timedelta(days=1)  # started earlier: today's new-word limit stays free
-    for vocab in words[: round(len(words) * share)]:
+    for vocab in Vocabulary.objects.filter(course_step__number=number):
         UserVocabulary.objects.get_or_create(user=user, vocabulary=vocab, defaults={"started_on": yesterday})
 
 
@@ -37,21 +36,30 @@ def test_the_lesson_never_sends_the_answers(client):
     assert len(step["words"]) == 40
 
 
-def test_passing_the_check_and_starting_the_words_opens_the_next_step(client, user):
+def test_passing_the_check_opens_the_next_step(client):
     r = client.post("/api/course/1/check/", {"answers": _right_answers(1)}, format="json").json()
     assert r["passed"] and r["percent"] == 100
-    assert r["opened_step"] is None  # the words are not started yet
-    assert r["step"]["status"] == "open"
-
-    _start_words(user, 1, share=0.7)
+    assert r["opened_step"] == 2
+    assert r["step"]["status"] == "done"
     steps = client.get("/api/course/").json()
     assert [s["status"] for s in steps[:3]] == ["done", "open", "locked"]
 
 
-def test_the_check_reports_the_step_it_opened(client, user):
-    _start_words(user, 1, share=0.7)
-    r = client.post("/api/course/1/check/", {"answers": _right_answers(1)}, format="json").json()
-    assert r["opened_step"] == 2
+def test_lessons_are_short_and_each_has_practice(client):
+    step = client.get("/api/course/1/").json()
+    assert step["intro_kk"] and step["lessons_total"] == len(step["lesson"]) >= 6
+    taught = [b for b in step["lesson"] if b["practice"]]
+    assert len(taught) >= 6
+    assert all(q["answer"] in q["options"] and q["why_kk"] for b in taught for q in b["practice"])
+
+
+def test_the_learner_resumes_at_the_last_lesson(client):
+    assert client.post("/api/course/1/lessons/", {"done": 3}, format="json").json() == {"lessons_done": 3}
+    assert client.post("/api/course/1/lessons/", {"done": 1}, format="json").json() == {"lessons_done": 3}
+    total = client.get("/api/course/1/").json()["lessons_total"]
+    assert client.post("/api/course/1/lessons/", {"done": 99}, format="json").json() == {"lessons_done": total}
+    assert client.get("/api/course/").json()[0]["lessons_done"] == total
+    assert client.post("/api/course/2/lessons/", {"done": 1}, format="json").status_code == 403
 
 
 def test_a_failed_check_shows_the_right_answers_and_keeps_the_best_score(client):
@@ -93,6 +101,7 @@ def test_the_tutor_waits_for_continuous_until_step_8():
 def test_every_step_has_content_and_valid_checks():
     for number, content in STEPS.items():
         assert content["lesson"] and len(content["exercises"]) >= 5, number
+        assert sum(len(b["practice"]) for b in content["lesson"]) >= len(content["lesson"]) - 1, number
         for e in content["exercises"]:
             if e["type"] == "choice":
                 assert e["answer"] in e["options"] and len(set(e["options"])) == len(e["options"])
