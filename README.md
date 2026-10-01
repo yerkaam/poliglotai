@@ -25,7 +25,7 @@ docker compose exec backend python manage.py createsuperuser
 В корне лежат `Dockerfile` (один образ: сборка Angular + Django, который отдаёт и API, и сайт) и `render.yaml` (Blueprint).
 
 1. Render Dashboard → **New → Blueprint** → подключить GitHub-репозиторий `yerkaam/poliglotai`, выбрать ветку.
-2. Render создаст веб-сервис `poliglot`, cron-задачу `poliglot-reminders`, базу `poliglot-db` и группу переменных `poliglot-mail`, сам сгенерирует `DJANGO_SECRET_KEY`.
+2. Render создаст веб-сервис `poliglot`, базу `poliglot-db` и группу переменных `poliglot-mail`, сам сгенерирует `DJANGO_SECRET_KEY`.
 3. Ввести `ANTHROPIC_API_KEY` (без него работает офлайн-заглушка чата).
 4. Сайт откроется на `https://poliglot-<...>.onrender.com`; миграции и начальные данные применяются при старте.
 
@@ -47,7 +47,7 @@ docker compose exec backend python manage.py createsuperuser
 Если ученик сегодня ещё не занимался, в выбранный им час (по умолчанию 19:00 по Алматы) ему уходит письмо: серия дней и слова к повторению. Письма получают только те, кто занимался в последние 7 дней, не чаще раза в день. В каждом письме есть ссылка «отписаться в один клик», час и отключение есть в «Баптаулар».
 
 - Команда: `python manage.py send_reminders` — запускать раз в час.
-- Render: cron-сервис `poliglot-reminders` из `render.yaml` (оплачивается по времени работы, несколько секунд в час). Нужно заполнить SMTP в группе `poliglot-mail` и `FRONTEND_URL` (адрес сайта) у cron-сервиса.
+- Render: в `render.yaml` cron-задачи нет (у Render cron платный). Чтобы включить напоминания, создайте в панели Cron Job из того же репозитория: Dockerfile, команда `python manage.py send_reminders`, расписание `5 * * * *`, те же `DATABASE_URL`, `DJANGO_SECRET_KEY`, группа `poliglot-mail` и `FRONTEND_URL` (адрес сайта). Без неё сайт работает полностью, только не уходят напоминания и недельный отчёт.
 - Docker Compose: сервис `reminders` запускает команду каждый час.
 
 Бесплатный план: сервис засыпает после 15 минут простоя (первый запрос ~50 с), бесплатная база удаляется через 30 дней — для реальных учеников перейти на платные планы. Тот же образ подходит для Railway и Fly.io (нужны `DATABASE_URL` и `PORT`).
