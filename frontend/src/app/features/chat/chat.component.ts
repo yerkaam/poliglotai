@@ -19,6 +19,7 @@ import { SpeechService } from '../../core/speech.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { IconComponent } from '../../shared/icon.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { apiErrors } from '../auth/errors';
 import { GuardedPage } from '../../core/leave.guard';
 
@@ -27,7 +28,7 @@ const ACTIVE_KEY = 'poliglot-chat';
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink],
+  imports: [IconComponent, RouterLink, MicButtonComponent],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
@@ -199,6 +200,12 @@ export class ChatComponent extends GuardedPage implements OnInit {
       this.sending.set(false);
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     }
+  }
+
+  /** A spoken answer lands in the field: the learner sees what was heard and sends it (or fixes it first). */
+  protected onHeard(text: string) {
+    this.text.set(text);
+    queueMicrotask(() => this.inputRef()?.nativeElement.focus());
   }
 
   protected useTemplate(template: string) {

@@ -20,6 +20,7 @@ import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadErrorComponent } from '../../shared/load-error.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { apiErrors } from '../auth/errors';
 
 interface QueueItem {
@@ -30,7 +31,7 @@ interface QueueItem {
 @Component({
   selector: 'app-words',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink, LoadErrorComponent],
+  imports: [IconComponent, RouterLink, LoadErrorComponent, MicButtonComponent],
   templateUrl: './words.component.html',
   styleUrl: './words.component.scss',
 })
@@ -51,6 +52,8 @@ export class WordsComponent implements OnInit {
   private typeInput = viewChild<ElementRef<HTMLInputElement>>('typeInput');
   private nextButton = viewChild<ElementRef<HTMLButtonElement>>('nextButton');
   private advanceTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The learner's try at saying the word on screen. */
+  protected said = signal<{ text: string; ok: boolean } | null>(null);
   protected busy = signal(false);
   protected note = signal('');
   protected error = signal('');
@@ -113,6 +116,13 @@ export class WordsComponent implements OnInit {
     }
   }
 
+  /** Pronunciation: the recogniser should hear the word itself (case and punctuation aside). */
+  protected pronounced(word: string, text: string) {
+    const clean = (s: string) => s.toLowerCase().replace(/[^a-z' ]/g, '').trim();
+    const heard = clean(text);
+    this.said.set({ text, ok: heard === clean(word) || heard.split(' ').includes(clean(word)) });
+  }
+
   protected listen() {
     const item = this.current();
     if (item) this.speech.speak(item.word.word, 0.85);
@@ -161,6 +171,7 @@ export class WordsComponent implements OnInit {
     }
     this.verdict.set(null);
     this.given.set('');
+    this.said.set(null);
     if (!res.correct) this.note.set(''); // the "comes back later" hint belonged to the previous card
   }
 
@@ -183,6 +194,7 @@ export class WordsComponent implements OnInit {
       const res = await firstValueFrom(this.api.answer(item.word.id, answer));
       this.queue.set(this.queue().slice(1));
       this.done.update((d) => d + 1);
+      this.said.set(null);
       this.note.set(this.noteFor(answer, res.status, res.next_review_date));
       if (answer === 'start') this.newLeft.update((n) => Math.max(0, n - 1));
       this.store.refresh();

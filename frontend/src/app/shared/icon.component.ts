@@ -13,6 +13,7 @@ const PATHS = {
   check: '<path d="M5 12.5 10 17l9-10"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',
   speaker: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>',
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
   send: '<path d="M4 12 20 4l-6 16-3-7z"/>',

@@ -16,6 +16,7 @@ import { CheckResult, TrainerStats, TrainerTask } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { SentenceComponent } from '../../shared/sentence.component';
 import { apiErrors } from '../auth/errors';
 import { GuardedPage } from '../../core/leave.guard';
@@ -23,7 +24,7 @@ import { GuardedPage } from '../../core/leave.guard';
 @Component({
   selector: 'app-trainer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, SentenceComponent, RouterLink],
+  imports: [IconComponent, SentenceComponent, RouterLink, MicButtonComponent],
   templateUrl: './trainer.component.html',
   styleUrl: './trainer.component.scss',
 })
@@ -85,6 +86,12 @@ export class TrainerComponent extends GuardedPage implements OnInit {
     } finally {
       this.loadingNext = false;
     }
+  }
+
+  /** A spoken sentence lands in the field; the learner can fix a misheard word, then check. */
+  protected onHeard(text: string) {
+    this.answer.set(text);
+    queueMicrotask(() => this.inputRef()?.nativeElement.focus());
   }
 
   /** Enter checks the sentence; a correct one is read aloud and the next task follows. */

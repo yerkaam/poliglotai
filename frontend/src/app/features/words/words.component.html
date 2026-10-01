@@ -49,9 +49,23 @@
               @if (item.word.ipa) {
                 <span class="ipa mono">{{ item.word.ipa }}</span>
               }
-              <button type="button" class="listen" (click)="listen()" i18n-aria-label aria-label="Тыңдау">
-                <app-icon name="speaker" [size]="28" />
-              </button>
+              <div class="sound-row">
+                <button type="button" class="listen" (click)="listen()" i18n-aria-label aria-label="Тыңдау">
+                  <app-icon name="speaker" [size]="28" />
+                </button>
+                @if (item.mode === 'new' || verdict()) {
+                  <app-mic-button [size]="26" label="Сөзді айтып көру" i18n-label (heard)="pronounced(item.word.word, $event)" />
+                }
+              </div>
+              @if (said(); as heard) {
+                <p class="said" [class.ok]="heard.ok" aria-live="polite">
+                  @if (heard.ok) {
+                    <ng-container i18n>Жақсы айттыңыз!</ng-container>
+                  } @else {
+                    <ng-container i18n>Естілгені: «{{ heard.text }}». Тыңдап, қайталап көріңіз.</ng-container>
+                  }
+                </p>
+              }
             } @else if (quiz()?.mode === 'listen') {
               <button type="button" class="listen big" (click)="listen()" i18n-aria-label aria-label="Сөзді тағы тыңдау">
                 <app-icon name="speaker" [size]="40" />

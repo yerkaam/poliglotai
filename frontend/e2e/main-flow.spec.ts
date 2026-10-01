@@ -242,3 +242,74 @@ test('a course step: short lessons with practice, then the check opens the next 
   await page.getByRole('button', { name: '2-қадамға өту' }).click();
   await expect(page.getByRole('heading', { name: 'Сұраулы сөздер' })).toBeVisible();
 });
+
+/** A stand-in for the browser's speech recognition: "hears" the given sentence, word by word. */
+async function fakeMicrophone(page: Page, sentence: string, error?: string) {
+  await page.addInitScript(
+    ([text, failure]) => {
+      class FakeRecognition {
+        lang = '';
+        interimResults = false;
+        continuous = false;
+        maxAlternatives = 1;
+        onresult: ((e: unknown) => void) | null = null;
+        onerror: ((e: unknown) => void) | null = null;
+        onend: (() => void) | null = null;
+        start() {
+          setTimeout(() => {
+            if (failure) {
+              this.onerror?.({ error: failure });
+            } else {
+              const words = text!.split(' ');
+              this.onresult?.({ resultIndex: 0, results: [{ isFinal: false, 0: { transcript: words[0] } }] });
+              this.onresult?.({ resultIndex: 0, results: [{ isFinal: true, 0: { transcript: text } }] });
+            }
+            this.onend?.();
+          }, 200);
+        }
+        stop() {}
+        abort() {}
+      }
+      for (const name of ['SpeechRecognition', 'webkitSpeechRecognition']) {
+        Object.defineProperty(window, name, { value: FakeRecognition, configurable: true, writable: true });
+      }
+    },
+    [sentence, error] as const,
+  );
+}
+
+test('the learner can say the sentence in the trainer and the chat', async ({ page }) => {
+  await fakeMicrophone(page, 'I like green tea');
+  await register(page);
+
+  await page.goto('/trainer');
+  await page.getByRole('button', { name: 'Айтып жауап беру' }).click();
+  await expect(page.locator('app-toasts')).toContainText('Біз дыбысты сақтамаймыз'); // shown once
+  await expect(page.getByLabel('Сіздің сөйлеміңіз')).toHaveValue('I like green tea');
+  await page.getByRole('button', { name: 'Тексеру' }).click();
+  await expect(page.locator('#answerFeedback')).toContainText(/Дұрыс|Дұрысы/);
+
+  await page.goto('/chat');
+  await page.getByRole('button', { name: 'Бастау' }).click();
+  await page.getByRole('button', { name: 'Айтып жауап беру' }).click();
+  await expect(page.getByLabel('Сіздің жауабыңыз')).toHaveValue('I like green tea');
+  await page.getByLabel('Сіздің жауабыңыз').press('Enter');
+  await expect(page.locator('.msg.me')).toContainText('I like green tea');
+});
+
+test('a blocked microphone is explained', async ({ page }) => {
+  await fakeMicrophone(page, '', 'not-allowed');
+  await register(page);
+  await page.goto('/trainer');
+  await page.getByRole('button', { name: 'Айтып жауап беру' }).click();
+  await expect(page.locator('app-toasts')).toContainText('Микрофонға рұқсат жоқ');
+});
+
+test('saying a new word gives pronunciation feedback', async ({ page }) => {
+  await fakeMicrophone(page, 'have');
+  await register(page);
+  await page.goto('/words');
+  await expect(page.locator('.en')).toHaveText('have');
+  await page.getByRole('button', { name: 'Сөзді айтып көру' }).click();
+  await expect(page.locator('.said')).toContainText('Жақсы айттыңыз!');
+});

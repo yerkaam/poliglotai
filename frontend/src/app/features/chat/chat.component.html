@@ -146,6 +146,11 @@
             (input)="text.set($any($event.target).value)"
             [disabled]="limitReached()"
           />
+          <app-mic-button
+            [disabled]="sending() || limitReached()"
+            (partial)="text.set($event)"
+            (heard)="onHeard($event)"
+          />
           <button type="submit" class="btn btn-primary" [disabled]="sending() || !text().trim() || limitReached()">
             <span class="send-label" i18n>Жіберу</span>
             <app-icon name="send" [size]="18" />
