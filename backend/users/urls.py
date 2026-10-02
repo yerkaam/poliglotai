@@ -14,4 +14,9 @@ urlpatterns = [
     path("profile/", views.ProfileView.as_view()),
     path("password-reset/", views.PasswordResetView.as_view()),
     path("password-reset/confirm/", views.PasswordResetConfirmView.as_view()),
+    path("password/", views.PasswordChangeView.as_view()),
+    path("become-teacher/", views.BecomeTeacherView.as_view()),
+    path("export/", views.ExportDataView.as_view()),
+    path("delete/", views.DeleteAccountView.as_view()),
+    path("reminders/unsubscribe/", views.UnsubscribeRemindersView.as_view()),
 ]

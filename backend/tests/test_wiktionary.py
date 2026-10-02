@@ -23,9 +23,9 @@ def _write(tmp_path, rows):
 
 ROWS = [
     {"word": "buy", "rank": 300, "pos": "verb", "translation_kk": "WRONG", "ipa": "", "past": "bought"},
-    {"word": "swim", "rank": 2000, "pos": "verb", "translation_kk": "жүзу", "ipa": "/swɪm/", "past": "swam"},
+    {"word": "shake", "rank": 2000, "pos": "verb", "translation_kk": "сілку", "ipa": "/ʃeɪk/", "past": "shook"},
     {"word": "cook", "rank": 1800, "pos": "verb", "translation_kk": "пісіру", "ipa": "/kʊk/", "past": "cooked"},
-    {"word": "can", "rank": 40, "pos": "verb", "translation_kk": "алу", "ipa": "", "past": "could"},
+    {"word": "might", "rank": 40, "pos": "verb", "translation_kk": "мүмкін", "ipa": "", "past": ""},
     {"word": "water", "rank": 500, "pos": "noun", "translation_kk": "су", "ipa": "", "past": "", "topic": "nature"},
 ]
 
@@ -35,23 +35,23 @@ def test_import_keeps_course_words_and_detects_irregular_verbs(tmp_path, no_impo
     assert result == {"created": 4, "updated": 0, "skipped": 1}
     assert Vocabulary.objects.get(word="buy").translation_kk == "сатып алу"
 
-    swim = Vocabulary.objects.get(word="swim")
-    assert (swim.is_verb, swim.is_irregular, swim.past, swim.source) == (True, True, "swam", "wiktionary")
-    assert swim.course_step is None
+    shake = Vocabulary.objects.get(word="shake")
+    assert (shake.is_verb, shake.is_irregular, shake.past, shake.source) == (True, True, "shook", "wiktionary")
+    assert shake.course_step is None
 
     cook = Vocabulary.objects.get(word="cook")
     assert (cook.is_irregular, cook.past_form, cook.past) == (False, "", "cooked")
 
-    assert Vocabulary.objects.get(word="can").is_verb is False  # modal: not for the do/does/did table
+    assert Vocabulary.objects.get(word="might").is_verb is False  # modal: not for the do/does/did table
     assert Vocabulary.objects.get(word="water").topic == "nature"
-    assert Vocabulary.objects.get(word="swim").topic == "general"
+    assert Vocabulary.objects.get(word="shake").topic == "general"
 
 
 def test_imported_verbs_build_a_correct_table(tmp_path, no_imported_words):
     load(Vocabulary, _write(tmp_path, ROWS))
-    swim = Vocabulary.objects.get(word="swim")
-    texts = [c["text"] for c in forms.table(swim, "he")]
-    assert texts[4] == "He swims." and texts[7] == "He swam." and texts[6] == "Did he swim?"
+    shake = Vocabulary.objects.get(word="shake")
+    texts = [c["text"] for c in forms.table(shake, "he")]
+    assert texts[4] == "He shakes." and texts[7] == "He shook." and texts[6] == "Did he shake?"
 
 
 def test_import_is_idempotent(tmp_path, no_imported_words):

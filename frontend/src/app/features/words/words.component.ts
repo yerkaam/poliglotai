@@ -1,14 +1,30 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { INTERVAL_LABELS } from '../../core/labels';
-import { Word } from '../../core/models';
+import { ReviewCheck, Word } from '../../core/models';
+import { isNetworkError } from '../../core/error.interceptor';
+import { OfflineQueueService } from '../../core/offline-queue.service';
 import { ProgressStore } from '../../core/progress.store';
+import { localVerdict } from '../../core/review-check';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
+import { LoadErrorComponent } from '../../shared/load-error.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { apiErrors } from '../auth/errors';
-import { GuardedPage } from '../../core/leave.guard';
 
 interface QueueItem {
   word: Word;
@@ -18,19 +34,30 @@ interface QueueItem {
 @Component({
   selector: 'app-words',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink],
+  imports: [IconComponent, RouterLink, LoadErrorComponent, MicButtonComponent],
   templateUrl: './words.component.html',
   styleUrl: './words.component.scss',
 })
-export class WordsComponent extends GuardedPage implements OnInit {
+export class WordsComponent implements OnInit {
   private api = inject(ApiService);
   protected speech = inject(SpeechService);
   protected store = inject(ProgressStore);
+  private offline = inject(OfflineQueueService);
 
   protected loading = signal(true);
+  /** Today's cards could not be loaded: the screen offers a retry instead of "all done". */
+  protected loadFailed = signal(false);
   protected queue = signal<QueueItem[]>([]);
   protected done = signal(0);
-  protected revealed = signal(false);
+  /** The verdict on the review card on screen; the card waits for "next" after a mistake. */
+  protected verdict = signal<ReviewCheck | null>(null);
+  /** The option the learner picked (choice / listen) or the word typed. */
+  protected given = signal('');
+  private typeInput = viewChild<ElementRef<HTMLInputElement>>('typeInput');
+  private nextButton = viewChild<ElementRef<HTMLButtonElement>>('nextButton');
+  private advanceTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The learner's try at saying the word on screen. */
+  protected said = signal<{ text: string; ok: boolean } | null>(null);
   protected busy = signal(false);
   protected note = signal('');
   protected error = signal('');
@@ -45,42 +72,62 @@ export class WordsComponent extends GuardedPage implements OnInit {
   protected total = computed(() => this.done() + this.queue().length);
   protected percent = computed(() => (this.total() ? Math.round((100 * this.done()) / this.total()) : 0));
   protected stageMax = computed(() => Math.max(1, ...(this.store.progress()?.stages.map((s) => s.count) ?? [1])));
+  protected quiz = computed(() => {
+    const item = this.current();
+    return item?.mode === 'review' ? (item.word.quiz ?? { mode: 'choice' as const }) : null;
+  });
 
-  hasUnsavedWork() {
-    return (this.done() > 0 || this.revealed()) && this.queue().length > 0;
-  }
-
-  override leaveTitle() {
-    return $localize`Сабақтан шығасыз ба?`;
-  }
-
-  override leaveMessage() {
-    return $localize`Тағы ${this.queue().length}:count: сөз қалды. Берілген жауаптар сақталды.`;
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.advanceTimer));
+    // A new review card: listening plays the word, typing puts the cursor in the field.
+    effect(() => {
+      const quiz = this.quiz();
+      const item = this.current();
+      if (!quiz || !item || this.verdict()) return;
+      if (quiz.mode === 'listen') setTimeout(() => this.speech.speak(item.word.word, 0.85), 250);
+      // After rendering: the new card is in view and, for typing, the cursor is in the field.
+      setTimeout(() => {
+        document.querySelector('.word-card')?.scrollIntoView({ block: 'nearest' });
+        if (quiz.mode === 'type') this.typeInput()?.nativeElement.focus({ preventScroll: true });
+      });
+    });
   }
 
   async ngOnInit() {
     await this.load();
   }
 
-  private async load() {
+  protected async load() {
     this.loading.set(true);
+    this.loadFailed.set(false);
+    this.error.set('');
     try {
       const today = await firstValueFrom(this.api.today());
+      // Words answered without internet (still waiting to be sent) are not asked again from a cached list.
+      const answered = this.offline.pendingWordIds();
+      const fresh = (word: Word) => !answered.has(word.id);
       // SRS-06: words due for review come first, then new ones.
       this.queue.set([
-        ...today.review.map((word) => ({ word, mode: 'review' as const })),
-        ...today.new.map((word) => ({ word, mode: 'new' as const })),
+        ...today.review.filter(fresh).map((word) => ({ word, mode: 'review' as const })),
+        ...today.new.filter(fresh).map((word) => ({ word, mode: 'new' as const })),
       ]);
       this.reviewTotal.set(today.review.length);
       this.newLimit.set(today.new_limit);
       this.newLeft.set(today.new_left);
       this.done.set(0);
-      this.revealed.set(false);
-    } catch (e) {
-      this.error.set(apiErrors(e).general);
+      this.verdict.set(null);
+    } catch {
+      this.loadFailed.set(true);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Pronunciation: the recogniser should hear the word itself (case and punctuation aside). */
+  protected pronounced(word: string, text: string) {
+    const clean = (s: string) => s.toLowerCase().replace(/[^a-z' ]/g, '').trim();
+    const heard = clean(text);
+    this.said.set({ text, ok: heard === clean(word) || heard.split(' ').includes(clean(word)) });
   }
 
   protected listen() {
@@ -88,31 +135,108 @@ export class WordsComponent extends GuardedPage implements OnInit {
     if (item) this.speech.speak(item.word.word, 0.85);
   }
 
-  protected async answer(answer: 'start' | 'known' | 'remember' | 'forget') {
+  /** Review card: the server checks the pick (or typed word); an empty answer is "I don't know". */
+  protected async check(answer: string) {
+    const item = this.current();
+    const quiz = this.quiz();
+    if (!item || !quiz || this.busy() || this.verdict()) return;
+    this.busy.set(true);
+    this.error.set('');
+    this.given.set(answer);
+    try {
+      let res: ReviewCheck;
+      let savedOffline = false;
+      try {
+        res = await firstValueFrom(this.api.checkReview(item.word.id, quiz.mode, answer));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        // No internet: check on the phone and send the answer once the connection is back.
+        res = localVerdict(item.word, quiz.mode, answer);
+        this.offline.add({ kind: 'check', wordId: item.word.id, mode: quiz.mode, answer });
+        savedOffline = true;
+      }
+      this.verdict.set(res);
+      this.store.refresh();
+      if (res.correct) {
+        this.speech.speak(item.word.word, 0.9);
+        this.note.set(this.noteFor('remember', res.status, res.next_review_date));
+        if (!res.almost) this.advanceTimer = setTimeout(() => this.next(), 1100);
+      } else {
+        this.note.set($localize`Сөз ${res.stage}:stage:-кезеңге оралды, соңында тағы көрсетеміз.`);
+      }
+      if (savedOffline) this.note.set($localize`Интернет жоқ: жауап сақталды, байланыс болғанда жіберіледі.`);
+      queueMicrotask(() => this.nextButton()?.nativeElement.focus());
+    } catch (e) {
+      if (e instanceof HttpErrorResponse && e.error?.code === 'stale') {
+        // The word moved on elsewhere (another device): fetch today's cards again.
+        this.note.set(apiErrors(e).general);
+        await this.load();
+        return;
+      }
+      this.error.set(apiErrors(e).general);
+      this.given.set('');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** After the verdict: a right word leaves the queue, a forgotten one comes back at the end of the session. */
+  protected next() {
+    clearTimeout(this.advanceTimer);
+    const item = this.current();
+    const res = this.verdict();
+    if (!item || !res) return;
+    const rest = this.queue().slice(1);
+    if (res.correct) {
+      this.queue.set(rest);
+      this.done.update((d) => d + 1);
+    } else {
+      this.queue.set([...rest, { word: { ...item.word, stage: res.stage }, mode: 'review' }]);
+    }
+    this.verdict.set(null);
+    this.given.set('');
+    this.said.set(null);
+    if (!res.correct) this.note.set(''); // the "comes back later" hint belonged to the previous card
+  }
+
+  protected submitTyped(event: Event) {
+    event.preventDefault();
+    if (this.verdict()) {
+      this.next();
+      return;
+    }
+    const value = this.typeInput()?.nativeElement.value.trim() ?? '';
+    if (value) this.check(value);
+  }
+
+  protected async answer(answer: 'start' | 'known') {
     const item = this.current();
     if (!item || this.busy()) return;
     this.busy.set(true);
     this.error.set('');
     try {
-      const res = await firstValueFrom(this.api.answer(item.word.id, answer));
-      const rest = this.queue().slice(1);
-      if (answer === 'forget') {
-        // SRS-05: one stage down and shown again later in this session.
-        this.queue.set([...rest, { word: { ...item.word, stage: res.stage }, mode: 'review' }]);
-        this.note.set($localize`Сөз ${res.stage}:stage:-кезеңге оралды, соңында тағы көрсетеміз.`);
-      } else {
-        this.queue.set(rest);
-        this.done.update((d) => d + 1);
-        this.note.set(this.noteFor(answer, res.status, res.next_review_date));
+      let note: string;
+      try {
+        const res = await firstValueFrom(this.api.answer(item.word.id, answer));
+        note = this.noteFor(answer, res.status, res.next_review_date);
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        // No internet: keep the answer on the phone and send it once the connection is back.
+        this.offline.add({ kind: 'answer', wordId: item.word.id, answer });
+        note = $localize`Интернет жоқ: жауап сақталды, байланыс болғанда жіберіледі.`;
       }
+      this.queue.set(this.queue().slice(1));
+      this.done.update((d) => d + 1);
+      this.said.set(null);
+      this.note.set(note);
       if (answer === 'start') this.newLeft.update((n) => Math.max(0, n - 1));
-      this.revealed.set(false);
       this.store.refresh();
     } catch (e) {
       this.error.set(apiErrors(e).general);
-      if (answer === 'start') {
-        // Limit reached: drop the remaining new words from today's queue.
+      if (e instanceof HttpErrorResponse && e.error?.code === 'limit') {
+        // Limit reached: drop the remaining new words from today's queue. Other errors keep the card for a retry.
         this.queue.update((q) => q.filter((i) => i.mode !== 'new'));
+        this.newLeft.set(0);
       }
     } finally {
       this.busy.set(false);

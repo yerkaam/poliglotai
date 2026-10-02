@@ -21,7 +21,7 @@
       <div class="titles">
         <h1 id="chatTitle">{{ title() }}</h1>
         <span class="muted small">
-          <ng-container i18n>1-қадам · тек сіздің етістіктеріңіз</ng-container>
+          <ng-container i18n>Тек сіздің етістіктеріңіз</ng-container>
           @if (conversation()?.scenario; as s) {
             · <ng-container i18n>{{ s.max_turns }} репликаның {{ turn() }}-і</ng-container>
           }
@@ -107,7 +107,12 @@
       }
 
       @if (sending()) {
-        <div class="msg ai"><div class="bubble typing" i18n-aria-label aria-label="AI жазып жатыр"><i></i><i></i><i></i></div></div>
+        <div class="msg me pending"><div class="bubble">{{ pendingText() }}</div></div>
+        @if (streamingReply(); as reply) {
+          <div class="msg ai"><div class="bubble streaming"><span>{{ reply }}</span><i class="caret" aria-hidden="true"></i></div></div>
+        } @else {
+          <div class="msg ai"><div class="bubble typing" i18n-aria-label aria-label="AI жазып жатыр"><i></i><i></i><i></i></div></div>
+        }
       }
       @if (conversation()?.finished) {
         <div class="finished">
@@ -145,6 +150,11 @@
             [value]="text()"
             (input)="text.set($any($event.target).value)"
             [disabled]="limitReached()"
+          />
+          <app-mic-button
+            [disabled]="sending() || limitReached()"
+            (partial)="text.set($event)"
+            (heard)="onHeard($event)"
           />
           <button type="submit" class="btn btn-primary" [disabled]="sending() || !text().trim() || limitReached()">
             <span class="send-label" i18n>Жіберу</span>
@@ -190,7 +200,7 @@
           <p class="muted small" i18n>Жаңа сөздер осында шығады.</p>
         }
       </div>
-      @if (summary()?.new_words?.length) {
+      @if (wordsToAdd().length) {
         <button type="button" class="btn btn-outline" (click)="addAll()" i18n>Барлығын карточкаға қосу</button>
       }
     </div>

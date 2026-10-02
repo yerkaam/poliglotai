@@ -33,3 +33,9 @@ export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   return auth.isLoggedIn() ? inject(Router).createUrlTree(['/']) : true;
 };
+
+/** The teacher's cabinet: only for accounts given the teacher role in the admin. */
+export const teacherGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.user()?.is_teacher ? true : inject(Router).createUrlTree(['/']);
+};

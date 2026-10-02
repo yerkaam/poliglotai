@@ -28,6 +28,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)
+    # Given in the admin: the teacher's cabinet (groups and their learners' progress).
+    is_teacher = models.BooleanField("teacher", default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()
@@ -52,6 +54,12 @@ class Profile(models.Model):
     daily_new_limit = models.PositiveSmallIntegerField(default=10)  # 5, 10, 15 or 20 (SRS-07)
     daily_minutes = models.PositiveSmallIntegerField(default=15)
     onboarded = models.BooleanField(default=False)
+    # Daily email when the learner has not studied yet today (local time, settings.TIME_ZONE).
+    reminder_enabled = models.BooleanField(default=True)
+    reminder_hour = models.PositiveSmallIntegerField(default=19)
+    reminder_sent_on = models.DateField(null=True, blank=True)
+    # The week's summary, on Sundays at the same hour.
+    weekly_sent_on = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = "profiles"

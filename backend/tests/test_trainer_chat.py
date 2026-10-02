@@ -1,7 +1,7 @@
 import pytest
 
 from chat.llm import build_system_prompt
-from chat.models import Scenario
+from chat.models import Conversation, Message, Scenario
 from vocabulary.models import Vocabulary
 
 pytestmark = pytest.mark.django_db
@@ -45,7 +45,7 @@ def test_chat_dialog_with_offline_tutor(client, settings):
     assert correction["right"] == "bought"
     assert (correction["tense"], correction["form"], correction["verb"]) == ("past", "affirmative", "buy")
     assert r["user_message"]["correct"] is False
-    assert r["usage"]["used"] == 1
+    assert r["usage"]["used"] == 2  # the opening line and the reply are both AI calls
 
     client.post(f"/api/chat/conversations/{conv['id']}/messages/", {"text": "I didn't buy it online."}, format="json")
     summary = client.get(f"/api/chat/conversations/{conv['id']}/summary/").json()
@@ -61,7 +61,18 @@ def test_chat_filters_inappropriate_text(client, settings):
     assert r.status_code == 400
 
 
-def test_add_word_from_chat_to_cards(client):
+def _tutor_suggested(user, word, translation):
+    conversation = Conversation.objects.create(user=user, mode=Conversation.Mode.FREE)
+    Message.objects.create(
+        conversation=conversation,
+        role=Message.Role.ASSISTANT,
+        text="I usually drink tea.",
+        new_words=[{"word": word, "translation_kk": translation}],
+    )
+
+
+def test_add_word_from_chat_to_cards(client, user):
+    _tutor_suggested(user, "Usually", "әдетте")
     r = client.post("/api/srs/add/", {"word": "usually", "translation_kk": "әдетте"}, format="json")
     assert r.status_code == 201
     today_verbs = client.get("/api/srs/today/").json()

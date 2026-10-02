@@ -16,6 +16,7 @@ import { CheckResult, TrainerStats, TrainerTask } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { IconComponent } from '../../shared/icon.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { SentenceComponent } from '../../shared/sentence.component';
 import { apiErrors } from '../auth/errors';
 import { GuardedPage } from '../../core/leave.guard';
@@ -23,7 +24,7 @@ import { GuardedPage } from '../../core/leave.guard';
 @Component({
   selector: 'app-trainer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, SentenceComponent, RouterLink],
+  imports: [IconComponent, SentenceComponent, RouterLink, MicButtonComponent],
   templateUrl: './trainer.component.html',
   styleUrl: './trainer.component.scss',
 })
@@ -42,16 +43,15 @@ export class TrainerComponent extends GuardedPage implements OnInit {
   protected sign = FORM_SIGN;
   protected aux = TENSE_AUX;
   private nextTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Sentences checked since the learner opened the trainer. */
-  protected sessionAnswers = signal(0);
 
   constructor() {
     super();
     inject(DestroyRef).onDestroy(() => clearTimeout(this.nextTimer));
   }
 
+  /** Checked sentences are saved on the server; only a typed, unchecked sentence would be lost. */
   hasUnsavedWork() {
-    return this.sessionAnswers() > 0 || (!!this.answer().trim() && !this.result());
+    return !!this.answer().trim() && !this.result();
   }
 
   override leaveTitle() {
@@ -59,17 +59,20 @@ export class TrainerComponent extends GuardedPage implements OnInit {
   }
 
   override leaveMessage() {
-    return this.answer().trim() && !this.result()
-      ? $localize`Жазылған сөйлем тексерілмей қалады.`
-      : $localize`Осы жаттығуда ${this.sessionAnswers()}:count: сөйлем жаздыңыз. Нәтижелер сақталды, бірақ жаттығу тоқтайды.`;
+    return $localize`Жазылған сөйлем тексерілмей қалады.`;
   }
 
   ngOnInit() {
     this.next();
   }
 
+  private loadingNext = false;
+
   protected async next() {
     clearTimeout(this.nextTimer);
+    // Enter right after a correct answer and the automatic step must not load two tasks.
+    if (this.loadingNext) return;
+    this.loadingNext = true;
     this.error.set('');
     try {
       const { task, stats } = await firstValueFrom(this.api.trainerTask());
@@ -80,7 +83,15 @@ export class TrainerComponent extends GuardedPage implements OnInit {
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     } catch (e) {
       this.error.set(apiErrors(e).general);
+    } finally {
+      this.loadingNext = false;
     }
+  }
+
+  /** A spoken sentence lands in the field; the learner can fix a misheard word, then check. */
+  protected onHeard(text: string) {
+    this.answer.set(text);
+    queueMicrotask(() => this.inputRef()?.nativeElement.focus());
   }
 
   /** Enter checks the sentence; a correct one is read aloud and the next task follows. */
@@ -106,7 +117,6 @@ export class TrainerComponent extends GuardedPage implements OnInit {
       );
       this.result.set(result);
       this.stats.set(result.stats);
-      this.sessionAnswers.update((n) => n + 1);
       this.store.refresh();
       if (result.correct) {
         this.speech.speak(result.expected);

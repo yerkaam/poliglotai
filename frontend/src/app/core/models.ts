@@ -9,9 +9,14 @@ export interface Profile {
   daily_new_limit: 5 | 10 | 15 | 20;
   daily_minutes: number;
   onboarded: boolean;
+  /** Daily email when the learner has not studied yet that day. */
+  reminder_enabled: boolean;
+  reminder_hour: number;
 }
 
 export interface User {
+  /** Given in the admin: opens the teacher's cabinet. */
+  is_teacher: boolean;
   id: number;
   email: string;
   name: string;
@@ -34,6 +39,14 @@ export interface Word {
   source: 'course' | 'chat' | 'wiktionary';
   status: WordStatus;
   stage: number;
+  /** Only on cards due for review: the exercise that checks the word at its stage. */
+  quiz?: ReviewQuiz;
+}
+
+/** choice: pick the Kazakh translation; listen: hear the word, pick its spelling; type: write the English word. */
+export interface ReviewQuiz {
+  mode: 'choice' | 'listen' | 'type';
+  options?: string[];
 }
 
 export interface Part {
@@ -70,6 +83,13 @@ export interface AnswerResult {
   again_today: boolean;
 }
 
+export interface ReviewCheck extends AnswerResult {
+  correct: boolean;
+  /** Accepted with one typo: the right spelling is shown. */
+  almost: boolean;
+  right: string;
+}
+
 export interface GoalTask {
   key: 'reviews' | 'new' | 'trainer' | 'chat';
   target: number;
@@ -79,6 +99,8 @@ export interface GoalTask {
 }
 
 export interface Progress {
+  /** Badges earned since the learner last looked. */
+  new_achievements: AchievementNews[];
   stats: { learning: number; learned: number; due: number; accuracy: number | null; streak: number };
   stages: { stage: number; count: number }[];
   not_started: number;
@@ -111,15 +133,64 @@ export interface CheckResult {
   stats: TrainerStats;
 }
 
+/** done: check passed and words started; open: unlocked; locked: after an unfinished step; soon: not published. */
+export type StepStatus = 'done' | 'open' | 'locked' | 'soon';
+
 export interface CourseStep {
   number: number;
   title_kk: string;
   title_en: string;
   description_kk: string;
-  status: 'open' | 'soon';
+  status: StepStatus;
   words_total: number;
+  words_started: number;
   words_learned: number;
   percent: number;
+  lessons_total: number;
+  lessons_done: number;
+  quiz_total: number;
+  quiz_best: number | null;
+  quiz_passed: boolean;
+}
+
+export interface PracticeQuestion {
+  prompt: string;
+  prompt_kk: string;
+  options: string[];
+  answer: string;
+  why_kk: string;
+}
+
+export interface LessonBlock {
+  title_kk: string;
+  text_kk: string;
+  examples: { en: string; kk: string }[];
+  practice: PracticeQuestion[];
+}
+
+export interface Exercise {
+  type: 'choice' | 'input';
+  prompt: string;
+  prompt_kk: string;
+  options?: string[];
+}
+
+export interface StepDetail extends CourseStep {
+  intro_kk: string;
+  lesson: LessonBlock[];
+  exercises: Exercise[];
+  words: Word[];
+  pass_percent: number;
+}
+
+export interface StepCheckResult {
+  items: { correct: boolean; right: string }[];
+  score: number;
+  total: number;
+  percent: number;
+  passed: boolean;
+  step: CourseStep;
+  opened_step: number | null;
 }
 
 export type ChatMode = 'dialog' | 'builder' | 'free';
@@ -185,4 +256,96 @@ export interface ChatSummary {
   top_errors: (Correction & { count: number; cell_label_kk: string })[];
   new_words: (NewWord & { added: boolean })[];
   usage: ChatUsage;
+}
+
+export interface AchievementNews {
+  key: string;
+  title_kk: string;
+  description_kk: string;
+  icon: string;
+}
+
+export interface Badge extends AchievementNews {
+  target: number;
+  current: number;
+  unlocked_at: string | null;
+}
+
+export interface WeekDay {
+  date: string;
+  weekday_kk: string;
+  reviews: number;
+  new_words: number;
+  trainer: number;
+  chat: number;
+  total: number;
+}
+
+export interface WeekSummary {
+  days: WeekDay[];
+  total: number;
+  previous_total: number;
+  active_days: number;
+  reviews: number;
+  new_words: number;
+  sentences: number;
+  chat_messages: number;
+  accuracy: number | null;
+  learned: number;
+  streak: number;
+  achievements: string[];
+}
+
+export interface PlacementQuestion extends Exercise {
+  step: number;
+}
+
+export interface PlacementResult {
+  items: { correct: boolean; right: string }[];
+  score: number;
+  total: number;
+  steps_credited: number[];
+  level: Level;
+}
+
+export interface TeacherGroup {
+  id: number;
+  name: string;
+  code: string;
+  created_at: string;
+  students: number;
+}
+
+export interface StudentRow {
+  id: number;
+  name: string;
+  email: string;
+  last_active: string | null;
+  streak: number;
+  active_days_week: number;
+  words_learning: number;
+  words_learned: number;
+  steps_done: number;
+  current_step: number | null;
+  current_step_title: string;
+  accuracy_30d: number | null;
+}
+
+export interface GroupMistake {
+  tense: Tense;
+  form: Form;
+  label_kk: string;
+  mistakes: number;
+  learners: number;
+}
+
+export interface TeacherGroupDetail extends TeacherGroup {
+  rows: StudentRow[];
+  mistakes: GroupMistake[];
+}
+
+export interface MyGroup {
+  id: number;
+  name: string;
+  teacher: string;
 }

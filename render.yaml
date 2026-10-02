@@ -19,6 +19,9 @@ services:
         value: "0"
       - key: AUTH_COOKIE_SECURE
         value: "1"
+      # Render's proxy adds one X-Forwarded-For entry: the learner's address for the login lockout.
+      - key: TRUSTED_PROXY_COUNT
+        value: "1"
       - key: WEB_CONCURRENCY
         value: "2"
       - key: TIME_ZONE
@@ -32,10 +35,44 @@ services:
         value: low
       - key: CHAT_DAILY_LIMIT
         value: "30"
-      # Email: registration codes and password resets. Without SMTP they only appear in the service logs,
-      # so nobody can confirm an account — fill these in (e.g. Resend, Mailgun, Gmail app password).
+      # Email confirmation code after registration. Off for now ("0"); set to "1" once email sending works.
       - key: REQUIRE_EMAIL_VERIFICATION
-        value: "1"
+        value: "0"
+      # Optional ready-made accounts for trying the site: set both passwords (8+ characters with a digit)
+      # and redeploy; student@poliglot.test and teacher@poliglot.test then log in with them.
+      # Teachers register like learners and enter this code in the settings (share it with teachers only).
+      - key: TEACHER_INVITE_CODE
+        sync: false
+      # Optional administrator for /admin/ (manage users, content): set both and redeploy.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DEMO_STUDENT_PASSWORD
+        sync: false
+      - key: DEMO_TEACHER_PASSWORD
+        sync: false
+      # Error monitoring (sentry.io, free plan is enough): the DSNs of a Django and a browser project.
+      # Empty = off. The browser DSN is public by design; the server one stays here.
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_FRONTEND_DSN
+        sync: false
+      - fromGroup: poliglot-mail
+
+envVarGroups:
+  # Email for registration codes, password resets and reminders. Without it nobody can confirm an account.
+  # Render's free plan blocks outgoing SMTP: there, set BREVO_API_KEY (sent over HTTPS) and a verified sender
+  # in DEFAULT_FROM_EMAIL; the SMTP fields are then ignored. On a paid plan SMTP (e.g. a Gmail app password) works.
+  - name: poliglot-mail
+    envVars:
+      - key: BREVO_API_KEY
+        sync: false
+      # Or your own Gmail through a Google Apps Script web app (deploy/gmail-sender.gs): no domain, no phone.
+      - key: GMAIL_SCRIPT_URL
+        sync: false
+      - key: GMAIL_SCRIPT_SECRET
+        sync: false
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST

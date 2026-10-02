@@ -106,6 +106,13 @@
   &.four button {
     align-items: center;
   }
+  &.six {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    button {
+      align-items: center;
+      min-height: 48px;
+    }
+  }
 }
 
 fieldset {

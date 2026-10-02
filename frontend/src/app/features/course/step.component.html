@@ -1,0 +1,252 @@
+<div class="page narrow">
+  <a class="back" routerLink="/course"><app-icon name="back" [size]="16" />&ngsp;<ng-container i18n>Курс картасы</ng-container></a>
+
+  @if (loading()) {
+    <div class="spinner" role="status"><span class="visually-hidden" i18n>Жүктелуде</span></div>
+  } @else if (locked()) {
+    <section class="card locked">
+      <app-icon name="lock" [size]="28" />
+      <h1 class="page-title" i18n>Бұл қадам әлі жабық</h1>
+      <p class="muted" i18n>Алдыңғы қадамның соңындағы тестті тапсырыңыз — сонда бұл қадам ашылады.</p>
+      <a class="btn btn-primary" routerLink="/course" i18n>Курс картасына</a>
+    </section>
+  } @else if (failed()) {
+    <section class="card"><app-load-error (retry)="reload()" /></section>
+  } @else if (step(); as s) {
+    <header class="head">
+      <span class="eyebrow" i18n>{{ s.number }}-қадам · {{ s.title_en }}</span>
+      <h1 class="page-title">{{ s.title_kk }}</h1>
+      @if (s.intro_kk) {
+        <p class="intro">{{ s.intro_kk }}</p>
+      }
+    </header>
+
+    @if (status() === 'done') {
+      <div class="alert alert-ok" role="status">
+        <app-icon name="check" />
+        <span i18n>Қадам аяқталды. Сабақтарды қайталап шығуға немесе тестті қайта тапсыруға болады.</span>
+      </div>
+    } @else {
+      <p class="how muted" i18n>
+        Қалай өтеміз: {{ s.lesson.length }} қысқа сабақ, әрқайсысынан кейін шағын жаттығу. Соңында — тест.
+        {{ s.pass_percent }}% жинасаңыз, келесі қадам ашылады.
+      </p>
+    }
+
+    <!-- The path: one dot per lesson, then the check -->
+    <nav class="path" i18n-aria-label aria-label="Қадам сабақтары">
+      <ol>
+        @for (i of stages(); track i) {
+          @let isCheck = i === lessonCount();
+          <li>
+            <button
+              type="button"
+              [class.current]="i === current()"
+              [class.passed]="i < reached() || (isCheck && status() === 'done')"
+              [disabled]="i > reached()"
+              [attr.aria-current]="i === current() ? 'step' : null"
+              (click)="show(i)"
+            >
+              @if (isCheck) {
+                <span class="visually-hidden" i18n>Тест</span><app-icon name="target" [size]="16" />
+              } @else if (i < reached()) {
+                <span class="visually-hidden" i18n>{{ i + 1 }}-сабақ, өтілді</span><app-icon name="check" [size]="14" [stroke]="3" />
+              } @else {
+                {{ i + 1 }}
+              }
+            </button>
+          </li>
+        }
+      </ol>
+    </nav>
+
+    <div id="stage">
+      @if (!onCheck() && lesson(); as b) {
+        <!-- One lesson -->
+        <section class="card lesson" aria-labelledby="lessonTitle">
+          <span class="eyebrow" i18n>Сабақ {{ current() + 1 }} / {{ lessonCount() }}</span>
+          <h2 id="lessonTitle" class="lesson-title">{{ b.title_kk }}</h2>
+          <p class="rule">{{ b.text_kk }}</p>
+          @if (b.examples.length) {
+            <ul class="examples">
+              @for (e of b.examples; track $index) {
+                <li>
+                  <button type="button" class="speak" (click)="speech.speak(e.en)" i18n-aria-label aria-label="Тыңдау">
+                    <app-icon name="speaker" [size]="16" />
+                  </button>
+                  <span><b>{{ e.en }}</b><br /><span class="muted">{{ e.kk }}</span></span>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (b.practice.length) {
+            <div class="practice">
+              <h3 i18n>Тексеріп көрейік</h3>
+              @for (q of b.practice; track $index; let qi = $index) {
+                @let chosen = picked()[qi];
+                <div class="pq">
+                  <p class="prompt"><b>{{ q.prompt }}</b><br /><span class="muted">{{ q.prompt_kk }}</span></p>
+                  <div class="options" role="group" [attr.aria-label]="q.prompt">
+                    @for (o of q.options; track o) {
+                      <button
+                        type="button"
+                        class="chip"
+                        [class.right]="chosen !== undefined && o === q.answer"
+                        [class.wrong]="chosen === o && o !== q.answer"
+                        [disabled]="chosen !== undefined"
+                        (click)="pick(qi, o)"
+                      >
+                        {{ o }}
+                      </button>
+                    }
+                  </div>
+                  @if (chosen !== undefined) {
+                    <p class="why" [class.ok]="chosen === q.answer" aria-live="polite">
+                      @if (chosen === q.answer) {
+                        <b i18n>Дұрыс!</b>
+                      } @else {
+                        <b i18n>Дұрысы: {{ q.answer }}.</b>
+                      }
+                      {{ q.why_kk }}
+                      @if (chosen !== q.answer) {
+                        <button type="button" class="link" (click)="tryAgain(qi)" i18n>Қайта көру</button>
+                      }
+                    </p>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="nav-row">
+            @if (current() > 0) {
+              <button type="button" class="btn btn-ghost" (click)="show(current() - 1)" i18n>Артқа</button>
+            }
+            <button type="button" class="btn btn-primary btn-lg grow" [disabled]="!practiceDone()" (click)="next()">
+              @if (current() + 1 < lessonCount()) {
+                <ng-container i18n>Келесі сабақ</ng-container>
+              } @else {
+                <ng-container i18n>Тестке өту</ng-container>
+              }
+              <app-icon name="arrow" [size]="18" />
+            </button>
+          </div>
+          @if (!practiceDone()) {
+            <p class="muted small center" i18n>Жалғастыру үшін сұрақтарға жауап беріңіз.</p>
+          }
+        </section>
+      } @else if (onCheck()) {
+        <!-- Final check -->
+        <section class="card quiz" aria-labelledby="checkTitle">
+          <span class="eyebrow" i18n>Қорытынды</span>
+          <h2 id="checkTitle" class="lesson-title" i18n>Тест · {{ s.exercises.length }} сұрақ</h2>
+          <p class="muted" i18n>{{ s.pass_percent }}% дұрыс болса, келесі қадам ашылады. Қате болса — дұрыс жауабын көрсетеміз, қайта тапсыруға болады.</p>
+          <form (submit)="check($event)" novalidate>
+            <ol class="questions">
+              @for (e of s.exercises; track $index; let i = $index) {
+                @let r = result()?.items?.[i];
+                <li [class.right]="r?.correct" [class.wrong]="r && !r.correct">
+                  @if (e.type === 'choice') {
+                    <p class="prompt"><b>{{ e.prompt }}</b><br /><span class="muted">{{ e.prompt_kk }}</span></p>
+                    <div class="options" role="radiogroup" [attr.aria-label]="e.prompt">
+                      @for (o of e.options; track o) {
+                        <button
+                          type="button"
+                          class="chip"
+                          role="radio"
+                          [attr.aria-checked]="answers()[i] === o"
+                          [disabled]="!!result()"
+                          (click)="setAnswer(i, o)"
+                        >
+                          {{ o }}
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <p class="prompt"><b>{{ e.prompt_kk }}</b><br /><span class="muted">{{ e.prompt }}</span></p>
+                    <label class="visually-hidden" [attr.for]="'q' + i" i18n>Жауабыңыз</label>
+                    <input
+                      class="input"
+                      type="text"
+                      autocomplete="off"
+                      autocapitalize="off"
+                      spellcheck="false"
+                      [id]="'q' + i"
+                      [value]="answers()[i]"
+                      [readOnly]="!!result()"
+                      (input)="setAnswer(i, $any($event.target).value)"
+                      i18n-placeholder
+                      placeholder="Ағылшынша жазыңыз…"
+                    />
+                  }
+                  @if (r && !r.correct) {
+                    <p class="fix"><ng-container i18n>Дұрысы:</ng-container>&ngsp;<b>{{ r.right }}</b></p>
+                  }
+                </li>
+              }
+            </ol>
+
+            @if (error()) {
+              <div class="alert" role="alert"><app-icon name="alert" /><span>{{ error() }}</span></div>
+            }
+
+            @if (!result()) {
+              <button type="submit" class="btn btn-primary btn-lg btn-block" [disabled]="!allAnswered() || checking()">
+                @if (allAnswered()) {
+                  <ng-container i18n>Тексеру</ng-container>
+                } @else {
+                  <ng-container i18n>Жауап берілді: {{ answeredCount() }} / {{ s.exercises.length }}</ng-container>
+                }
+              </button>
+            }
+          </form>
+
+          @if (result(); as res) {
+            <div id="checkResult" class="result" [class.passed]="res.passed" aria-live="polite">
+              <b class="score">{{ res.score }} / {{ res.total }} · {{ res.percent }}%</b>
+              @if (res.passed) {
+                <p i18n>Тест тапсырылды!</p>
+              } @else {
+                <p i18n>Тест тапсыру үшін кемінде {{ s.pass_percent }}% керек. Қателерді қарап, қайталап көріңіз.</p>
+              }
+              @if (res.opened_step) {
+                <p i18n>{{ res.opened_step }}-қадам ашылды.</p>
+              }
+              <div class="result-actions">
+                <button type="button" class="btn btn-outline" (click)="retry()" i18n>Қайта тапсыру</button>
+                @if (res.opened_step) {
+                  <button type="button" class="btn btn-primary" (click)="goTo(res.opened_step)" i18n>
+                    {{ res.opened_step }}-қадамға өту
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </section>
+      }
+    </div>
+
+    <!-- The step's words: they come to the cards on their own -->
+    @if (s.words.length) {
+      <details class="card words-card">
+        <summary>
+          <span i18n>Қадамның сөздері · {{ s.words.length }}</span>
+          <small class="muted" i18n>«Сөздер» бөлімінде күн сайын бірнешеуден келеді</small>
+        </summary>
+        <ul class="words">
+          @for (w of s.words; track w.id) {
+            <li [class.started]="w.status !== 'new'">
+              <button type="button" class="word" (click)="speech.speak(w.word)">{{ w.word }}</button>
+              <span class="kk">{{ w.translation_kk }}</span>
+              @if (w.past && w.is_irregular) {
+                <span class="mono past">{{ w.past }}</span>
+              }
+            </li>
+          }
+        </ul>
+        <a class="btn btn-outline" routerLink="/words" i18n>Сөздерді үйрену</a>
+      </details>
+    }
+  }
+</div>

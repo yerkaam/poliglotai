@@ -72,6 +72,9 @@
       background: var(--tint);
       border-color: transparent;
     }
+    &.done {
+      border-color: var(--line);
+    }
   }
 }
 .num {
@@ -91,6 +94,11 @@
     border-color: var(--red);
     color: #fff;
   }
+  .done & {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
 }
 .info {
   flex: 1;
@@ -102,7 +110,7 @@
   b {
     font-size: 15px;
   }
-  li:not(.open) & b {
+  li:not(.open):not(.done) & b {
     color: var(--muted);
     font-weight: 500;
   }

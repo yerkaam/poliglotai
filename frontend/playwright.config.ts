@@ -10,6 +10,8 @@ export default defineConfig({
     baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:4300',
     trace: 'retain-on-failure',
     locale: 'kk-KZ',
+    // The service worker answers requests before page.route() mocks can; the offline test turns it back on.
+    serviceWorkers: 'block',
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },

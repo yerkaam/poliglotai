@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { Profile, User } from './models';
+import { clearOfflineData } from './pwa.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,7 +16,8 @@ export class AuthService {
   /** Runs once at start-up: gets the CSRF cookie, then asks who is logged in. */
   async init(): Promise<void> {
     try {
-      await firstValueFrom(this.api.csrf());
+      // Without internet there is no new CSRF cookie, but the cached profile still opens the app offline.
+      await firstValueFrom(this.api.csrf()).catch(() => undefined);
       this.user.set(await firstValueFrom(this.api.me()));
     } catch {
       this.user.set(null);
@@ -32,6 +34,11 @@ export class AuthService {
     await this.offerToSavePassword(data.email, data.password, data.name);
   }
 
+  /** Fetches the profile again (e.g. after the placement test changed the level). */
+  async reload() {
+    this.user.set(await firstValueFrom(this.api.me()));
+  }
+
   async verifyEmail(code: string) {
     this.user.set(await firstValueFrom(this.api.verifyEmail(code)));
   }
@@ -41,11 +48,11 @@ export class AuthService {
   }
 
   /** AUTH-13: the token cookies are removed and the learner lands on the login screen. */
-  async logout() {
+  async logout(then: '/login' | '/register' = '/login') {
     try {
       await firstValueFrom(this.api.logout());
     } finally {
-      await this.clear();
+      await this.clear(then);
     }
   }
 
@@ -64,8 +71,9 @@ export class AuthService {
     }
   }
 
-  clear() {
+  clear(then: '/login' | '/register' = '/login') {
     this.user.set(null);
-    return this.router.navigate(['/login']);
+    void clearOfflineData(); // the next person on this device must not see this learner's cached data
+    return this.router.navigate([then]);
   }
 }

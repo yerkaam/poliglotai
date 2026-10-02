@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,14 +14,21 @@ def env_bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
 
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-key-change-me-in-production-0123456789")
-DEBUG = env_bool("DJANGO_DEBUG", True)
+# Safe by default: debug mode must be switched on explicitly (DJANGO_DEBUG=1 for local development),
+# and without debug the app refuses to start on the public development key.
+DEBUG = env_bool("DJANGO_DEBUG", False)
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Set DJANGO_SECRET_KEY (or DJANGO_DEBUG=1 for local development).")
+    SECRET_KEY = "dev-insecure-key-change-me-in-production-0123456789"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:4200").split(",") if o
 ]
 # Render publishes the service's public hostname; trust it automatically.
-if RENDER_HOST := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
+if RENDER_HOST:
     ALLOWED_HOSTS.append(RENDER_HOST)
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
 
@@ -39,6 +47,7 @@ INSTALLED_APPS = [
     "trainer",
     "chat",
     "progress",
+    "classroom",
 ]
 
 MIDDLEWARE = [
@@ -113,7 +122,6 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
-        "chat": os.environ.get("CHAT_DAILY_LIMIT", "30") + "/day",
         "reset_email": "1/min",
     },
 }
@@ -141,6 +149,9 @@ EMAIL_CODE_OVERRIDE = os.environ.get("EMAIL_CODE_OVERRIDE", "") if DEBUG else ""
 
 # Login brute-force protection (AUTH-09).
 LOGIN_MAX_FAILURES = 5
+LOGIN_MAX_FAILURES_PER_IP = 30
+# How many of our own proxies add an X-Forwarded-For entry (Render: 1). 0 trusts only REMOTE_ADDR.
+TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
 LOGIN_LOCKOUT_SECONDS = 15 * 60
 
 # Login lockout and chat limits need a cache shared by all gunicorn workers:
@@ -157,20 +168,36 @@ CACHES = {"default": _cache}
 SPA_DIR = os.environ.get("SPA_DIR", "")
 if SPA_DIR:
     WHITENOISE_ROOT = SPA_DIR
+# The web app manifest needs its own type, or browsers may not offer to install the app.
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Brevo's HTTPS API when its key is set (Render's free plan blocks outgoing SMTP), otherwise EMAIL_BACKEND.
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+# Or the owner's own Gmail through a Google Apps Script web app (deploy/gmail-sender.gs).
+GMAIL_SCRIPT_URL = os.environ.get("GMAIL_SCRIPT_URL", "")
+GMAIL_SCRIPT_SECRET = os.environ.get("GMAIL_SCRIPT_SECRET", "")
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "users.email_backends.BrevoEmailBackend"
+elif GMAIL_SCRIPT_URL:
+    EMAIL_BACKEND = "users.email_backends.AppsScriptEmailBackend"
+else:
+    EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Seconds to wait for the mail server: a blocked or slow one must not hang the learner's request.
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "15"))
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "PoliglotAi <no-reply@poliglot.ai>")
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:4200")
+# Links in emails (password reset, reminders). On Render the service's own address unless set explicitly.
+FRONTEND_URL = os.environ.get("FRONTEND_URL") or (f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:4200")
 
 # AI chat. The key never leaves the server. Without a key the chat uses an offline tutor stub.
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "claude-opus-5")
 CHAT_EFFORT = os.environ.get("CHAT_EFFORT", "low")
+CHAT_DAILY_LIMIT = int(os.environ.get("CHAT_DAILY_LIMIT", "30"))
 
 LOGGING = {
     "version": 1,
@@ -178,3 +205,16 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Teachers sign up like learners, then enter this code in the settings to get the teacher's cabinet.
+# Empty = only an admin can make someone a teacher (admin site or `manage.py grant_teacher`).
+TEACHER_INVITE_CODE = os.environ.get("TEACHER_INVITE_CODE", "").strip()
+
+# Error monitoring: Sentry, only when a DSN is configured. The frontend gets its own (public) DSN from /api/config/.
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+SENTRY_FRONTEND_DSN = os.environ.get("SENTRY_FRONTEND_DSN", "")
+SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "production" if not DEBUG else "development")
+if SENTRY_DSN:
+    from config import monitoring
+
+    monitoring.init(SENTRY_DSN, SENTRY_ENVIRONMENT)

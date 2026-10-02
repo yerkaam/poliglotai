@@ -12,12 +12,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { ChatStreamService } from '../../core/chat-stream.service';
 import { FORM_KK, TENSE_KK } from '../../core/labels';
 import { ChatMessage, ChatMode, ChatSummary, ChatUsage, Conversation, Correction, NewWord, Scenario } from '../../core/models';
 import { ProgressStore } from '../../core/progress.store';
 import { SpeechService } from '../../core/speech.service';
 import { ToastService } from '../../core/toast.service';
+import { ConfirmService } from '../../core/confirm.service';
 import { IconComponent } from '../../shared/icon.component';
+import { MicButtonComponent } from '../../shared/mic-button.component';
 import { apiErrors } from '../auth/errors';
 import { GuardedPage } from '../../core/leave.guard';
 
@@ -26,15 +29,17 @@ const ACTIVE_KEY = 'poliglot-chat';
 @Component({
   selector: 'app-chat',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, RouterLink],
+  imports: [IconComponent, RouterLink, MicButtonComponent],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
 export class ChatComponent extends GuardedPage implements OnInit {
   private api = inject(ApiService);
+  private chatStream = inject(ChatStreamService);
   protected speech = inject(SpeechService);
   private store = inject(ProgressStore);
   private toasts = inject(ToastService);
+  private confirm = inject(ConfirmService);
   private feed = viewChild<ElementRef<HTMLElement>>('feed');
   private inputRef = viewChild<ElementRef<HTMLInputElement>>('chatInput');
 
@@ -46,6 +51,10 @@ export class ChatComponent extends GuardedPage implements OnInit {
   protected summary = signal<ChatSummary | null>(null);
   protected text = signal('');
   protected sending = signal(false);
+  /** The learner's line while it is on its way (shown at once, before the server answers). */
+  protected pendingText = signal('');
+  /** The tutor's line as it is being written. */
+  protected streamingReply = signal('');
   protected starting = signal(false);
   protected error = signal('');
   protected showKk = signal(true);
@@ -62,6 +71,8 @@ export class ChatComponent extends GuardedPage implements OnInit {
   protected lastAssistant = computed(() => [...this.messages()].reverse().find((m) => m.role === 'assistant') ?? null);
   protected turn = computed(() => this.messages().filter((m) => m.role === 'assistant').length);
   protected limitReached = computed(() => this.usage().used >= this.usage().limit);
+  /** Words of the summary not yet in the cards: "add all" only makes sense while there are some. */
+  protected wordsToAdd = computed(() => (this.summary()?.new_words ?? []).filter((w) => !this.isAdded(w)));
   protected title = computed(() => {
     const c = this.conversation();
     if (!c) return $localize`AI-әңгімелесуші`;
@@ -114,12 +125,22 @@ export class ChatComponent extends GuardedPage implements OnInit {
       this.setConversation(conversation);
       this.summary.set(null);
       this.added.set(new Set());
+      this.loadSummary(); // the opening line counts against today's limit
       this.speakMessage(conversation.messages[0]);
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     } catch (e) {
-      this.error.set(apiErrors(e).general);
+      this.showError(e);
     } finally {
       this.starting.set(false);
+    }
+  }
+
+  private showError(e: unknown) {
+    if (e instanceof HttpErrorResponse && e.status === 429) {
+      this.error.set($localize`Бүгінгі хабарламалар лимиті бітті. Ертең жалғастырамыз!`);
+      this.usage.update((u) => ({ ...u, used: u.limit }));
+    } else {
+      this.error.set(apiErrors(e).general);
     }
   }
 
@@ -129,15 +150,34 @@ export class ChatComponent extends GuardedPage implements OnInit {
     this.writeActive(null);
   }
 
-  protected pickScenario(slug: string) {
+  protected async pickScenario(slug: string) {
+    const c = this.conversation();
+    const same = c?.mode === 'dialog' && c.scenario?.slug === slug;
+    if (c && !same && !(await this.confirmDropDialog())) return;
     this.mode.set('dialog');
     this.scenario.set(slug);
-    if (this.conversation()) this.newSession();
+    if (c && !same) this.newSession();
   }
 
-  protected pickMode(mode: ChatMode) {
+  protected async pickMode(mode: ChatMode) {
+    const c = this.conversation();
+    const other = !!c && c.mode !== mode;
+    if (other && !(await this.confirmDropDialog())) return;
     this.mode.set(mode);
-    if (this.conversation() && this.conversation()!.mode !== mode) this.newSession();
+    if (other) this.newSession();
+  }
+
+  /** Switching scenario or mode in the middle of a dialog closes it: ask first, as leaving the page does. */
+  private async confirmDropDialog(): Promise<boolean> {
+    const c = this.conversation();
+    const inDialog = !!c && !c.finished && c.messages.some((m) => m.role === 'user');
+    if (!inDialog && !this.sending() && !this.text().trim()) return true;
+    return this.confirm.ask({
+      title: $localize`Жаңа диалог бастайсыз ба?`,
+      message: $localize`Қазіргі диалог аяқталмады. Ол жабылады.`,
+      confirmText: $localize`Жаңасын бастау`,
+      cancelText: $localize`Қалу`,
+    });
   }
 
   protected async send(event?: Event) {
@@ -147,30 +187,41 @@ export class ChatComponent extends GuardedPage implements OnInit {
     if (!conversation || !text || this.sending()) return;
     this.sending.set(true);
     this.error.set('');
+    this.pendingText.set(text);
+    this.text.set('');
+    this.streamingReply.set('');
+    this.scrollDown();
     try {
-      const res = await firstValueFrom(this.api.send(conversation.id, text));
+      const res = await this.chatStream.send(conversation.id, text, (reply) => {
+        this.streamingReply.set(reply);
+        this.scrollDown();
+      });
       this.conversation.set({
         ...conversation,
         finished: res.finished,
         messages: [...conversation.messages, res.user_message, res.assistant_message],
       });
       this.usage.set(res.usage);
-      this.text.set('');
       this.speakMessage(res.assistant_message);
       this.scrollDown();
       this.loadSummary();
       this.store.refresh();
     } catch (e) {
-      if (e instanceof HttpErrorResponse && e.status === 429) {
-        this.error.set($localize`Бүгінгі хабарламалар лимиті бітті. Ертең жалғастырамыз!`);
-        this.usage.update((u) => ({ ...u, used: u.limit }));
-      } else {
-        this.error.set(apiErrors(e).general);
-      }
+      // Nothing was saved: the learner's line goes back into the field to send again.
+      if (!this.text()) this.text.set(text);
+      this.showError(e);
     } finally {
+      this.pendingText.set('');
+      this.streamingReply.set('');
       this.sending.set(false);
       queueMicrotask(() => this.inputRef()?.nativeElement.focus());
     }
+  }
+
+  /** A spoken answer lands in the field: the learner sees what was heard and sends it (or fixes it first). */
+  protected onHeard(text: string) {
+    this.text.set(text);
+    queueMicrotask(() => this.inputRef()?.nativeElement.focus());
   }
 
   protected useTemplate(template: string) {
@@ -180,7 +231,7 @@ export class ChatComponent extends GuardedPage implements OnInit {
 
   protected async addWord(word: NewWord, quiet = false) {
     try {
-      await firstValueFrom(this.api.addWord(word.word, word.translation_kk));
+      await firstValueFrom(this.api.addWord(word.word));
       this.added.update((s) => new Set(s).add(word.word.toLowerCase()));
       this.store.refresh();
       if (!quiet) this.toasts.success($localize`«${word.word}:word:» карточкаларға қосылды.`);
@@ -193,8 +244,8 @@ export class ChatComponent extends GuardedPage implements OnInit {
 
   protected async addAll() {
     let count = 0;
-    for (const w of this.summary()?.new_words ?? []) {
-      if (!this.isAdded(w) && (await this.addWord(w, true))) count++;
+    for (const w of this.wordsToAdd()) {
+      if (await this.addWord(w, true)) count++;
     }
     if (count) this.toasts.success($localize`${count}:count: сөз карточкаларға қосылды.`);
     this.loadSummary();

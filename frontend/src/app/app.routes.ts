@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, onboardedGuard, unverifiedGuard, verifiedGuard } from './core/auth.guard';
+import { authGuard, guestGuard, onboardedGuard, teacherGuard, unverifiedGuard, verifiedGuard } from './core/auth.guard';
 import { leaveGuard } from './core/leave.guard';
 import { ShellComponent } from './layout/shell.component';
 
@@ -44,6 +44,19 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
   },
   {
+    path: 'placement',
+    canActivate: [authGuard, verifiedGuard],
+    canDeactivate: [leaveGuard],
+    title: $localize`Деңгейді анықтау · PoliglotAi`,
+    loadComponent: () => import('./features/placement/placement.component').then((m) => m.PlacementComponent),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard, verifiedGuard, onboardedGuard],
+    title: $localize`Баптаулар · PoliglotAi`,
+    loadComponent: () => import('./features/auth/onboarding.component').then((m) => m.OnboardingComponent),
+  },
+  {
     path: '',
     component: ShellComponent,
     canActivate: [authGuard, verifiedGuard, onboardedGuard],
@@ -60,19 +73,18 @@ export const routes: Routes = [
       },
       {
         path: 'words',
-    canDeactivate: [leaveGuard],
         title: $localize`Сөздер · PoliglotAi`,
         loadComponent: () => import('./features/words/words.component').then((m) => m.WordsComponent),
       },
       {
         path: 'trainer',
-    canDeactivate: [leaveGuard],
+        canDeactivate: [leaveGuard],
         title: $localize`Жаттықтырғыш · PoliglotAi`,
         loadComponent: () => import('./features/trainer/trainer.component').then((m) => m.TrainerComponent),
       },
       {
         path: 'chat',
-    canDeactivate: [leaveGuard],
+        canDeactivate: [leaveGuard],
         title: $localize`AI-чат · PoliglotAi`,
         loadComponent: () => import('./features/chat/chat.component').then((m) => m.ChatComponent),
       },
@@ -80,6 +92,23 @@ export const routes: Routes = [
         path: 'course',
         title: $localize`Курс · PoliglotAi`,
         loadComponent: () => import('./features/course/course.component').then((m) => m.CourseComponent),
+      },
+      {
+        path: 'teacher',
+        canActivate: [teacherGuard],
+        title: $localize`Мұғалім кабинеті · PoliglotAi`,
+        loadComponent: () => import('./features/teacher/teacher.component').then((m) => m.TeacherComponent),
+      },
+      {
+        path: 'progress',
+        title: $localize`Прогресс · PoliglotAi`,
+        loadComponent: () => import('./features/progress/progress.component').then((m) => m.ProgressComponent),
+      },
+      {
+        path: 'course/:number',
+        canDeactivate: [leaveGuard],
+        title: $localize`Қадам · PoliglotAi`,
+        loadComponent: () => import('./features/course/step.component').then((m) => m.StepComponent),
       },
     ],
   },

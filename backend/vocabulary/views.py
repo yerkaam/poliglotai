@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from srs.models import UserVocabulary
 
-from . import forms
-from .models import CourseStep, Vocabulary
+from . import course, forms, placement
+from .models import Vocabulary
 
 
 class VocabularySerializer(serializers.ModelSerializer):
@@ -76,32 +77,79 @@ class VerbFormsView(APIView):
 
 
 class CourseView(APIView):
+    """GET /api/course/ — the 16 steps for this learner: done, open, locked or not published yet."""
+
     def get(self, request):
-        steps = CourseStep.objects.all()
-        learned = set(
-            UserVocabulary.objects.filter(
-                user=request.user, status__in=[UserVocabulary.Status.LEARNED, UserVocabulary.Status.KNOWN]
-            ).values_list("vocabulary_id", flat=True)
+        return Response([state.as_dict() for state in course.course_state(request.user)])
+
+
+def _unlocked_state(user, number):
+    state = next((s for s in course.course_state(user) if s.step.number == number), None)
+    if state is None:
+        raise NotFound()
+    if not state.unlocked:
+        raise PermissionDenied("Бұл қадам әлі ашылмады. Алдыңғы қадамды аяқтаңыз.")
+    return state
+
+
+class StepView(APIView):
+    """GET /api/course/{n}/ — the lesson, the step's words and its check (without the answers)."""
+
+    def get(self, request, number):
+        state = _unlocked_state(request.user, number)
+        step = state.step
+        words = Vocabulary.objects.filter(course_step=step)
+        return Response(
+            {
+                **state.as_dict(),
+                "intro_kk": step.intro_kk,
+                "lesson": step.lesson,
+                "exercises": course.public_exercises(step),
+                "words": VocabularySerializer(words, many=True, context={"progress": progress_map(request.user)}).data,
+                "pass_percent": course.PASS_PERCENT,
+            }
         )
-        started = set(UserVocabulary.objects.filter(user=request.user).values_list("vocabulary_id", flat=True))
-        result = []
-        for step in steps:
-            ids = list(Vocabulary.objects.filter(course_step=step).values_list("id", flat=True))
-            total = len(ids)
-            done = sum(1 for i in ids if i in learned)
-            touched = sum(1 for i in ids if i in started)
-            # Step progress: learned words count fully, words in progress count half.
-            percent = round(100 * (done + 0.5 * (touched - done)) / total) if total else 0
-            result.append(
-                {
-                    "number": step.number,
-                    "title_kk": step.title_kk,
-                    "title_en": step.title_en,
-                    "description_kk": step.description_kk,
-                    "status": "open" if step.is_open else "soon",
-                    "words_total": total,
-                    "words_learned": done,
-                    "percent": percent,
-                }
-            )
+
+
+class LessonsDoneSerializer(serializers.Serializer):
+    done = serializers.IntegerField(min_value=0, max_value=100)
+
+
+class StepLessonsView(APIView):
+    """POST /api/course/{n}/lessons/ {done} — the learner finished a lesson; resume there next time."""
+
+    def post(self, request, number):
+        state = _unlocked_state(request.user, number)
+        serializer = LessonsDoneSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(
+            {"lessons_done": course.save_lessons_done(request.user, state.step, serializer.validated_data["done"])}
+        )
+
+
+class CheckAnswersSerializer(serializers.Serializer):
+    answers = serializers.ListField(child=serializers.CharField(max_length=200, allow_blank=True), max_length=50)
+
+
+class StepCheckView(APIView):
+    """POST /api/course/{n}/check/ {answers: [...]} — scores the check; a pass may open the next step."""
+
+    def post(self, request, number):
+        state = _unlocked_state(request.user, number)
+        serializer = CheckAnswersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(course.check(request.user, state.step, serializer.validated_data["answers"]))
+
+
+class PlacementView(APIView):
+    """GET /api/placement/ — the questions (no answers); POST {answers} — the level and the credited steps."""
+
+    def get(self, request):
+        return Response({"questions": placement.public_questions()})
+
+    def post(self, request):
+        serializer = CheckAnswersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = placement.score(serializer.validated_data["answers"])
+        placement.apply(request.user, result)
         return Response(result)

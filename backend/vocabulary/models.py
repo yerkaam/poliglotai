@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -6,7 +7,22 @@ class CourseStep(models.Model):
     title_kk = models.CharField(max_length=120)
     title_en = models.CharField(max_length=120)
     description_kk = models.TextField(blank=True)
-    is_open = models.BooleanField(default=False)
+    is_open = models.BooleanField(
+        "published",
+        default=False,
+        help_text="The step's content is ready. Learners still unlock published steps one by one.",
+    )
+    intro_kk = models.TextField(blank=True, help_text="What the learner will be able to do after this step.")
+    # Short lessons, one idea each, taken one after another:
+    # [{"title_kk": str, "text_kk": str, "examples": [{"en": str, "kk": str}],
+    #   "practice": [{"prompt": str, "prompt_kk": str, "options": [str], "answer": str, "why_kk": str}]}]
+    lesson = models.JSONField(default=list, blank=True)
+    # [{"type": "choice", "prompt": str, "prompt_kk": str, "options": [str], "answer": str}
+    #  | {"type": "input", "prompt": str, "prompt_kk": str, "answers": [str]}]
+    exercises = models.JSONField(default=list, blank=True)
+    grammar_en = models.CharField(
+        max_length=300, blank=True, help_text="What the AI tutor may use once the learner has completed this step."
+    )
 
     class Meta:
         db_table = "course_steps"
@@ -51,3 +67,18 @@ class Vocabulary(models.Model):
         from .forms import past_simple
 
         return past_simple(self.word, self.past_form)
+
+
+class StepResult(models.Model):
+    """How far the learner got in a step: lessons taken and the best check score. A pass opens the next step."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="step_results")
+    step = models.ForeignKey(CourseStep, on_delete=models.CASCADE)
+    lessons_done = models.PositiveSmallIntegerField(default=0)
+    best_percent = models.PositiveSmallIntegerField(default=0)
+    passed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "step_results"
+        unique_together = [("user", "step")]

@@ -8,17 +8,23 @@ from chat.models import Conversation
 from srs.models import MAX_STAGE, UserVocabulary
 from srs.views import new_words_left
 from trainer.models import TrainerAttempt, trainer_stats
-from vocabulary.models import Vocabulary
+from vocabulary.course import unlocked_steps
+from vocabulary.models import StepResult, Vocabulary
 
-from .models import DailyGoal, ProgressLog
+from . import achievements
+from .models import Achievement, DailyGoal, ProgressLog
 from .services import streak_days
+from .week import week_summary
 
 
 def _daily_goal(user, today, due_count: int) -> DailyGoal:
     goal = DailyGoal.objects.filter(user=user, date=today).first()
     if goal is None:
         left, _ = new_words_left(user, today)
-        goal = DailyGoal.objects.create(user=user, date=today, reviews_target=due_count, new_target=min(5, left))
+        # get_or_create: the stats bar and a screen may both ask for the first time today at once.
+        goal, _ = DailyGoal.objects.get_or_create(
+            user=user, date=today, defaults={"reviews_target": due_count, "new_target": min(5, left)}
+        )
     return goal
 
 
@@ -32,9 +38,10 @@ class ProgressView(APIView):
         learning = words.filter(status=UserVocabulary.Status.LEARNING)
         due = learning.filter(next_review_date__lte=today).count()
         learned = words.filter(status__in=[UserVocabulary.Status.LEARNED, UserVocabulary.Status.KNOWN]).count()
-        total = Vocabulary.objects.filter(course_step__is_open=True).count()
+        course_words = Vocabulary.objects.filter(course_step__in=unlocked_steps(user))
+        total = course_words.count()
         started_ids = words.values_list("vocabulary_id", flat=True)
-        not_started = Vocabulary.objects.filter(course_step__is_open=True).exclude(id__in=started_ids).count()
+        not_started = course_words.exclude(id__in=started_ids).count()
 
         stages = [{"stage": s, "count": learning.filter(stage=s).count()} for s in range(1, MAX_STAGE + 1)]
         log = ProgressLog.objects.filter(user=user, date=today).first()
@@ -51,8 +58,12 @@ class ProgressView(APIView):
         for t in tasks:
             t["complete"] = t["done"] >= t["target"]
 
+        achievements.unlock_new(user)
+        fresh = Achievement.objects.filter(user=user, seen=False)
         return Response(
             {
+                # Badges earned since the learner last looked: the app congratulates, then marks them seen.
+                "new_achievements": [achievements.describe(a) for a in fresh],
                 "stats": {
                     "learning": learning.count(),
                     "learned": learned,
@@ -77,7 +88,10 @@ class ResetSerializer(serializers.Serializer):
 
 
 class ResetView(APIView):
-    """POST /api/progress/reset/ {confirm: true} — wipes words, trainer history, chats and logs."""
+    """POST /api/progress/reset/ {confirm: true} — wipes words, course results, trainer history, chats and logs.
+
+    Badges stay: they were earned.
+    """
 
     @transaction.atomic
     def post(self, request):
@@ -86,9 +100,36 @@ class ResetView(APIView):
         if not serializer.validated_data["confirm"]:
             return Response({"detail": "Растау керек."}, status=status.HTTP_400_BAD_REQUEST)
         user = request.user
+        # Today's AI calls stay counted: a reset must not reopen the daily chat limit.
+        today = ProgressLog.objects.filter(user=user, date=timezone.localdate()).first()
         UserVocabulary.objects.filter(user=user).delete()
         TrainerAttempt.objects.filter(user=user).delete()
         Conversation.objects.filter(user=user).delete()
         ProgressLog.objects.filter(user=user).delete()
         DailyGoal.objects.filter(user=user).delete()
+        StepResult.objects.filter(user=user).delete()
+        if today and today.chat_requests:
+            ProgressLog.objects.create(user=user, date=today.date, chat_requests=today.chat_requests)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WeekView(APIView):
+    """GET /api/progress/week/ — the last 7 days, day by day, and the totals against the week before."""
+
+    def get(self, request):
+        return Response(week_summary(request.user))
+
+
+class AchievementsView(APIView):
+    """GET /api/achievements/ — every badge with the progress toward it."""
+
+    def get(self, request):
+        return Response(achievements.overview(request.user))
+
+
+class AchievementsSeenView(APIView):
+    """POST /api/achievements/seen/ — the congratulations were shown."""
+
+    def post(self, request):
+        Achievement.objects.filter(user=request.user, seen=False).update(seen=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

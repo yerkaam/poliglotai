@@ -31,20 +31,35 @@
       }
       <ol class="steps">
         @for (s of steps.value(); track s.number) {
-          <li [class.open]="s.status === 'open'">
-            <span class="num">{{ s.number }}</span>
+          <li [class.open]="s.status === 'open'" [class.done]="s.status === 'done'">
+            <span class="num">
+              @if (s.status === 'done') {
+                <app-icon name="check" [size]="16" [stroke]="3" /><span class="visually-hidden">{{ s.number }}</span>
+              } @else {
+                {{ s.number }}
+              }
+            </span>
             <div class="info">
               <b>{{ s.title_kk }}</b>
               <span class="muted">{{ s.description_kk }}</span>
-              @if (s.status === 'open') {
+              @if (s.status === 'open' || s.status === 'done') {
                 <div class="step-progress">
-                  <div class="progress-track"><span [style.width.%]="s.percent"></span></div>
-                  <small class="muted" i18n>{{ s.words_learned }} / {{ s.words_total }} сөз · {{ s.percent }}%</small>
+                  @if (s.words_total) {
+                    <div class="progress-track"><span [style.width.%]="s.percent"></span></div>
+                    <small class="muted" i18n>{{ s.words_learned }} / {{ s.words_total }} сөз · {{ s.percent }}%</small>
+                  }
+                  @if (s.quiz_best !== null) {
+                    <small class="muted" i18n>тест: {{ s.quiz_best }}%</small>
+                  }
                 </div>
               }
             </div>
             @if (s.status === 'open') {
-              <a class="btn btn-primary open-btn" routerLink="/table" i18n>Ашу</a>
+              <a class="btn btn-primary open-btn" [routerLink]="['/course', s.number]" i18n>Ашу</a>
+            } @else if (s.status === 'done') {
+              <a class="btn btn-ghost open-btn" [routerLink]="['/course', s.number]" i18n>Қайталау</a>
+            } @else if (s.status === 'locked') {
+              <span class="soon"><app-icon name="lock" [size]="14" />&ngsp;<ng-container i18n>жабық</ng-container></span>
             } @else {
               <span class="soon"><app-icon name="lock" [size]="14" />&ngsp;<ng-container i18n>жақында</ng-container></span>
             }
@@ -81,7 +96,7 @@
 
       <section class="card panel">
         <h2 class="section-title" i18n>Прогресті тазарту</h2>
-        <p class="muted" i18n>Барлық сөздер, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
+        <p class="muted" i18n>Барлық сөздер, курс қадамдары, жаттықтырғыш тарихы мен диалогтар өшіріледі.</p>
         <button type="button" class="btn btn-ghost" (click)="openReset()" i18n>Тазарту…</button>
       </section>
     </aside>
@@ -94,7 +109,7 @@
 
 <dialog #resetDialog class="dialog" aria-labelledby="resetTitle" (cancel)="closeReset()">
   <h2 id="resetTitle" i18n>Прогресті тазарту керек пе?</h2>
-  <p class="muted" i18n>Бұл әрекетті қайтару мүмкін емес. Сөздер, кезеңдер, жаттықтырғыш пен AI-чат тарихы өшеді.</p>
+  <p class="muted" i18n>Бұл әрекетті қайтару мүмкін емес. Сөздер, кезеңдер, курс қадамдары, жаттықтырғыш пен AI-чат тарихы өшеді. Жетістік белгілері сақталады.</p>
   <div class="dialog-actions">
     <button type="button" class="btn btn-ghost" (click)="closeReset()" i18n>Болдырмау</button>
     <button type="button" class="btn btn-primary" [disabled]="resetting()" (click)="confirmReset()" i18n>Иә, тазарту</button>

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DailyGoal, ProgressLog
+from .models import Achievement, DailyGoal, ProgressLog
 
 
 @admin.register(ProgressLog)
@@ -10,3 +10,10 @@ class ProgressLogAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DailyGoal)
+
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display = ["user", "key", "unlocked_at", "seen"]
+    list_filter = ["key"]
+    search_fields = ["user__email"]

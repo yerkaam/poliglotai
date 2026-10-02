@@ -52,6 +52,7 @@
 
       <form class="answer" (submit)="check($event)">
         <label for="answerInput" class="visually-hidden" i18n>Сіздің сөйлеміңіз</label>
+        <div class="input-row">
         <input
           #answerInput
           id="answerInput"
@@ -68,6 +69,12 @@
           [attr.aria-invalid]="result() && !result()!.correct ? true : null"
           aria-describedby="answerFeedback"
         />
+          <app-mic-button
+            [disabled]="!!result() || busy()"
+            (partial)="answer.set($event)"
+            (heard)="onHeard($event)"
+          />
+        </div>
         <button type="submit" class="btn btn-primary btn-lg" [disabled]="busy() || (!result() && !answer().trim())">
           @if (result()) {
             <ng-container i18n>Келесі</ng-container>&ngsp;<app-icon name="arrow" [size]="18" />
@@ -101,7 +108,7 @@
           }
         }
       </div>
-      <p class="hint muted" i18n>Enter — тексеру. Бас әріп пен тыныс белгілері маңызды емес; won't = will not.</p>
+      <p class="hint muted" i18n>Enter — тексеру. Бас әріп пен тыныс белгілері маңызды емес; won't = will not. 🎤 — сөйлемді дауыстап айтып көріңіз.</p>
     </section>
 
     @if (!t.from_learning) {

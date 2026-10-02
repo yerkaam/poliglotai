@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CourseStep, Vocabulary
+from .models import CourseStep, StepResult, Vocabulary
 
 
 @admin.register(Vocabulary)
@@ -15,3 +15,21 @@ class VocabularyAdmin(admin.ModelAdmin):
 class CourseStepAdmin(admin.ModelAdmin):
     list_display = ["number", "title_kk", "title_en", "is_open"]
     list_editable = ["is_open"]
+    fields = [
+        "number",
+        "title_kk",
+        "title_en",
+        "description_kk",
+        "intro_kk",
+        "is_open",
+        "grammar_en",
+        "lesson",
+        "exercises",
+    ]
+
+
+@admin.register(StepResult)
+class StepResultAdmin(admin.ModelAdmin):
+    list_display = ["user", "step", "lessons_done", "best_percent", "passed", "updated_at"]
+    list_filter = ["step", "passed"]
+    search_fields = ["user__email"]

@@ -54,7 +54,7 @@
         <section class="card verb" aria-labelledby="verbTitle">
           <div class="verb-head">
             <div>
-              <span class="eyebrow" i18n>1-қадам · Күннің етістігі</span>
+              <span class="eyebrow" i18n>Күннің етістігі</span>
               <h2 id="verbTitle" class="verb-title">
                 {{ v.word }}&ngsp;<span class="mono ipa">{{ v.ipa }}</span>&ngsp;<span class="kk">— {{ v.translation_kk }}</span>
               </h2>
@@ -112,11 +112,17 @@
           <app-load-error (retry)="course.reload()" />
         }
         <ol class="steps">
-          @for (s of course.value().slice(0, 3); track s.number) {
-            <li [class.open]="s.status === 'open'">
+          @for (s of nearSteps(); track s.number) {
+            <li [class.open]="s.status === 'open'" [class.done]="s.status === 'done'">
               <span class="num">{{ s.number }}</span>
-              <span class="name">{{ s.title_kk }}</span>
-              @if (s.status === 'open') {
+              @if (s.status === 'open' || s.status === 'done') {
+                <a class="name" [routerLink]="['/course', s.number]">{{ s.title_kk }}</a>
+              } @else {
+                <span class="name">{{ s.title_kk }}</span>
+              }
+              @if (s.status === 'done') {
+                <app-icon name="check" [size]="16" [stroke]="3" />
+              } @else if (s.status === 'open') {
                 <span class="pct">{{ s.percent }}%</span>
               } @else {
                 <app-icon name="lock" [size]="16" />

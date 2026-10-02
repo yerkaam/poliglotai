@@ -6,6 +6,7 @@ frontend can only guess what happened.
 
 import logging
 
+import sentry_sdk
 from django.http import JsonResponse
 from rest_framework.views import exception_handler
 
@@ -28,6 +29,9 @@ def api_exception_handler(exc, context):
     if response is None:
         # Not an API exception: a bug. Log it with the request and answer in the usual JSON shape.
         request = context.get("request")
+        user = getattr(request, "user", None)
+        if getattr(user, "is_authenticated", False):
+            sentry_sdk.set_user({"id": user.pk})  # the id only, to find the account; no email
         logger.exception("Unhandled API error on %s %s", getattr(request, "method", "?"), getattr(request, "path", "?"))
         return JsonResponse({"detail": SERVER_ERROR, "code": "server_error"}, status=500)
 

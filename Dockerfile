@@ -15,6 +15,6 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 COPY --from=web /web/dist/frontend/browser /app/spa
-RUN DJANGO_DEBUG=0 python manage.py collectstatic --noinput
+RUN DJANGO_DEBUG=0 DJANGO_SECRET_KEY=build-only python manage.py collectstatic --noinput
 EXPOSE 8000
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py createcachetable && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-3} --timeout 90"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py createcachetable && (python manage.py create_demo_accounts --from-env || true) && (python manage.py ensure_admin || true) && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-3} --timeout 90"]

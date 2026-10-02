@@ -1,23 +1,35 @@
+from django.conf import settings
 from django.contrib.auth import password_validation
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import Profile, User
 
+REMINDER_HOURS = [8, 12, 18, 19, 20, 21]
+EMAIL_TAKEN = "Бұл поштамен аккаунт бұрыннан бар. Кіріп көріңіз."
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     daily_new_limit = serializers.ChoiceField(choices=[5, 10, 15, 20])
+    reminder_hour = serializers.ChoiceField(choices=REMINDER_HOURS, required=False)
 
     class Meta:
         model = Profile
-        fields = ["level", "daily_new_limit", "daily_minutes", "onboarded"]
+        fields = ["level", "daily_new_limit", "daily_minutes", "onboarded", "reminder_enabled", "reminder_hour"]
 
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
+    # With email confirmation switched off, accounts that registered while it was on are let in too.
+    email_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "email_verified", "profile"]
+        fields = ["id", "email", "name", "email_verified", "is_teacher", "profile"]
+        read_only_fields = ["is_teacher"]
+
+    def get_email_verified(self, user) -> bool:
+        return user.email_verified or not settings.REQUIRE_EMAIL_VERIFICATION
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -31,7 +43,7 @@ class RegisterSerializer(serializers.Serializer):
         value = value.lower().strip()
         if User.objects.filter(email=value).exists():
             # AUTH-03: a clear error for an email that is already taken.
-            raise serializers.ValidationError("Бұл поштамен аккаунт бұрыннан бар. Кіріп көріңіз.")
+            raise serializers.ValidationError(EMAIL_TAKEN)
         return value
 
     def validate_accept_terms(self, value):
@@ -73,3 +85,24 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class VerifyEmailSerializer(serializers.Serializer):
     code = serializers.RegexField(r"^\s*\d{6}\s*$", error_messages={"invalid": "Код 6 саннан тұрады."})
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    password = serializers.CharField()
+    password2 = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Құпиясөздер сәйкес емес."})
+        if attrs["password"] == attrs["old_password"]:
+            raise serializers.ValidationError({"password": "Жаңа құпиясөз ескісінен өзгеше болуы керек."})
+        try:
+            password_validation.validate_password(attrs["password"], self.context["user"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
+        return attrs
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    password = serializers.CharField()
